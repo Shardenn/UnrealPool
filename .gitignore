@@ -1,0 +1,12 @@
+# Unreal generated
+*/Build
+Binaries
+*/DerivedDataCache
+Intermediate
+Saved
+*_BuiltData.uasset
+Content/StarterContent
+
+# Visual studio reproducables
+*.db
+*.vs
