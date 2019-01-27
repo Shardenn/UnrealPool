@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "Components/SplineComponent.h"
 #include "Table.generated.h"
 
 UCLASS()
@@ -28,10 +29,14 @@ protected:
 
     UPROPERTY(EditAnywhere, Meta = (DisplayName = "Ball fall registrator"))
     UBoxComponent* m_pBallRegistrator = nullptr;
+
+    // Spline path for player movement along the table
+    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Spline player path"))
+    USplineComponent* m_pSplinePath = nullptr;
 public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-
+    USplineComponent* GetSplinePath()                                        { return m_pSplinePath; }
 
 };
