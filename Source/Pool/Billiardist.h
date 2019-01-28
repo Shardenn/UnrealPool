@@ -24,6 +24,9 @@ protected:
 
     UPROPERTY(EditAnywhere, meta = (DisplayName = "Assigned billiard table"))
     ATable* m_pTable = nullptr;
+
+    UPROPERTY(EditAnywhere, meta = (DisplayName = "Move speed"))
+    float m_fMoveSpeed = 1.0f;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -36,6 +39,8 @@ private:
     void MoveForward(float Value);
     UFUNCTION()
     void MoveRight(float Value);
+
+    void MoveAlongSpline();
 
     FVector m_fCurrentMoveDirection = FVector(0);
     USplineComponent* m_pSplinePath = nullptr;

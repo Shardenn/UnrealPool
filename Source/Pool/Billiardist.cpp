@@ -44,6 +44,7 @@ void ABilliardist::BeginPlay()
         }
     }
 
+    // after we tried to find a table we can move the player on the spline
     if(m_pTable)
     {
         m_pSplinePath = m_pTable->GetSplinePath();
@@ -68,9 +69,6 @@ void ABilliardist::BeginPlay()
 void ABilliardist::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-    UE_LOG(LogTemp, Log, TEXT("Object %s 's movement vector is %s."), *GetName(), *m_fCurrentMoveDirection.ToString());
-
 }
 
 // Called to bind functionality to input
@@ -80,24 +78,27 @@ void ABilliardist::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     PlayerInputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
+    PlayerInputComponent->BindAxis("Turn", this, &ABilliardist::AddControllerYawInput);
+    PlayerInputComponent->BindAxis("LookUp", this, &ABilliardist::AddControllerPitchInput);
+
 }
 
 void ABilliardist::MoveForward(float Value)
 {
     if (!Controller || Value == 0.f)
     {
-        
         return;
     }
-
+    
     FRotator Rotation = GetControlRotation();
 
     if (GetCharacterMovement()->IsFalling() || GetCharacterMovement()->IsMovingOnGround())
         Rotation.Pitch = 0.f;
 
     const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
-
-    m_fCurrentMoveDirection += Direction;
+    
+    m_fCurrentMoveDirection += Direction * Value;
+    MoveAlongSpline();
 }
 
 void ABilliardist::MoveRight(float Value)
@@ -109,6 +110,21 @@ void ABilliardist::MoveRight(float Value)
 
     const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 
-    m_fCurrentMoveDirection += Direction;
+    m_fCurrentMoveDirection += Direction * Value;
+    MoveAlongSpline();
 }
 
+void ABilliardist::MoveAlongSpline()
+{
+    m_fCurrentMoveDirection = m_fCurrentMoveDirection.GetSafeNormal(); // where would the character move without spline
+
+    auto SplineTangent = m_pSplinePath->FindDirectionClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
+
+    auto cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) / 
+        (SplineTangent.Size() * m_fCurrentMoveDirection.Size()); // cos between spline tangent and move direction without spline
+
+    // if the cos is negative (so we are moving backwards on the spline) than negite-ness of cos will handle it
+    auto ActualMovementVector = SplineTangent * cosin;
+
+    AddMovementInput(ActualMovementVector.GetSafeNormal() * m_fMoveSpeed);
+}
