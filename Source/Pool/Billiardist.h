@@ -40,9 +40,9 @@ private:
     UFUNCTION()
     void MoveRight(float Value);
 
-    void MoveAlongSpline();
+    //void MoveAlongSpline();
 
     FVector m_fCurrentMoveDirection = FVector(0);
     USplineComponent* m_pSplinePath = nullptr;
-    
+    float m_fDistanceAlongSpline = 0.0f;
 };

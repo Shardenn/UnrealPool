@@ -68,7 +68,24 @@ void ABilliardist::BeginPlay()
 // Called every frame
 void ABilliardist::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
+
+    if (m_fCurrentMoveDirection != FVector::ZeroVector)
+    {
+        auto SplineTangent = m_pSplinePath->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
+        float cosin = cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) /
+            (SplineTangent.Size() * m_fCurrentMoveDirection.Size()); // cos between spline tangent and move direction without spline
+        m_fDistanceAlongSpline += cosin * DeltaTime * m_fMoveSpeed;
+
+        if (m_fDistanceAlongSpline >= m_pSplinePath->GetSplineLength())
+            m_fDistanceAlongSpline -= m_pSplinePath->GetSplineLength();
+        else if (m_fDistanceAlongSpline < 0)
+            m_fDistanceAlongSpline += m_pSplinePath->GetSplineLength();
+
+        SetActorLocation(m_pSplinePath->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
+            ESplineCoordinateSpace::World));
+    }
+    m_fCurrentMoveDirection = FVector::ZeroVector;
 }
 
 // Called to bind functionality to input
@@ -90,15 +107,15 @@ void ABilliardist::MoveForward(float Value)
         return;
     }
     
-    FRotator Rotation = GetControlRotation();
+    auto Rotation = GetControlRotation();
 
     if (GetCharacterMovement()->IsFalling() || GetCharacterMovement()->IsMovingOnGround())
         Rotation.Pitch = 0.f;
 
-    const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
     
     m_fCurrentMoveDirection += Direction * Value;
-    MoveAlongSpline();
+    //MoveAlongSpline();
 }
 
 void ABilliardist::MoveRight(float Value)
@@ -106,25 +123,25 @@ void ABilliardist::MoveRight(float Value)
     if (!Controller || Value == 0.f)
         return;
 
-    FRotator Rotation = GetControlRotation();
+    auto Rotation = GetControlRotation();
 
-    const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 
     m_fCurrentMoveDirection += Direction * Value;
-    MoveAlongSpline();
+    //MoveAlongSpline();
 }
-
+/*
 void ABilliardist::MoveAlongSpline()
 {
     m_fCurrentMoveDirection = m_fCurrentMoveDirection.GetSafeNormal(); // where would the character move without spline
 
     auto SplineTangent = m_pSplinePath->FindDirectionClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
 
-    auto cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) / 
+    float cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) / 
         (SplineTangent.Size() * m_fCurrentMoveDirection.Size()); // cos between spline tangent and move direction without spline
 
     // if the cos is negative (so we are moving backwards on the spline) than negite-ness of cos will handle it
     auto ActualMovementVector = SplineTangent * cosin;
 
     AddMovementInput(ActualMovementVector.GetSafeNormal() * m_fMoveSpeed);
-}
+}*/
