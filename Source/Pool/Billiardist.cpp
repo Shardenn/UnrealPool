@@ -29,9 +29,12 @@ void ABilliardist::BeginPlay()
     // if no table assigned, we will try to look for one manually in the game world
     if (!m_pTable)
     {
+        // warn if we do not have a table assigned
         UE_LOG(LogTemp, Error, TEXT("Object %s has no table assigned. Looking for a table in the game world..."), *GetName());
-
+        if (GEngine)
+            GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Red, FString::Printf(TEXT("Object %s has no spline path (possibly no table assigned)"), *GetName()));
         // try to find a table in the game world
+        /*
         for (TObjectIterator<ATable> it; it; ++it)
         {
             ATable* foundTable = *it;
@@ -42,8 +45,9 @@ void ABilliardist::BeginPlay()
                 break; // we need any suitable table, so break after smth is found
             }
         }
+        */
     }
-
+    /* GameMode should handle this on player login ------------------------------------
     // after we tried to find a table we can move the player on the spline
     if(m_pTable)
     {
@@ -63,6 +67,7 @@ void ABilliardist::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("Object %s has no assigned table. Searching for a table in the game world did not succeed."), *GetName());
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Object %s has no assigned table"), *GetName()));
     }
+    */
 }
 
 // Called every frame
@@ -70,7 +75,7 @@ void ABilliardist::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (m_fCurrentMoveDirection != FVector::ZeroVector)
+    if (m_fCurrentMoveDirection != FVector::ZeroVector && m_pSplinePath != nullptr)
     {
         auto SplineTangent = m_pSplinePath->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
         float cosin = cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) /
@@ -130,18 +135,10 @@ void ABilliardist::MoveRight(float Value)
     m_fCurrentMoveDirection += Direction * Value;
     //MoveAlongSpline();
 }
-/*
-void ABilliardist::MoveAlongSpline()
+
+void ABilliardist::SetTable(ATable* NewTable)
 {
-    m_fCurrentMoveDirection = m_fCurrentMoveDirection.GetSafeNormal(); // where would the character move without spline
-
-    auto SplineTangent = m_pSplinePath->FindDirectionClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
-
-    float cosin = FVector::DotProduct(SplineTangent, m_fCurrentMoveDirection) / 
-        (SplineTangent.Size() * m_fCurrentMoveDirection.Size()); // cos between spline tangent and move direction without spline
-
-    // if the cos is negative (so we are moving backwards on the spline) than negite-ness of cos will handle it
-    auto ActualMovementVector = SplineTangent * cosin;
-
-    AddMovementInput(ActualMovementVector.GetSafeNormal() * m_fMoveSpeed);
-}*/
+    m_pTable = NewTable;
+    if (m_pTable)
+        m_pSplinePath = m_pTable->GetSplinePath();
+}

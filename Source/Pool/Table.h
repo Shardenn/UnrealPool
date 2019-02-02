@@ -37,6 +37,7 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+    UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Spline Path"))
     USplineComponent* GetSplinePath()                                        { return m_pSplinePath; }
 
 };

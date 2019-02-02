@@ -18,6 +18,8 @@ public:
 	// Sets default values for this character's properties
 	ABilliardist();
 
+    UFUNCTION(BlueprintCallable)
+    void SetTable(ATable* NewTable);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
