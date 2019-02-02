@@ -4,6 +4,7 @@
 #include "Components/InputComponent.h"
 #include "UObject/UObjectIterator.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "UnrealNetwork.h"
 
 UENUM(BlueprintType)
 enum class FBilliardistState : uint8
@@ -21,6 +22,16 @@ ABilliardist::ABilliardist()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+// VisualStudio shows IntelliSense error, but it actually compiles
+void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    // Replicate to everyone
+    //DOREPLIFETIME(ABilliardist, m_pTable);
+    DOREPLIFETIME(ABilliardist, m_pSplinePath);
+}
+
 // Called when the game starts or when spawned
 void ABilliardist::BeginPlay()
 {
@@ -30,7 +41,7 @@ void ABilliardist::BeginPlay()
     if (!m_pTable)
     {
         // warn if we do not have a table assigned
-        UE_LOG(LogTemp, Error, TEXT("Object %s has no table assigned. Looking for a table in the game world..."), *GetName());
+        UE_LOG(LogTemp, Error, TEXT("Object %s has no table assigned."), *GetName());
         if (GEngine)
             GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Red, FString::Printf(TEXT("Object %s has no spline path (possibly no table assigned)"), *GetName()));
         // try to find a table in the game world
@@ -74,7 +85,7 @@ void ABilliardist::BeginPlay()
 void ABilliardist::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
+    /*
     if (m_fCurrentMoveDirection != FVector::ZeroVector && m_pSplinePath != nullptr)
     {
         auto SplineTangent = m_pSplinePath->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
@@ -90,7 +101,9 @@ void ABilliardist::Tick(float DeltaTime)
         SetActorLocation(m_pSplinePath->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
             ESplineCoordinateSpace::World));
     }
+    
     m_fCurrentMoveDirection = FVector::ZeroVector;
+    */
 }
 
 // Called to bind functionality to input
@@ -137,6 +150,13 @@ void ABilliardist::MoveRight(float Value)
 }
 
 void ABilliardist::SetTable(ATable* NewTable)
+{
+    Server_SetTable(NewTable);
+}
+
+bool ABilliardist::Server_SetTable_Validate(ATable*) { return true; }
+
+void ABilliardist::Server_SetTable_Implementation(ATable* NewTable)
 {
     m_pTable = NewTable;
     if (m_pTable)

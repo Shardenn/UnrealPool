@@ -8,6 +8,7 @@ ATable::ATable()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
 
     m_pTableMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Table mesh"));
     RootComponent = (USceneComponent*)m_pTableMesh;
@@ -19,6 +20,7 @@ ATable::ATable()
     m_pFrontBallLocation->SetRelativeLocation(FVector(0, 0, 2 * zBound)); // spawn above the table if we did not define otherwise
 
     m_pSplinePath = CreateDefaultSubobject<USplineComponent>(TEXT("Spline player path"));
+    m_pSplinePath->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned

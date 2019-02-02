@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Billiardist.h"
 #include "BilliardistController.generated.h"
 
 /**
@@ -12,6 +13,21 @@
 UCLASS()
 class POOL_API ABilliardistController : public APlayerController
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
+public:
+    ABilliardistController();
+    virtual void Tick(float DeltaTime) override;
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Self Initialize Pawn"))
+    void SelfInitializePawn();
+protected:
+    float m_fDistanceAlongSpline{ 0.0f };
+    UPROPERTY(Replicated) // needs to be replicated for movement along spline
+    USplineComponent* m_pPlayerSpline{ nullptr };
+    virtual void BeginPlay() override;
+private:
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_MovePlayer(FVector NewLocation);
+    ABilliardist* m_pControlledBilliardist{ nullptr };
 };
