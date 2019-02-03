@@ -9,6 +9,18 @@
 #include "Components/SplineComponent.h"
 #include "Billiardist.generated.h"
 
+
+UENUM(BlueprintType)
+enum class FBilliardistState : uint8
+{
+    WALKING     UMETA(DisplayName = "Walking"),     // just walking around the table, examining
+    PICKING     UMETA(DisplayName = "Picking"),     // if we are playing RU billiard, we can pick any ball for the shot
+    AIMING      UMETA(DisplayName = "Aiming"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
+    OBSERVING   UMETA(DisplayName = "Observing"),  // observing the balls after a shot
+    EXAMINING   UMETA(DisplayName = "Examinging"),  // watching from the top of the table
+    POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
+};
+
 UCLASS()
 class POOL_API ABilliardist : public ACharacter
 {
@@ -43,14 +55,25 @@ public:
     USplineComponent* GetSpline() { return m_pSplinePath; }
     //UPROPERTY(Replicated)
     FVector m_fCurrentMoveDirection = FVector(0);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set State"))
+    void SetState(FBilliardistState NewState);
+
+    UFUNCTION(BlueprintPure, meta = (DisplayName = "GetState"))
+    FBilliardistState GetState() { return m_eState; }
 private:
     UFUNCTION()
     void MoveForward(float Value);
     UFUNCTION()
     void MoveRight(float Value);
     UPROPERTY(Replicated) // needed for replication, tested
-    USplineComponent* m_pSplinePath = nullptr;
+    USplineComponent* m_pSplinePath { nullptr };
     
+    UPROPERTY(Replicated)
+    FBilliardistState m_eState { FBilliardistState::WALKING };
+
     UFUNCTION(server, reliable, WithValidation)
     void Server_SetTable(ATable* NewTable);
+    UFUNCTION(server, reliable, WithValidation)
+    void Server_SetState(FBilliardistState NewState);
 };

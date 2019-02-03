@@ -16,9 +16,7 @@ void ABilliardistController::BeginPlay()
 
 void ABilliardistController::Tick(float DeltaTime)
 {
-    // direction that the pawn would go in case we do not have a spline path
-    auto Direction{ FVector::ZeroVector };
-
+    
     if (m_pControlledBilliardist && 
         m_pPlayerSpline)
     {
