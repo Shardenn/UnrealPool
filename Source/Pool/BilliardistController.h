@@ -29,6 +29,9 @@ protected:
 private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_MovePlayer(FVector NewLocation);
+    UFUNCTION(reliable, NetMulticast, WithValidation)
+    void Multicast_MovePlayer(FVector NewLocation);
+
     ABilliardist* m_pControlledBilliardist{ nullptr };
 
     FVector Direction{ FVector::ZeroVector }; // direction that the pawn would go in case we do not have a spline path

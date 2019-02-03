@@ -82,5 +82,13 @@ bool ABilliardistController::Server_MovePlayer_Validate(FVector)
 
 void ABilliardistController::Server_MovePlayer_Implementation(FVector NewLocation)
 {
+    //GetPawn()->SetActorLocation(NewLocation);
+    Multicast_MovePlayer(NewLocation);
+}
+
+bool ABilliardistController::Multicast_MovePlayer_Validate(FVector NewLocation) { return true; }
+
+void ABilliardistController::Multicast_MovePlayer_Implementation(FVector NewLocation)
+{
     GetPawn()->SetActorLocation(NewLocation);
 }
