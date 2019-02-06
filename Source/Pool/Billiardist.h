@@ -9,6 +9,31 @@
 #include "Components/SplineComponent.h"
 #include "Billiardist.generated.h"
 
+/* for fast copy-paste in future
+switch (m_eState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            break;
+        }
+    }
+*/
 
 UENUM(BlueprintType)
 enum class FBilliardistState : uint8
@@ -27,27 +52,16 @@ class POOL_API ABilliardist : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	ABilliardist();
+    // Sets default values for this character's properties
+    ABilliardist();
 
     UFUNCTION(BlueprintCallable)
     void SetTable(ATable* NewTable);
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-    // does not needs to be replicated for movement (only m_pSpline does)
-    // but may be needed for replication later
-    UPROPERTY(/*Replicated, */EditAnywhere, meta = (DisplayName = "Assigned billiard table"))
-    ATable* m_pTable = nullptr;
-    UPROPERTY(EditAnywhere, meta = (DisplayName = "Move speed"))
-    float m_fMoveSpeed = 1.0f;
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    // Called to bind functionality to input
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Move Speed"))
     float GetMoveSpeed() { return m_fMoveSpeed; }
@@ -61,11 +75,27 @@ public:
 
     UFUNCTION(BlueprintPure, meta = (DisplayName = "GetState"))
     FBilliardistState GetState() { return m_eState; }
+
+protected:
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
+
+    // does not needs to be replicated for movement (only m_pSpline does)
+    // but may be needed for replication later
+    UPROPERTY(/*Replicated, */EditAnywhere, meta = (DisplayName = "Assigned billiard table"))
+        ATable* m_pTable = nullptr;
+    UPROPERTY(EditAnywhere, meta = (DisplayName = "Move speed"))
+        float m_fMoveSpeed = 1.0f;
 private:
     UFUNCTION()
     void MoveForward(float Value);
     UFUNCTION()
     void MoveRight(float Value);
+    UFUNCTION()
+    void ActionPressHandle();
+    UFUNCTION()
+    void ReturnPressHandle();
+
     UPROPERTY(Replicated) // needed for replication, tested
     USplineComponent* m_pSplinePath { nullptr };
     

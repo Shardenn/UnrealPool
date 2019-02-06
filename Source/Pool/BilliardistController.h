@@ -26,6 +26,11 @@ public:
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Selected Ball"))
     void SetBall(ABall* NewBall);
 protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Lock outgoing camera"))
+    bool m_bLockOutgoing{ false };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Cameras blend time"))
+    float m_fCameraBlendTime { 0.5f };
+
     float m_fDistanceAlongSpline{ 0.0f };
     UPROPERTY(Replicated) // needs to be replicated for movement along spline
     USplineComponent* m_pPlayerSpline{ nullptr };

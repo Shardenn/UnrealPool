@@ -34,6 +34,7 @@ void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutL
     // Replicate to everyone
     //DOREPLIFETIME(ABilliardist, m_pTable);
     DOREPLIFETIME(ABilliardist, m_pSplinePath);
+    DOREPLIFETIME(ABilliardist, m_eState);
 }
 
 // Called when the game starts or when spawned
@@ -55,6 +56,32 @@ void ABilliardist::BeginPlay()
 void ABilliardist::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    switch (m_eState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            // highlight a ball that may be picked right now
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // update the hot strength
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            break;
+        }
+    }
 }
 
 // Called to bind functionality to input
@@ -66,6 +93,9 @@ void ABilliardist::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     PlayerInputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
     PlayerInputComponent->BindAxis("Turn", this, &ABilliardist::AddControllerYawInput);
     PlayerInputComponent->BindAxis("LookUp", this, &ABilliardist::AddControllerPitchInput);
+
+    PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
+    PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
 
 }
 
@@ -84,7 +114,6 @@ void ABilliardist::MoveForward(float Value)
     const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
     
     m_fCurrentMoveDirection += Direction * Value;
-    //MoveAlongSpline();
 }
 
 void ABilliardist::MoveRight(float Value)
@@ -97,7 +126,79 @@ void ABilliardist::MoveRight(float Value)
     const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 
     m_fCurrentMoveDirection += Direction * Value;
-    //MoveAlongSpline();
+}
+
+// when action button is pressed, here we check the next possible state to switch
+void ABilliardist::ActionPressHandle()
+{
+    switch (m_eState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            SetState(FBilliardistState::PICKING);
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            // when we press LMB while PIKING, we should 
+            // 1. set the selected ball
+            // 2. blend the camera (in controller actually) to it
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // set observing
+            // 1. get the current hit strength
+            // 2. handle ball push
+            // 3. in this state it is possible to switch between additional cameras
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set any state, but it is possible only to set examining (handled in setstate)
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // return to the previous state
+            break;
+        }
+    }
+}
+
+// when return button is pressed, here we check the next possible state to switch
+void ABilliardist::ReturnPressHandle()
+{
+    switch (m_eState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            // nowhere to return, it is a default state
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            SetState(FBilliardistState::WALKING);
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // 1. set picking
+            // 2. clear selected ball
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set examining
+            // we cannot return to anything except examining
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // return to the previous state
+            break;
+        }
+    }
 }
 
 void ABilliardist::SetTable(ATable* NewTable)
@@ -123,6 +224,7 @@ bool ABilliardist::Server_SetState_Validate(FBilliardistState) { return true; }
 
 void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 {
+    GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Green, FString::Printf(TEXT("Setting state of %s on server"), *GetName()));
     if (m_eState == NewState)
         return;
 
@@ -130,4 +232,5 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
                                                   // then we update the state. It is replicated automatically
                                                   // by UPROPERTY
         m_eState = NewState;
+    GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Green, FString::Printf(TEXT("Now the state of %s is %d"), *GetName(), static_cast<uint8>(m_eState)));
 }
