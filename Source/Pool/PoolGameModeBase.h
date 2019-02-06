@@ -12,9 +12,5 @@
 UCLASS()
 class POOL_API APoolGameModeBase : public AGameModeBase
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+    GENERATED_BODY()
 };

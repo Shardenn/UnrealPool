@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Billiardist.h"
 #include "Ball.h"
+#include "PoolGameModeBase.h"
 #include "BilliardistController.generated.h"
 
 /**
@@ -20,11 +21,15 @@ public:
     ABilliardistController();
     virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Self Initialize Pawn"))
-    void SelfInitializePawn();
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Billiardist Pawn"))
+    void InitializeBilliardistPawn();
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Selected Ball"))
     void SetBall(ABall* NewBall);
+
+    // sets the new table for controller to know what spline is used by the player
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Table And Spline"))
+    void SetTable(ATable* NewTable);
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Lock outgoing camera"))
     bool m_bLockOutgoing{ false };
@@ -35,15 +40,25 @@ protected:
     UPROPERTY(Replicated) // needs to be replicated for movement along spline
     USplineComponent* m_pPlayerSpline{ nullptr };
     UPROPERTY(Replicated)
-    ABall* m_pSelectedBall { nullptr };
+    ABall* m_pSelectedBall { nullptr };    
+
     virtual void BeginPlay() override;
 private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_MovePlayer(FVector NewLocation);
     UFUNCTION(reliable, NetMulticast, WithValidation)
     void Multicast_MovePlayer(FVector NewLocation);
+    
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetBall(ABall* NewBall);
+
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_SetTable(ATable* NewTable);
+
+    UFUNCTION()
+    void OnPlayerStateChanged(FBilliardistState NewState);
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_SubscribeToStateChange();
 
     ABilliardist* m_pControlledBilliardist{ nullptr };
 

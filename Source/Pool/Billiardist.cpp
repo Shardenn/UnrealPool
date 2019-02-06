@@ -5,6 +5,8 @@
 #include "UObject/UObjectIterator.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UnrealNetwork.h"
+#include "Ball.h"
+#include "BilliardistController.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -40,16 +42,7 @@ void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutL
 // Called when the game starts or when spawned
 void ABilliardist::BeginPlay()
 {
-	Super::BeginPlay();
-
-    // if no table assigned, we will try to look for one manually in the game world
-    if (!m_pTable)
-    {
-        // warn if we do not have a table assigned
-        UE_LOG(LogTemp, Error, TEXT("Object %s has no table assigned."), *GetName());
-        if (GEngine)
-            GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Red, FString::Printf(TEXT("Object %s has no spline path (possibly no table assigned)"), *GetName()));
-    }
+    Super::BeginPlay();
 }
 
 // Called every frame
@@ -142,6 +135,15 @@ void ABilliardist::ActionPressHandle()
         {
             // when we press LMB while PIKING, we should 
             // 1. set the selected ball
+            for (TObjectIterator<ABall> it; it; ++it)
+            {
+                auto FoundBall = *it;
+                if (FoundBall)
+                {
+                    Cast<ABilliardistController>(GetController())->SetBall(FoundBall);
+                }
+            }
+            SetState(FBilliardistState::AIMING);
             // 2. blend the camera (in controller actually) to it
             break;
         }
@@ -204,6 +206,24 @@ void ABilliardist::ReturnPressHandle()
 void ABilliardist::SetTable(ATable* NewTable)
 {
     Server_SetTable(NewTable);
+    auto GotController = Cast<ABilliardistController>(GetController());
+    if (GotController)
+    {
+        GotController->SetTable(NewTable);
+    }
+    else
+    {
+        if (GetController())
+        {
+            UE_LOG(LogTemp, Error, TEXT("%s: Tried to tell controller %s to update the table but failed - got null on controller cast"),
+                *GetName(),
+                *GetController()->GetName());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("%s: does not have controller at all. What?"), *GetName());
+        }
+    }
 }
 
 bool ABilliardist::Server_SetTable_Validate(ATable*) { return true; }
@@ -213,6 +233,11 @@ void ABilliardist::Server_SetTable_Implementation(ATable* NewTable)
     m_pTable = NewTable;
     if (m_pTable)
         m_pSplinePath = m_pTable->GetSplinePath();
+    else
+    {
+        m_pSplinePath = nullptr;
+        UE_LOG(LogTemp, Warning, TEXT("%s was assigned with the null table and therefore null spline path"), *GetName());
+    }
 }
 
 void ABilliardist::SetState(FBilliardistState NewState)
@@ -224,13 +249,14 @@ bool ABilliardist::Server_SetState_Validate(FBilliardistState) { return true; }
 
 void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 {
-    GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Green, FString::Printf(TEXT("Setting state of %s on server"), *GetName()));
     if (m_eState == NewState)
         return;
 
     if (BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
                                                   // then we update the state. It is replicated automatically
                                                   // by UPROPERTY
+    {
         m_eState = NewState;
-    GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.f, FColor::Green, FString::Printf(TEXT("Now the state of %s is %d"), *GetName(), static_cast<uint8>(m_eState)));
+        OnStateChange.Broadcast(m_eState);
+    }
 }

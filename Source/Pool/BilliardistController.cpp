@@ -3,15 +3,28 @@
 #include "BilliardistController.h"
 #include "Pool.h"
 #include "UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
 
 ABilliardistController::ABilliardistController()
 {
 
 }
 
+bool ABilliardistController::Server_SubscribeToStateChange_Validate() { return true; }
+void ABilliardistController::Server_SubscribeToStateChange_Implementation()
+{
+    auto Billiardist = Cast<ABilliardist>(GetPawn());
+    if (Billiardist)
+    {
+        Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
+    }
+
+}
+
 void ABilliardistController::BeginPlay()
 {
-    SelfInitializePawn();
+    InitializeBilliardistPawn();
+    Server_SubscribeToStateChange();
 }
 
 void ABilliardistController::Tick(float DeltaTime)
@@ -85,29 +98,41 @@ void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
     DOREPLIFETIME(ABilliardistController, m_pSelectedBall);
 }
 
-void ABilliardistController::SelfInitializePawn()
+void ABilliardistController::InitializeBilliardistPawn()
 {
     auto PossessedPawn = Cast<ABilliardist>(GetPawn());
-    if (!PossessedPawn)
+    if (PossessedPawn)
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast its possessed pawn to the billiardist in SelfInitializePawn."), *GetName());
+        m_pControlledBilliardist = PossessedPawn;
     }
     else
     {
-        m_pControlledBilliardist = PossessedPawn;
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its possessed pawn to the billiardist in SelfInitializePawn."), *GetName());
+    }
+}
+
+void ABilliardistController::SetTable(ATable* NewTable)
+{
+    Server_SetTable(NewTable);
+}
+
+bool ABilliardistController::Server_SetTable_Validate(ATable*) { return true; }
+void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
+{
+    if (NewTable == nullptr)
+    {
+        m_pPlayerSpline = nullptr;
+        UE_LOG(LogPool, Warning, TEXT("%s was assigned with the null table and therefore null player spline."), *GetName());
+        return;
+    }
+
+    if (m_pControlledBilliardist)
+    {
         m_pPlayerSpline = m_pControlledBilliardist->GetSpline();
-        if (!m_pPlayerSpline)
-        {
-            UE_LOG(LogPool, Error, TEXT("%s has proper possessed billiardist %s but could not retrieve proper spline from it in SelfInitializePawn."),
-                *GetName(),
-                *m_pControlledBilliardist->GetName());
-        }
-        else
-        {
-            UE_LOG(LogPool, Log, TEXT("%s successfully initialized %s as its Billiardist pawn and %s as a spline"), *GetName(),
-                *m_pControlledBilliardist->GetName(),
-                *m_pPlayerSpline->GetName());
-        }
+    }
+    else
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not get its m_pControlledBilliardist and player spline fom it."), *GetName());
     }
 }
 
@@ -139,4 +164,48 @@ bool ABilliardistController::Server_SetBall_Validate(ABall*) { return true; }
 void ABilliardistController::Server_SetBall_Implementation(ABall* NewBall)
 {
     m_pSelectedBall = NewBall;
+}
+
+void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
+{
+    if (m_pControlledBilliardist)
+    {
+        UE_LOG(LogPool, Log, TEXT("%s : controller says that its pawn's (%s) state has changed to %d"), *GetName(),
+            *m_pControlledBilliardist->GetName(),
+            static_cast<uint8>(m_pControlledBilliardist->GetState()));
+    }
+    else
+    {
+        UE_LOG(LogPool, Log, TEXT("Controller %s tried to log smth, but it either does not have a billiardist pawn under it."),
+            *GetName());
+    }
+
+    switch (NewState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // blend the camera to the ball
+            // add aiming widget with strengh bar and stuff
+            // camera now flies around the selected ball
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // blend the camera to the top view
+            
+            break;
+        }
+    }
 }

@@ -35,6 +35,8 @@ switch (m_eState)
     }
 */
 
+
+
 UENUM(BlueprintType)
 enum class FBilliardistState : uint8
 {
@@ -46,6 +48,8 @@ enum class FBilliardistState : uint8
     POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistState, NewState);
+
 UCLASS()
 class POOL_API ABilliardist : public ACharacter
 {
@@ -54,6 +58,9 @@ class POOL_API ABilliardist : public ACharacter
 public:
     // Sets default values for this character's properties
     ABilliardist();
+
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerStateChange OnStateChange;
 
     UFUNCTION(BlueprintCallable)
     void SetTable(ATable* NewTable);
@@ -83,9 +90,9 @@ protected:
     // does not needs to be replicated for movement (only m_pSpline does)
     // but may be needed for replication later
     UPROPERTY(/*Replicated, */EditAnywhere, meta = (DisplayName = "Assigned billiard table"))
-        ATable* m_pTable = nullptr;
+    ATable* m_pTable = nullptr;
     UPROPERTY(EditAnywhere, meta = (DisplayName = "Move speed"))
-        float m_fMoveSpeed = 1.0f;
+    float m_fMoveSpeed = 1.0f;
 private:
     UFUNCTION()
     void MoveForward(float Value);
