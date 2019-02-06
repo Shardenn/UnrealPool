@@ -6,7 +6,7 @@
 
 ABilliardistController::ABilliardistController()
 {
-    
+
 }
 
 void ABilliardistController::BeginPlay()
@@ -16,28 +16,63 @@ void ABilliardistController::BeginPlay()
 
 void ABilliardistController::Tick(float DeltaTime)
 {
-    
-    if (m_pControlledBilliardist && 
-        m_pPlayerSpline)
+    if (m_pControlledBilliardist)
     {
-        Direction = m_pControlledBilliardist->m_fCurrentMoveDirection;
+        auto CurrentState = m_pControlledBilliardist->GetState();
 
-        if (Direction != FVector::ZeroVector)
+        switch (CurrentState)
         {
-            auto SplineTangent = m_pPlayerSpline->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
-            float cosin = cosin = FVector::DotProduct(SplineTangent, Direction) /
-                (SplineTangent.Size() * Direction.Size()); // cos between spline tangent and move direction without spline
-            m_fDistanceAlongSpline += cosin * DeltaTime * m_pControlledBilliardist->GetMoveSpeed();
+            case FBilliardistState::WALKING:
+            {
+                if (m_pPlayerSpline)
+                {
+                    Direction = m_pControlledBilliardist->m_fCurrentMoveDirection;
 
-            if (m_fDistanceAlongSpline >= m_pPlayerSpline->GetSplineLength())
-                m_fDistanceAlongSpline -= m_pPlayerSpline->GetSplineLength();
-            else if (m_fDistanceAlongSpline < 0)
-                m_fDistanceAlongSpline += m_pPlayerSpline->GetSplineLength();
+                    if (Direction != FVector::ZeroVector)
+                    {
+                        auto SplineTangent = m_pPlayerSpline->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
+                        float cosin = cosin = FVector::DotProduct(SplineTangent, Direction) /
+                            (SplineTangent.Size() * Direction.Size()); // cos between spline tangent and move direction without spline
+                        m_fDistanceAlongSpline += cosin * DeltaTime * m_pControlledBilliardist->GetMoveSpeed();
 
-            Server_MovePlayer(m_pPlayerSpline->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
-                ESplineCoordinateSpace::World));
+                        if (m_fDistanceAlongSpline >= m_pPlayerSpline->GetSplineLength())
+                            m_fDistanceAlongSpline -= m_pPlayerSpline->GetSplineLength();
+                        else if (m_fDistanceAlongSpline < 0)
+                            m_fDistanceAlongSpline += m_pPlayerSpline->GetSplineLength();
+
+                        Server_MovePlayer(m_pPlayerSpline->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
+                            ESplineCoordinateSpace::World));
+                    }
+                    m_pControlledBilliardist->m_fCurrentMoveDirection = FVector::ZeroVector;
+                }
+                break;
+            }
+            case FBilliardistState::PICKING:
+            {
+                // allow only camera controls
+                // small crosshair for ball selecting is visible
+                // on LBM we pick a ball and goto aiming state
+                break;
+            }
+            case FBilliardistState::AIMING:
+            {
+                // we follow only the selected ball - camera flies around it
+                // LBM down -> we start gaining/losing the strength meter
+                // LBM up -> hit occurs, we go to the observing state
+                break;
+            }
+            case FBilliardistState::OBSERVING:
+            {
+                // we are allowed to switch between different cameras aroung the whole room
+                // we are not allowed to move or freely control the camera generally
+                // if the player selects the camera in his own playable charater, then he can move, but he only observes
+                break;
+            }
+            case FBilliardistState::EXAMINING:
+            {
+                break;
+            }
         }
-        m_pControlledBilliardist->m_fCurrentMoveDirection = FVector::ZeroVector;
     }
 }
 
@@ -47,6 +82,7 @@ void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
 
     // Replicate to everyone
     DOREPLIFETIME(ABilliardistController, m_pPlayerSpline);
+    DOREPLIFETIME(ABilliardistController, m_pSelectedBall);
 }
 
 void ABilliardistController::SelfInitializePawn()
@@ -62,7 +98,7 @@ void ABilliardistController::SelfInitializePawn()
         m_pPlayerSpline = m_pControlledBilliardist->GetSpline();
         if (!m_pPlayerSpline)
         {
-            UE_LOG(LogPool, Error, TEXT("%s has proper possessed billiardist %s but could not retrieve proper spline from it in SelfInitializePawn."), 
+            UE_LOG(LogPool, Error, TEXT("%s has proper possessed billiardist %s but could not retrieve proper spline from it in SelfInitializePawn."),
                 *GetName(),
                 *m_pControlledBilliardist->GetName());
         }
@@ -91,4 +127,16 @@ bool ABilliardistController::Multicast_MovePlayer_Validate(FVector NewLocation) 
 void ABilliardistController::Multicast_MovePlayer_Implementation(FVector NewLocation)
 {
     GetPawn()->SetActorLocation(NewLocation);
+}
+
+void ABilliardistController::SetBall(ABall* NewBall)
+{
+    Server_SetBall(NewBall);
+}
+
+bool ABilliardistController::Server_SetBall_Validate(ABall*) { return true; }
+
+void ABilliardistController::Server_SetBall_Implementation(ABall* NewBall)
+{
+    m_pSelectedBall = NewBall;
 }

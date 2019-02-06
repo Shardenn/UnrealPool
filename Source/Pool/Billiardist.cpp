@@ -8,13 +8,14 @@
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
+// observing is the state that takes place after a hit - when we are waiting for the balls to stop
 int BillStateMachine[5][5] = { // state machine of transferring from one state to another
     // W, P, A, O, E
     { 1, 1, 1, 0, 1 }, // Walking
     { 1, 1, 1, 0, 1 }, // Picking
-    { 1, 1, 1, 0, 1 }, // Aiming
-    { 1, 1, 1, 0, 1 }, // Observing
-    { 1, 1, 1, 0, 1 }  // Examining
+    { 0, 1, 1, 1, 1 }, // Aiming - cant return directly to moving
+    { 0, 0, 0, 1, 1 }, // Observing - cant return to any state
+    { 1, 1, 1, 1, 1 }  // Examining
 };
 #endif
 
