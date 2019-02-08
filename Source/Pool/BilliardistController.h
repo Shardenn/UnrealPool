@@ -21,11 +21,14 @@ public:
     ABilliardistController();
     virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Billiardist Pawn"))
-    void InitializeBilliardistPawn();
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Billiardist Controller"))
+    void Initialize(ATable* Table, ABilliardist* BillPawn);
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Selected Ball"))
     void SetBall(ABall* NewBall);
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Billiardist Pawn"))
+    void SetBilliardist(ABilliardist* BillPawn);
+
 
     // sets the new table for controller to know what spline is used by the player
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Table And Spline"))
@@ -54,12 +57,18 @@ private:
 
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetTable(ATable* NewTable);
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_SetBilliardist(ABilliardist* NewBill);
+
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_Initialize(ATable* Table, ABilliardist* BillPawn);
 
     UFUNCTION()
     void OnPlayerStateChanged(FBilliardistState NewState);
     UFUNCTION(reliable, server, WithValidation)
     void Server_SubscribeToStateChange();
 
+    UPROPERTY(Replicated)
     ABilliardist* m_pControlledBilliardist{ nullptr };
 
     FVector Direction{ FVector::ZeroVector }; // direction that the pawn would go in case we do not have a spline path

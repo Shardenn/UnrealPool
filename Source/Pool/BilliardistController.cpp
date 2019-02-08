@@ -23,7 +23,6 @@ void ABilliardistController::Server_SubscribeToStateChange_Implementation()
 
 void ABilliardistController::BeginPlay()
 {
-    InitializeBilliardistPawn();
     Server_SubscribeToStateChange();
 }
 
@@ -95,19 +94,47 @@ void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
 
     // Replicate to everyone
     DOREPLIFETIME(ABilliardistController, m_pPlayerSpline);
-    DOREPLIFETIME(ABilliardistController, m_pSelectedBall);
+    DOREPLIFETIME(ABilliardistController, m_pSelectedBall); 
+    DOREPLIFETIME(ABilliardistController, m_pControlledBilliardist);
 }
 
-void ABilliardistController::InitializeBilliardistPawn()
+void ABilliardistController::Initialize(ATable* Table, ABilliardist* BillPawn)
 {
-    auto PossessedPawn = Cast<ABilliardist>(GetPawn());
-    if (PossessedPawn)
+    Server_Initialize(Table, BillPawn);
+}
+
+bool ABilliardistController::Server_Initialize_Validate(ATable*, ABilliardist*) { return true; }
+void ABilliardistController::Server_Initialize_Implementation(ATable* Table, ABilliardist* BillPawn)
+{
+    SetBilliardist(BillPawn);
+    SetTable(Table);
+}
+
+void ABilliardistController::SetBilliardist(ABilliardist* BillPawn)
+{
+    Server_SetBilliardist(BillPawn);
+}
+
+bool ABilliardistController::Server_SetBilliardist_Validate(ABilliardist*) { return true; }
+void ABilliardistController::Server_SetBilliardist_Implementation(ABilliardist* BillPawn)
+{
+    if (BillPawn)
     {
-        m_pControlledBilliardist = PossessedPawn;
+        m_pControlledBilliardist = BillPawn;
     }
     else
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast its possessed pawn to the billiardist in SelfInitializePawn."), *GetName());
+        UE_LOG(LogPool, Warning, TEXT("%s was assigned with null billiardist in Server_SetBill_Impl. Setting controlled pawn manually..."), *GetName());
+        auto PossessedPawn = Cast<ABilliardist>(GetPawn());
+        if (PossessedPawn)
+        {
+            m_pControlledBilliardist = PossessedPawn;
+            UE_LOG(LogPool, Log, TEXT("%s successfully self-assigned %s as controlled Billiardist."), *GetName(), *m_pControlledBilliardist->GetName());
+        }
+        else
+        {
+            UE_LOG(LogPool, Error, TEXT("Init failed: %s could not cast its possessed pawn to the billiardist in SelfInitializePawn."), *GetName());
+        }
     }
 }
 
@@ -119,31 +146,21 @@ void ABilliardistController::SetTable(ATable* NewTable)
 bool ABilliardistController::Server_SetTable_Validate(ATable*) { return true; }
 void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
 {
-    if (NewTable == nullptr)
+    if (NewTable)
     {
-        m_pPlayerSpline = nullptr;
-        UE_LOG(LogPool, Warning, TEXT("%s was assigned with the null table and therefore null player spline."), *GetName());
-        return;
-    }
-
-    if (m_pControlledBilliardist)
-    {
-        m_pPlayerSpline = m_pControlledBilliardist->GetSpline();
+        m_pPlayerSpline = NewTable->GetSplinePath();
     }
     else
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not get its m_pControlledBilliardist and player spline fom it."), *GetName());
+        UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr Table in Server_SetTable_Impl."), *GetName());
     }
+
 }
 
-bool ABilliardistController::Server_MovePlayer_Validate(FVector)
-{
-    return true;
-}
+bool ABilliardistController::Server_MovePlayer_Validate(FVector) { return true; }
 
 void ABilliardistController::Server_MovePlayer_Implementation(FVector NewLocation)
 {
-    //GetPawn()->SetActorLocation(NewLocation);
     Multicast_MovePlayer(NewLocation);
 }
 
