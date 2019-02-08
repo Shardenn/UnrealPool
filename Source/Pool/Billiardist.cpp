@@ -37,6 +37,7 @@ void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutL
     //DOREPLIFETIME(ABilliardist, m_pTable);
     DOREPLIFETIME(ABilliardist, m_pSplinePath);
     DOREPLIFETIME(ABilliardist, m_eState);
+    DOREPLIFETIME(ABilliardist, m_ePreviousState);
 }
 
 // Called when the game starts or when spawned
@@ -89,7 +90,7 @@ void ABilliardist::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
     PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
-
+    PlayerInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
 }
 
 void ABilliardist::MoveForward(float Value)
@@ -203,6 +204,14 @@ void ABilliardist::ReturnPressHandle()
     }
 }
 
+void ABilliardist::ExaminingPressHandle()
+{
+    if (m_eState == FBilliardistState::EXAMINING)
+        SetState(m_ePreviousState);
+    else
+        SetState(FBilliardistState::EXAMINING);
+}
+
 void ABilliardist::SetTable(ATable* NewTable)
 {
     Server_SetTable(NewTable);
@@ -256,6 +265,7 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
                                                   // then we update the state. It is replicated automatically
                                                   // by UPROPERTY
     {
+        m_ePreviousState = m_eState;
         m_eState = NewState;
         OnStateChange.Broadcast(m_eState);
     }

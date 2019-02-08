@@ -102,12 +102,17 @@ private:
     void ActionPressHandle();
     UFUNCTION()
     void ReturnPressHandle();
+    UFUNCTION()
+    void ExaminingPressHandle();
 
     UPROPERTY(Replicated) // needed for replication, tested
     USplineComponent* m_pSplinePath { nullptr };
     
     UPROPERTY(Replicated)
     FBilliardistState m_eState { FBilliardistState::WALKING };
+    UPROPERTY(Replicated)
+    FBilliardistState m_ePreviousState { FBilliardistState::WALKING };
+
 
     UFUNCTION(server, reliable, WithValidation)
     void Server_SetTable(ATable* NewTable);

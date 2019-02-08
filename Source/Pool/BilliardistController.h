@@ -9,6 +9,8 @@
 #include "PoolGameModeBase.h"
 #include "BilliardistController.generated.h"
 
+class ACameraManager;
+
 /**
  * 
  */
@@ -22,13 +24,14 @@ public:
     virtual void Tick(float DeltaTime) override;
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Billiardist Controller"))
-    void Initialize(ATable* Table, ABilliardist* BillPawn);
+    void Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Selected Ball"))
     void SetBall(ABall* NewBall);
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Billiardist Pawn"))
     void SetBilliardist(ABilliardist* BillPawn);
-
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Camera Manager"))
+    void SetCameraManager(ACameraManager* CamMan);
 
     // sets the new table for controller to know what spline is used by the player
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Table And Spline"))
@@ -36,14 +39,20 @@ public:
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Lock outgoing camera"))
     bool m_bLockOutgoing{ false };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Cameras blend time"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Default Camera blend time"))
     float m_fCameraBlendTime { 0.5f };
 
     float m_fDistanceAlongSpline{ 0.0f };
-    UPROPERTY(Replicated) // needs to be replicated for movement along spline
+
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Player Spline")) // needs to be replicated for movement along spline
     USplineComponent* m_pPlayerSpline{ nullptr };
-    UPROPERTY(Replicated)
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Selected Ball"))
     ABall* m_pSelectedBall { nullptr };    
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Camera Manager"))
+    ACameraManager* m_pCameraManager;
+
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Player State Changed"))
+    void OnPlayerStateChangedEvent(FBilliardistState NewState);
 
     virtual void BeginPlay() override;
 private:
@@ -56,12 +65,14 @@ private:
     void Server_SetBall(ABall* NewBall);
 
     UFUNCTION(reliable, server, WithValidation)
+    void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
+    
+    UFUNCTION(reliable, server, WithValidation)
     void Server_SetTable(ATable* NewTable);
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetBilliardist(ABilliardist* NewBill);
-
     UFUNCTION(reliable, server, WithValidation)
-    void Server_Initialize(ATable* Table, ABilliardist* BillPawn);
+    void Server_SetCameraManager(ACameraManager* CamMan);
 
     UFUNCTION()
     void OnPlayerStateChanged(FBilliardistState NewState);

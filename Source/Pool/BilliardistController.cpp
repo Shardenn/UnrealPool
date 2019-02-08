@@ -4,6 +4,7 @@
 #include "Pool.h"
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
+#include "CameraManager.h"
 
 ABilliardistController::ABilliardistController()
 {
@@ -96,18 +97,20 @@ void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
     DOREPLIFETIME(ABilliardistController, m_pPlayerSpline);
     DOREPLIFETIME(ABilliardistController, m_pSelectedBall); 
     DOREPLIFETIME(ABilliardistController, m_pControlledBilliardist);
+    DOREPLIFETIME(ABilliardistController, m_pCameraManager);
 }
 
-void ABilliardistController::Initialize(ATable* Table, ABilliardist* BillPawn)
+void ABilliardistController::Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan)
 {
-    Server_Initialize(Table, BillPawn);
+    Server_Initialize(Table, BillPawn, CamMan);
 }
 
-bool ABilliardistController::Server_Initialize_Validate(ATable*, ABilliardist*) { return true; }
-void ABilliardistController::Server_Initialize_Implementation(ATable* Table, ABilliardist* BillPawn)
+bool ABilliardistController::Server_Initialize_Validate(ATable*, ABilliardist*, ACameraManager*) { return true; }
+void ABilliardistController::Server_Initialize_Implementation(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan)
 {
     SetBilliardist(BillPawn);
     SetTable(Table);
+    SetCameraManager(CamMan);
 }
 
 void ABilliardistController::SetBilliardist(ABilliardist* BillPawn)
@@ -157,6 +160,38 @@ void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
 
 }
 
+void ABilliardistController::SetCameraManager(ACameraManager* CamMan)
+{
+    Server_SetCameraManager(CamMan);
+}
+
+bool ABilliardistController::Server_SetCameraManager_Validate(ACameraManager*) { return true; }
+void ABilliardistController::Server_SetCameraManager_Implementation(ACameraManager* CamMan)
+{
+    if (CamMan)
+    {
+        m_pCameraManager = CamMan;
+    }
+    else
+    {
+        UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr CameraManager in Server_SetCamMan_Impl. Finfing camera manager manually..."), *GetName());
+        for (TObjectIterator<ACameraManager> it; it; ++it)
+        {
+            auto FoundCamMan = *it;
+            if (FoundCamMan)
+            {
+                m_pCameraManager = FoundCamMan;
+                UE_LOG(LogPool, Log, TEXT("%s found camera manager %s and has set it manually."), *GetName(), *it->GetName());
+                break;
+            }
+        }
+        if (m_pCameraManager == nullptr)
+        {
+            UE_LOG(LogPool, Warning, TEXT("%s could not find any camera manager in the world. Check if one exists in the game world."), *GetName());
+        }
+    }
+}
+
 bool ABilliardistController::Server_MovePlayer_Validate(FVector) { return true; }
 
 void ABilliardistController::Server_MovePlayer_Implementation(FVector NewLocation)
@@ -201,10 +236,22 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
     {
         case FBilliardistState::WALKING:
         {
+            if (!m_pCameraManager)
+            {
+                UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
+                return;
+            }
+
+            /*SetViewTargetWithBlend(
+                GetPawn()
+            );
+            */
+            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
             break;
         }
         case FBilliardistState::PICKING:
         {
+            UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
             break;
         }
         case FBilliardistState::AIMING:
@@ -212,17 +259,43 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
             // blend the camera to the ball
             // add aiming widget with strengh bar and stuff
             // camera now flies around the selected ball
+            UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
             break;
         }
         case FBilliardistState::OBSERVING:
         {
+            UE_LOG(LogPool, Warning, TEXT("%s just entered OBSERVING state."), *GetName());
             break;
         }
         case FBilliardistState::EXAMINING:
         {
             // blend the camera to the top view
-            
+            if (!m_pCameraManager)
+            {
+                UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
+                return;
+            }
+            /*
+            for (auto Cam : m_pCameraManager->ControlledCameras)
+            {
+                if (Cam.eCameraType == CameraType::TopDown && Cam.Camera)
+                {
+                    SetViewTargetWithBlend(
+                        Cam.Camera
+                    );
+                }
+                else
+                {
+                    UE_LOG(LogPool, Error, TEXT("%s tried to blend the view to top down camera, but  %s does not contain such an Enum entry for a camera."),
+                        *GetName(),
+                        *m_pCameraManager->GetName());
+                }
+            }
+            */
+            UE_LOG(LogPool, Warning, TEXT("%s just entered EXAMINING state."), *GetName());
             break;
         }
+        
     }
+    OnPlayerStateChangedEvent(NewState);
 }
