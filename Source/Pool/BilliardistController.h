@@ -23,23 +23,23 @@ public:
     ABilliardistController();
     virtual void Tick(float DeltaTime) override;
 
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Initialize Billiardist Controller"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Controller", meta = (DisplayName = "Initialize Billiardist Controller"))
     void Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
 
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Selected Ball"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Controller", meta = (DisplayName = "Set Selected Ball"))
     void SetBall(ABall* NewBall);
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Billiardist Pawn"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Controller", meta = (DisplayName = "Set Billiardist Pawn"))
     void SetBilliardist(ABilliardist* BillPawn);
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Camera Manager"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Controller", meta = (DisplayName = "Set Camera Manager"))
     void SetCameraManager(ACameraManager* CamMan);
 
     // sets the new table for controller to know what spline is used by the player
-    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Set Table And Spline"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Controller", meta = (DisplayName = "Set Table And Spline"))
     void SetTable(ATable* NewTable);
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Lock outgoing camera"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Lock outgoing camera"))
     bool m_bLockOutgoing{ false };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Default Camera blend time"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Default Camera blend time"))
     float m_fCameraBlendTime { 0.5f };
 
     float m_fDistanceAlongSpline{ 0.0f };
@@ -53,7 +53,7 @@ protected:
     // if controller tries to self-initialize it when it is not assigned,
     // then camera manager is set on server, but on client it is  null.
 
-    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Player State Changed"))
+    UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist Controller", meta = (DisplayName = "On Player State Changed"))
     void OnPlayerStateChangedEvent(FBilliardistState NewState);
 
     virtual void BeginPlay() override;

@@ -20,16 +20,16 @@ struct FControlledCamera
 {
     GENERATED_BODY()
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Camera Actor"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Billiardist Camera Manager", meta = (DisplayName = "Camera Actor"))
     ACameraActor* Camera = nullptr;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Blend Time"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Billiardist Camera Manager", meta = (DisplayName = "Blend Time"))
     float fBlendTime = 0.0f;
     
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Lock Outgoing?"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Billiardist Camera Manager", meta = (DisplayName = "Lock Outgoing?"))
     bool bLockOutgoing = false;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Camera Type"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Billiardist Camera Manager", meta = (DisplayName = "Camera Type"))
     FCameraType eCameraType = FCameraType::TopDown;
 };
 
