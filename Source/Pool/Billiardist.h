@@ -53,7 +53,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistSt
 UCLASS()
 class POOL_API ABilliardist : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     // Sets default values for this character's properties
@@ -118,4 +118,5 @@ private:
     void Server_SetTable(ATable* NewTable);
     UFUNCTION(server, reliable, WithValidation)
     void Server_SetState(FBilliardistState NewState);
+
 };

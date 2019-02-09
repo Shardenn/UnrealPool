@@ -44,6 +44,9 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Possible controlled cameras"))
     TArray<FControlledCamera> ControlledCameras;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Top Down Camera"))
+    FControlledCamera m_pTopDownCamera;
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

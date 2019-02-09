@@ -7,6 +7,9 @@
 #include "UnrealNetwork.h"
 #include "Ball.h"
 #include "BilliardistController.h"
+#include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Pool.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -136,15 +139,19 @@ void ABilliardist::ActionPressHandle()
         {
             // when we press LMB while PIKING, we should 
             // 1. set the selected ball
-            for (TObjectIterator<ABall> it; it; ++it)
+            auto BillController = Cast<ABilliardistController>(GetController());
+            if (!BillController)
             {
-                auto FoundBall = *it;
-                if (FoundBall)
-                {
-                    Cast<ABilliardistController>(GetController())->SetBall(FoundBall);
-                }
+                UE_LOG(LogPool, Error, TEXT("%s could not cast its controller %s to ABilliardistController"), *GetName(), *GetController()->GetName());
+                return;
             }
-            SetState(FBilliardistState::AIMING);
+            ABall* FoundBall = nullptr;
+            if (BillController->TryRaycastBall(FoundBall))
+            {
+                UE_LOG(LogPool, Log, TEXT("%s found ball %s with its controller"), *GetName(), *FoundBall->GetName());
+                BillController->SetBall(FoundBall);
+                SetState(FBilliardistState::AIMING);
+            }
             // 2. blend the camera (in controller actually) to it
             break;
         }
@@ -187,7 +194,15 @@ void ABilliardist::ReturnPressHandle()
         case FBilliardistState::AIMING:
         {
             // 1. set picking
+            SetState(FBilliardistState::PICKING);
+            auto BillController = Cast<ABilliardistController>(GetController());
+            if (!BillController)
+            {
+                UE_LOG(LogPool, Error, TEXT("%s tried to setBall in his controller but could not cast it to billController."), *GetName());
+                return;
+            }
             // 2. clear selected ball
+            BillController->SetBall(nullptr);
             break;
         }
         case FBilliardistState::OBSERVING:
@@ -199,6 +214,7 @@ void ABilliardist::ReturnPressHandle()
         case FBilliardistState::EXAMINING:
         {
             // return to the previous state
+            SetState(m_ePreviousState);
             break;
         }
     }
@@ -224,13 +240,13 @@ void ABilliardist::SetTable(ATable* NewTable)
     {
         if (GetController())
         {
-            UE_LOG(LogTemp, Error, TEXT("%s: Tried to tell controller %s to update the table but failed - got null on controller cast"),
+            UE_LOG(LogPool, Error, TEXT("%s: Tried to tell controller %s to update the table but failed - got null on controller cast"),
                 *GetName(),
                 *GetController()->GetName());
         }
         else
         {
-            UE_LOG(LogTemp, Error, TEXT("%s: does not have controller at all. What?"), *GetName());
+            UE_LOG(LogPool, Error, TEXT("%s: does not have controller at all. What?"), *GetName());
         }
     }
 }

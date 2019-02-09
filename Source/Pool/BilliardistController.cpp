@@ -241,13 +241,6 @@ void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliar
     {
         case FBilliardistState::WALKING:
         {
-            /*
-            if (!m_pCameraManager)
-            {
-                UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
-                return;
-            }
-            */
             SetViewTargetWithBlend(
                 GetPawn(),
                 m_fCameraBlendTime
@@ -258,6 +251,10 @@ void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliar
         }
         case FBilliardistState::PICKING:
         {
+            SetViewTargetWithBlend(
+                GetPawn(),
+                m_fCameraBlendTime
+            );
             UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
             break;
         }
@@ -282,31 +279,80 @@ void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliar
                 UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
                 return;
             }
-            
-            for (auto Cam : m_pCameraManager->ControlledCameras)
+            auto Cam = m_pCameraManager->m_pTopDownCamera;
+            if (Cam.Camera)
             {
-                if (Cam.eCameraType == FCameraType::TopDown && Cam.Camera)
-                {
-                    SetViewTargetWithBlend(
-                        Cam.Camera,
-                        Cam.fBlendTime,
-                        EViewTargetBlendFunction::VTBlend_Linear,
-                        0.0f,
-                        Cam.bLockOutgoing
-                    );
-                }
-                else
-                {
-                    UE_LOG(LogPool, Error, TEXT("%s tried to blend the view to top down camera, but  %s does not contain such an Enum entry for a camera."),
-                        *GetName(),
-                        *m_pCameraManager->GetName());
-                }
+                SetViewTargetWithBlend(
+                    Cam.Camera,
+                    Cam.fBlendTime,
+                    EViewTargetBlendFunction::VTBlend_Linear,
+                    0.0f,
+                    Cam.bLockOutgoing
+                );
             }
+            else
+            {
+                UE_LOG(LogPool, Error, TEXT("%s tried to blend the view to top down camera, but  %s does not contain top down camera."),
+                    *GetName(),
+                    *m_pCameraManager->GetName());
+            }   
             
             UE_LOG(LogPool, Warning, TEXT("%s just entered EXAMINING state."), *GetName());
             break;
         }
         
     }
-    //OnPlayerStateChangedEvent(NewState);
+    OnPlayerStateChangedEvent(NewState);
 }
+
+bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
+{
+    int32 ViewportSizeX, ViewportSizeY;
+    GetViewportSize(ViewportSizeX, ViewportSizeY);
+    auto ScreenLocation = FVector2D(ViewportSizeX * m_fCrosshairXLocation, ViewportSizeY * m_fCrosshairYLocation);
+
+    FVector Direction; // look direction
+    if (!GetLookDirection(ScreenLocation, Direction))
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not get LookDirection."), *GetName());
+        return false;
+    }
+
+    // TODO split in the other method later
+    FHitResult HitResult;
+    auto StartLocation = PlayerCameraManager->GetCameraLocation();
+    auto EndLocation = StartLocation + Direction * m_fRaycastLength;
+    
+    if (!GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        StartLocation,
+        EndLocation,
+        ECollisionChannel::ECC_GameTraceChannel1
+    ))
+    {
+        UE_LOG(LogPool, Warning, TEXT("%s could not RayCast in LineTraceSingleByChannel."), *GetName());
+        return false;
+    }
+
+    auto HittedActor = Cast<ABall>(HitResult.Actor);
+    if (!HittedActor)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast %s to ABall."), *GetName(), *HitResult.Actor->GetName());
+        return false;
+    }
+    
+    FoundBall = HittedActor;
+    return true;
+}
+
+bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const
+{
+    FVector CameraWorldLocation; // to de discarded
+    return DeprojectScreenPositionToWorld(
+        ScreenLocation.X,
+        ScreenLocation.Y,
+        CameraWorldLocation,
+        LookDirection
+    );
+}
+
