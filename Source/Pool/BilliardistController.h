@@ -49,7 +49,9 @@ protected:
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Selected Ball"))
     ABall* m_pSelectedBall { nullptr };    
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist Controller", meta = (DisplayName = "Camera Manager"))
-    ACameraManager* m_pCameraManager;
+    ACameraManager* m_pCameraManager; // TODO camera manager is not replicated : 
+    // if controller tries to self-initialize it when it is not assigned,
+    // then camera manager is set on server, but on client it is  null.
 
     UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Player State Changed"))
     void OnPlayerStateChangedEvent(FBilliardistState NewState);
@@ -74,8 +76,11 @@ private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetCameraManager(ACameraManager* CamMan);
 
+    // need to be run on the client as this function handles camera
     UFUNCTION()
     void OnPlayerStateChanged(FBilliardistState NewState);
+    UFUNCTION(Client, reliable)
+    void Client_OnPlayerStateChanged(FBilliardistState NewState);
     UFUNCTION(reliable, server, WithValidation)
     void Server_SubscribeToStateChange();
 

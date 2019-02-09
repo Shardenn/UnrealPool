@@ -174,7 +174,7 @@ void ABilliardistController::Server_SetCameraManager_Implementation(ACameraManag
     }
     else
     {
-        UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr CameraManager in Server_SetCamMan_Impl. Finfing camera manager manually..."), *GetName());
+        UE_LOG(LogPool, Error, TEXT("%s was assigned with nullptr CameraManager in Server_SetCamMan_Impl. Finfing camera manager manually..."), *GetName());
         for (TObjectIterator<ACameraManager> it; it; ++it)
         {
             auto FoundCamMan = *it;
@@ -218,7 +218,12 @@ void ABilliardistController::Server_SetBall_Implementation(ABall* NewBall)
     m_pSelectedBall = NewBall;
 }
 
+// need to be run on the client as this function handles camera
 void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
+{
+    Client_OnPlayerStateChanged(NewState);
+}
+void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliardistState NewState)
 {
     if (m_pControlledBilliardist)
     {
@@ -236,16 +241,18 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
     {
         case FBilliardistState::WALKING:
         {
+            /*
             if (!m_pCameraManager)
             {
                 UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
                 return;
             }
-
-            /*SetViewTargetWithBlend(
-                GetPawn()
-            );
             */
+            SetViewTargetWithBlend(
+                GetPawn(),
+                m_fCameraBlendTime
+            );
+            
             UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
             break;
         }
@@ -275,13 +282,17 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
                 UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
                 return;
             }
-            /*
+            
             for (auto Cam : m_pCameraManager->ControlledCameras)
             {
-                if (Cam.eCameraType == CameraType::TopDown && Cam.Camera)
+                if (Cam.eCameraType == FCameraType::TopDown && Cam.Camera)
                 {
                     SetViewTargetWithBlend(
-                        Cam.Camera
+                        Cam.Camera,
+                        Cam.fBlendTime,
+                        EViewTargetBlendFunction::VTBlend_Linear,
+                        0.0f,
+                        Cam.bLockOutgoing
                     );
                 }
                 else
@@ -291,11 +302,11 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
                         *m_pCameraManager->GetName());
                 }
             }
-            */
+            
             UE_LOG(LogPool, Warning, TEXT("%s just entered EXAMINING state."), *GetName());
             break;
         }
         
     }
-    OnPlayerStateChangedEvent(NewState);
+    //OnPlayerStateChangedEvent(NewState);
 }
