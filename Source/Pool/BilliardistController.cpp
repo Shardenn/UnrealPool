@@ -24,11 +24,15 @@ void ABilliardistController::Server_SubscribeToStateChange_Implementation()
 
 void ABilliardistController::BeginPlay()
 {
+    Super::BeginPlay();
+
     Server_SubscribeToStateChange();
 }
 
 void ABilliardistController::Tick(float DeltaTime)
 {
+    Super::Tick(DeltaTime);
+
     if (m_pControlledBilliardist)
     {
         auto CurrentState = m_pControlledBilliardist->GetState();
