@@ -193,16 +193,17 @@ void ABilliardist::ReturnPressHandle()
         }
         case FBilliardistState::AIMING:
         {
-            // 1. set picking
-            SetState(FBilliardistState::PICKING);
+            // 1. clear selected ball
             auto BillController = Cast<ABilliardistController>(GetController());
             if (!BillController)
             {
                 UE_LOG(LogPool, Error, TEXT("%s tried to setBall in his controller but could not cast it to billController."), *GetName());
                 return;
             }
-            // 2. clear selected ball
             BillController->SetBall(nullptr);
+
+            // 2. set picking
+            SetState(FBilliardistState::PICKING);
             break;
         }
         case FBilliardistState::OBSERVING:

@@ -11,6 +11,8 @@
 
 class ACameraManager;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
+
 /**
  * 
  */
@@ -22,6 +24,9 @@ class POOL_API ABilliardistController : public APlayerController
 public:
     ABilliardistController();
     virtual void Tick(float DeltaTime) override;
+    
+    UPROPERTY(BlueprintAssignable)
+    FOnSelectedBallUpdated OnSelectedBallUpdate;
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Initialize billiardist controller"))
     void Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);

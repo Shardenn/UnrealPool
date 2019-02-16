@@ -213,6 +213,7 @@ void ABilliardistController::Multicast_MovePlayer_Implementation(FVector NewLoca
 void ABilliardistController::SetBall(ABall* NewBall)
 {
     Server_SetBall(NewBall);
+    OnSelectedBallUpdate.Broadcast(NewBall);
 }
 
 bool ABilliardistController::Server_SetBall_Validate(ABall*) { return true; }
