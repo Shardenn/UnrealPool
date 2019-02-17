@@ -60,11 +60,11 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Billiardist controller | Casting to a ball", meta = (DisplayName = "Ball search raycast length"))
     float m_fRaycastLength{ 200.f };
 
-    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller", meta = (DisplayName = "Player spline")) // needs to be replicated for movement along spline
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Player spline")) // needs to be replicated for movement along spline
     USplineComponent* m_pPlayerSpline{ nullptr };
-    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller", meta = (DisplayName = "Selected ball"))
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Selected ball"))
     ABall* m_pSelectedBall { nullptr };    
-    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller", meta = (DisplayName = "Camera manager"))
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Camera manager"))
     ACameraManager* m_pCameraManager; // TODO camera manager is not replicated : 
     // if controller tries to self-initialize it when it is not assigned,
     // then camera manager is set on server, but on client it is  null.
