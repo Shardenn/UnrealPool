@@ -25,6 +25,8 @@ public:
     ABilliardistController();
     virtual void Tick(float DeltaTime) override;
     
+    virtual void SetupInputComponent() override;
+
     UPROPERTY(BlueprintAssignable)
     FOnSelectedBallUpdated OnSelectedBallUpdate;
 
@@ -75,6 +77,9 @@ protected:
     virtual void BeginPlay() override;
 private:
     UFUNCTION(reliable, server, WithValidation)
+    void Server_SwitchPawn(APawn* newPawn);
+
+    UFUNCTION(reliable, server, WithValidation)
     void Server_MovePlayer(FVector NewLocation);
     UFUNCTION(reliable, NetMulticast, WithValidation)
     void Multicast_MovePlayer(FVector NewLocation);
@@ -107,4 +112,15 @@ private:
     FVector Direction{ FVector::ZeroVector }; // direction that the pawn would go in case we do not have a spline path
 
     bool GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const;
+
+    UFUNCTION()
+    void MoveForward(float Value);
+    UFUNCTION()
+    void MoveRight(float Value);
+    UFUNCTION()
+    void ActionPressHandle();
+    UFUNCTION()
+    void ReturnPressHandle();
+    UFUNCTION()
+    void ExaminingPressHandle();
 };

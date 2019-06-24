@@ -10,9 +10,10 @@
 UENUM(BlueprintType)
 enum class FCameraType : uint8
 {
-    TopDown         UMETA(DisplayName = "TopDown"),     // just walking around the table, examining
-    Corner          UMETA(DisplayName = "Corner"),     // if we are playing RU billiard, we can pick any ball for the shot
-    Tournament      UMETA(DisplayName = "Tournament"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
+    TopDown         UMETA(DisplayName = "TopDown"), 
+    Corner          UMETA(DisplayName = "Corner"),
+    Tournament      UMETA(DisplayName = "Tournament"),
+    Aiming          UMETA(DisplayName = "Aiming")
 };
 
 USTRUCT(BlueprintType)

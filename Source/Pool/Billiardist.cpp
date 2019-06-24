@@ -5,6 +5,9 @@
 #include "UObject/UObjectIterator.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UnrealNetwork.h"
+
+#include "DrawDebugHelpers.h"
+
 #include "Ball.h"
 #include "BilliardistController.h"
 #include "Components/ActorComponent.h"
@@ -67,7 +70,9 @@ void ABilliardist::Tick(float DeltaTime)
         }
         case FBilliardistState::AIMING:
         {
-            // update the hot strength
+            // update the hit strength
+           
+            
             break;
         }
         case FBilliardistState::OBSERVING:
@@ -79,50 +84,6 @@ void ABilliardist::Tick(float DeltaTime)
             break;
         }
     }
-}
-
-// Called to bind functionality to input
-void ABilliardist::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-    PlayerInputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
-    PlayerInputComponent->BindAxis("Turn", this, &ABilliardist::AddControllerYawInput);
-    PlayerInputComponent->BindAxis("LookUp", this, &ABilliardist::AddControllerPitchInput);
-
-    PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
-    PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
-    PlayerInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
-}
-
-void ABilliardist::MoveForward(float Value)
-{
-    if (!Controller || Value == 0.f)
-    {
-        return;
-    }
-    
-    auto Rotation = GetControlRotation();
-
-    if (GetCharacterMovement()->IsFalling() || GetCharacterMovement()->IsMovingOnGround())
-        Rotation.Pitch = 0.f;
-
-    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
-    
-    m_fCurrentMoveDirection += Direction * Value;
-}
-
-void ABilliardist::MoveRight(float Value)
-{
-    if (!Controller || Value == 0.f)
-        return;
-
-    auto Rotation = GetControlRotation();
-
-    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
-
-    m_fCurrentMoveDirection += Direction * Value;
 }
 
 // when action button is pressed, here we check the next possible state to switch
@@ -153,12 +114,14 @@ void ABilliardist::ActionPressHandle()
                 SetState(FBilliardistState::AIMING);
             }
             // 2. blend the camera (in controller actually) to it
+            // camera blending is implemented in BilliardistController BP
             break;
         }
         case FBilliardistState::AIMING:
         {
             // set observing
-            // 1. get the current hit strength
+            // 1. get the current hit strength and look vector
+            
             // 2. handle ball push
             // 3. in this state it is possible to switch between additional cameras
             break;

@@ -67,22 +67,33 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    // Called to bind functionality to input
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
     UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Move Speed"))
     float GetMoveSpeed() { return m_fMoveSpeed; }
     UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Spline"))
     USplineComponent* GetSpline() { return m_pSplinePath; }
-    //UPROPERTY(Replicated)
+    
     FVector m_fCurrentMoveDirection = FVector(0);
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Handle action input"))
+    void ActionPressHandle();
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Handle return input"))
+    void ReturnPressHandle();
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Handle examining input"))
+    void ExaminingPressHandle();
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Set State"))
     void SetState(FBilliardistState NewState);
 
-    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "GetState"))
+    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get State"))
     FBilliardistState GetState() { return m_eState; }
 
+    UPROPERTY(EditAnywhere, Category = "Gameplay", meta = (DisplayName = "Hit strength"))
+    float m_fHitStrength = 0.0f;
+
+    UPROPERTY(EditAnywhere, Category = "Gameplay", meta = (DisplayName = "Hit strength multiplier"))
+    float m_fHitStrengthMultiplier = 10.0f;
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -93,18 +104,9 @@ protected:
     ATable* m_pTable = nullptr;
     UPROPERTY(EditAnywhere, Category = "Billiardist Character", meta = (DisplayName = "Move speed"))
     float m_fMoveSpeed = 1.0f;
-private:
-    UFUNCTION()
-    void MoveForward(float Value);
-    UFUNCTION()
-    void MoveRight(float Value);
-    UFUNCTION()
-    void ActionPressHandle();
-    UFUNCTION()
-    void ReturnPressHandle();
-    UFUNCTION()
-    void ExaminingPressHandle();
 
+    
+private:
     UPROPERTY(Replicated) // needed for replication, tested
     USplineComponent* m_pSplinePath { nullptr };
     
@@ -113,10 +115,8 @@ private:
     UPROPERTY(Replicated)
     FBilliardistState m_ePreviousState { FBilliardistState::WALKING };
 
-
     UFUNCTION(server, reliable, WithValidation)
     void Server_SetTable(ATable* NewTable);
     UFUNCTION(server, reliable, WithValidation)
     void Server_SetState(FBilliardistState NewState);
-
 };

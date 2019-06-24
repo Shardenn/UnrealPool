@@ -2,6 +2,8 @@
 
 #include "BilliardistController.h"
 #include "Pool.h"
+#include "Components/InputComponent.h"
+#include "Camera/CameraComponent.h"
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "CameraManager.h"
@@ -29,6 +31,20 @@ void ABilliardistController::BeginPlay()
     Server_SubscribeToStateChange();
 }
 
+void ABilliardistController::SetupInputComponent()
+{
+    Super::SetupInputComponent();
+
+    InputComponent->BindAxis("MoveForward", this, &ABilliardistController::MoveForward);
+    InputComponent->BindAxis("MoveRight", this, &ABilliardistController::MoveRight);
+    InputComponent->BindAxis("Turn", this, &ABilliardistController::AddYawInput);
+    InputComponent->BindAxis("LookUp", this, &ABilliardistController::AddPitchInput);
+
+    InputComponent->BindAction("Action", IE_Pressed, this, &ABilliardistController::ActionPressHandle);
+    InputComponent->BindAction("Return", IE_Pressed, this, &ABilliardistController::ReturnPressHandle);
+    InputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardistController::ExaminingPressHandle);
+}
+
 void ABilliardistController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -41,27 +57,31 @@ void ABilliardistController::Tick(float DeltaTime)
         {
             case FBilliardistState::WALKING:
             {
-                if (m_pPlayerSpline)
+                if (!m_pPlayerSpline)
                 {
-                    Direction = m_pControlledBilliardist->m_fCurrentMoveDirection;
-
-                    if (Direction != FVector::ZeroVector)
-                    {
-                        auto SplineTangent = m_pPlayerSpline->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
-                        float cosin = cosin = FVector::DotProduct(SplineTangent, Direction) /
-                            (SplineTangent.Size() * Direction.Size()); // cos between spline tangent and move direction without spline
-                        m_fDistanceAlongSpline += cosin * DeltaTime * m_pControlledBilliardist->GetMoveSpeed();
-
-                        if (m_fDistanceAlongSpline >= m_pPlayerSpline->GetSplineLength())
-                            m_fDistanceAlongSpline -= m_pPlayerSpline->GetSplineLength();
-                        else if (m_fDistanceAlongSpline < 0)
-                            m_fDistanceAlongSpline += m_pPlayerSpline->GetSplineLength();
-
-                        Server_MovePlayer(m_pPlayerSpline->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
-                            ESplineCoordinateSpace::World));
-                    }
-                    m_pControlledBilliardist->m_fCurrentMoveDirection = FVector::ZeroVector;
+                    UE_LOG(LogPool, Error, TEXT("%s does not have a m_pPlayerSpline assigned"), *GetName());
+                    break;
                 }
+
+                Direction = m_pControlledBilliardist->m_fCurrentMoveDirection;
+
+                if (Direction != FVector::ZeroVector)
+                {
+                    auto SplineTangent = m_pPlayerSpline->GetDirectionAtDistanceAlongSpline(m_fDistanceAlongSpline, ESplineCoordinateSpace::World);
+                    float cosin = cosin = FVector::DotProduct(SplineTangent, Direction) /
+                        (SplineTangent.Size() * Direction.Size()); // cos between spline tangent and move direction without spline
+                    m_fDistanceAlongSpline += cosin * DeltaTime * m_pControlledBilliardist->GetMoveSpeed();
+
+                    if (m_fDistanceAlongSpline >= m_pPlayerSpline->GetSplineLength())
+                        m_fDistanceAlongSpline -= m_pPlayerSpline->GetSplineLength();
+                    else if (m_fDistanceAlongSpline < 0)
+                        m_fDistanceAlongSpline += m_pPlayerSpline->GetSplineLength();
+
+                    Server_MovePlayer(m_pPlayerSpline->GetLocationAtDistanceAlongSpline(m_fDistanceAlongSpline,
+                        ESplineCoordinateSpace::World));
+                }
+                m_pControlledBilliardist->m_fCurrentMoveDirection = FVector::ZeroVector;
+
                 break;
             }
             case FBilliardistState::PICKING:
@@ -75,6 +95,8 @@ void ABilliardistController::Tick(float DeltaTime)
             {
                 // we follow only the selected ball - camera flies around it
                 // LBM down -> we start gaining/losing the strength meter
+                
+                
                 // LBM up -> hit occurs, we go to the observing state
                 break;
             }
@@ -223,6 +245,15 @@ void ABilliardistController::Server_SetBall_Implementation(ABall* NewBall)
     m_pSelectedBall = NewBall;
 }
 
+bool ABilliardistController::Server_SwitchPawn_Validate(APawn*) { return true; }
+
+void ABilliardistController::Server_SwitchPawn_Implementation(APawn* newPawn)
+{
+    UnPossess();
+    Possess(newPawn);
+    newPawn->SetOwner(this);
+}
+
 // need to be run on the client as this function handles camera
 void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
 {
@@ -265,10 +296,34 @@ void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliar
         }
         case FBilliardistState::AIMING:
         {
-            // blend the camera to the ball
-            // add aiming widget with strengh bar and stuff
-            // camera now flies around the selected ball
+            check(m_pCameraManager != nullptr);
+
+            FControlledCamera* aimingCamera = nullptr;
+            for (auto &it : m_pCameraManager->ControlledCameras)
+            {
+                if (it.eCameraType == FCameraType::Aiming)
+                {
+                    aimingCamera = &it;
+                    break;
+                }
+            }
+            check(aimingCamera != nullptr);
+
+            auto location = PlayerCameraManager->GetCameraLocation();
+            auto rotation = PlayerCameraManager->GetCameraRotation();
+
+            aimingCamera->Camera->SetActorLocationAndRotation(location + FVector(50, 50, 50), rotation);
+
+            SetViewTargetWithBlend(
+                aimingCamera->Camera,
+                aimingCamera->fBlendTime,
+                EViewTargetBlendFunction::VTBlend_Linear,
+                0.0f,
+                aimingCamera->bLockOutgoing
+            );
+
             UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
+
             break;
         }
         case FBilliardistState::OBSERVING:
@@ -359,5 +414,99 @@ bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector 
         CameraWorldLocation,
         LookDirection
     );
+}
+
+void ABilliardistController::MoveForward(float Value)
+{
+    if (Value == 0.0f)
+        return;
+
+    auto Rotation = GetControlRotation();
+
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+    
+    auto Bill = Cast<ABilliardist>(GetPawn());
+    if (!Bill)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in MoveForward"),
+            *GetName());
+        return;
+    }
+    
+    Bill->m_fCurrentMoveDirection += Direction * Value;
+}
+
+void ABilliardistController::MoveRight(float Value)
+{
+    if (Value == 0.0f)
+        return;
+
+    auto Rotation = GetControlRotation();
+
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+    
+    auto Bill = Cast<ABilliardist>(GetPawn());
+    if (!Bill)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in MoveRight"),
+            *GetName());
+        return;
+    }
+
+    Bill->m_fCurrentMoveDirection += Direction * Value;
+}
+
+void ABilliardistController::ActionPressHandle()
+{
+    if (m_pControlledBilliardist)
+        m_pControlledBilliardist->ActionPressHandle();
+    return;
+
+    auto Bill = Cast<ABilliardist>(GetPawn());
+
+    if (!Bill)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ActionPressHandle"),
+            *GetName());
+        return;
+    }
+
+    Bill->ActionPressHandle();
+}
+
+void ABilliardistController::ReturnPressHandle()
+{
+    if (m_pControlledBilliardist)
+        m_pControlledBilliardist->ReturnPressHandle();
+    return;
+
+    auto Bill = Cast<ABilliardist>(GetPawn());
+
+    if (!Bill)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ReturnPressHandle"),
+            *GetName());
+        return;
+    }
+
+    Bill->ReturnPressHandle();
+}
+
+void ABilliardistController::ExaminingPressHandle()
+{
+    if (m_pControlledBilliardist)
+        m_pControlledBilliardist->ExaminingPressHandle();
+    return;
+
+    auto Bill = Cast<ABilliardist>(GetPawn());
+
+    if (!Bill)
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ExaminingPressHandle"),
+            *GetName());
+        return;
+    }
+
+    Bill->ExaminingPressHandle();
 }
 
