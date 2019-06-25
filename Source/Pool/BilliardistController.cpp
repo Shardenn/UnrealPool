@@ -1,34 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BilliardistController.h"
+#include "Billiardist.h"
 #include "Pool.h"
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "CameraManager.h"
+#include "AimingCamera.h"
+
+#ifndef STATE_MACHINE
+#define STATE_MACHINE
+// observing is the state that takes place after a hit - when we are waiting for the balls to stop
+int BillStateMachine[5][5] = { // state machine of transferring from one state to another
+    // W, P, A, O, E
+    { 1, 1, 1, 0, 1 }, // Walking
+    { 1, 1, 1, 0, 1 }, // Picking
+    { 0, 1, 1, 1, 1 }, // Aiming - cant return directly to moving
+    { 0, 0, 0, 1, 1 }, // Observing - cant return to any state
+    { 1, 1, 1, 1, 1 }  // Examining
+};
+#endif
 
 ABilliardistController::ABilliardistController()
 {
 
 }
 
-bool ABilliardistController::Server_SubscribeToStateChange_Validate() { return true; }
-void ABilliardistController::Server_SubscribeToStateChange_Implementation()
-{
-    auto Billiardist = Cast<ABilliardist>(GetPawn());
-    if (Billiardist)
-    {
-        Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
-    }
-
-}
 
 void ABilliardistController::BeginPlay()
 {
     Super::BeginPlay();
-
-    Server_SubscribeToStateChange();
 }
 
 void ABilliardistController::SetupInputComponent()
@@ -51,9 +54,7 @@ void ABilliardistController::Tick(float DeltaTime)
 
     if (m_pControlledBilliardist)
     {
-        auto CurrentState = m_pControlledBilliardist->GetState();
-
-        switch (CurrentState)
+        switch (m_eState)
         {
             case FBilliardistState::WALKING:
             {
@@ -124,6 +125,8 @@ void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimePropert
     DOREPLIFETIME(ABilliardistController, m_pSelectedBall); 
     DOREPLIFETIME(ABilliardistController, m_pControlledBilliardist);
     DOREPLIFETIME(ABilliardistController, m_pCameraManager);
+    DOREPLIFETIME(ABilliardistController, m_eState);
+    DOREPLIFETIME(ABilliardistController, m_ePreviousState);
 }
 
 void ABilliardistController::Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan)
@@ -176,14 +179,9 @@ bool ABilliardistController::Server_SetTable_Validate(ATable*) { return true; }
 void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
 {
     if (NewTable)
-    {
         m_pPlayerSpline = NewTable->GetSplinePath();
-    }
     else
-    {
         UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr Table in Server_SetTable_Impl."), *GetName());
-    }
-
 }
 
 void ABilliardistController::SetCameraManager(ACameraManager* CamMan)
@@ -254,116 +252,30 @@ void ABilliardistController::Server_SwitchPawn_Implementation(APawn* newPawn)
     newPawn->SetOwner(this);
 }
 
-// need to be run on the client as this function handles camera
-void ABilliardistController::OnPlayerStateChanged(FBilliardistState NewState)
+void ABilliardistController::SetState(FBilliardistState NewState)
 {
-    Client_OnPlayerStateChanged(NewState);
+    Server_SetState(NewState);
 }
-void ABilliardistController::Client_OnPlayerStateChanged_Implementation(FBilliardistState NewState)
+
+bool ABilliardistController::Server_SetState_Validate(FBilliardistState) { return true; }
+
+void ABilliardistController::Server_SetState_Implementation(FBilliardistState NewState)
 {
-    if (m_pControlledBilliardist)
+    if (m_eState == NewState)
+        return;
+
+    if (BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
+                                                  // then we update the state. It is replicated automatically
+                                                  // by UPROPERTY
     {
-        UE_LOG(LogPool, Log, TEXT("%s : controller says that its pawn's (%s) state has changed to %d"), *GetName(),
-            *m_pControlledBilliardist->GetName(),
-            static_cast<uint8>(m_pControlledBilliardist->GetState()));
+        m_ePreviousState = m_eState;
+        m_eState = NewState;
+        OnStateChange.Broadcast(m_eState);
+        OnPlayerStateChangedEvent(m_eState);
     }
-    else
-    {
-        UE_LOG(LogPool, Log, TEXT("Controller %s tried to log smth, but it either does not have a billiardist pawn under it."),
-            *GetName());
-    }
-
-    switch (NewState)
-    {
-        case FBilliardistState::WALKING:
-        {
-            SetViewTargetWithBlend(
-                GetPawn(),
-                m_fCameraBlendTime
-            );
-            
-            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
-            break;
-        }
-        case FBilliardistState::PICKING:
-        {
-            SetViewTargetWithBlend(
-                GetPawn(),
-                m_fCameraBlendTime
-            );
-            UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
-            break;
-        }
-        case FBilliardistState::AIMING:
-        {
-            check(m_pCameraManager != nullptr);
-
-            FControlledCamera* aimingCamera = nullptr;
-            for (auto &it : m_pCameraManager->ControlledCameras)
-            {
-                if (it.eCameraType == FCameraType::Aiming)
-                {
-                    aimingCamera = &it;
-                    break;
-                }
-            }
-            check(aimingCamera != nullptr);
-
-            auto location = PlayerCameraManager->GetCameraLocation();
-            auto rotation = PlayerCameraManager->GetCameraRotation();
-
-            aimingCamera->Camera->SetActorLocationAndRotation(location + FVector(50, 50, 50), rotation);
-
-            SetViewTargetWithBlend(
-                aimingCamera->Camera,
-                aimingCamera->fBlendTime,
-                EViewTargetBlendFunction::VTBlend_Linear,
-                0.0f,
-                aimingCamera->bLockOutgoing
-            );
-
-            UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
-
-            break;
-        }
-        case FBilliardistState::OBSERVING:
-        {
-            UE_LOG(LogPool, Warning, TEXT("%s just entered OBSERVING state."), *GetName());
-            break;
-        }
-        case FBilliardistState::EXAMINING:
-        {
-            // blend the camera to the top view
-            if (!m_pCameraManager)
-            {
-                UE_LOG(LogPool, Error, TEXT("%s does not have camera manager assigned."));
-                return;
-            }
-            auto Cam = m_pCameraManager->m_pTopDownCamera;
-            if (Cam.Camera)
-            {
-                SetViewTargetWithBlend(
-                    Cam.Camera,
-                    Cam.fBlendTime,
-                    EViewTargetBlendFunction::VTBlend_Linear,
-                    0.0f,
-                    Cam.bLockOutgoing
-                );
-            }
-            else
-            {
-                UE_LOG(LogPool, Error, TEXT("%s tried to blend the view to top down camera, but  %s does not contain top down camera."),
-                    *GetName(),
-                    *m_pCameraManager->GetName());
-            }   
-            
-            UE_LOG(LogPool, Warning, TEXT("%s just entered EXAMINING state."), *GetName());
-            break;
-        }
-        
-    }
-    OnPlayerStateChangedEvent(NewState);
 }
+
+
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
 {
@@ -405,6 +317,11 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
     return true;
 }
 
+void ABilliardistController::SwitchPawn(APawn* newPawn)
+{
+    Server_SwitchPawn(newPawn);
+}
+
 bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const
 {
     FVector CameraWorldLocation; // to de discarded
@@ -418,7 +335,7 @@ bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector 
 
 void ABilliardistController::MoveForward(float Value)
 {
-    if (Value == 0.0f)
+    if (Value == 0.0f || Cast<ABilliardist>(GetPawn()) == nullptr)
         return;
 
     auto Rotation = GetControlRotation();
@@ -438,7 +355,7 @@ void ABilliardistController::MoveForward(float Value)
 
 void ABilliardistController::MoveRight(float Value)
 {
-    if (Value == 0.0f)
+    if (Value == 0.0f || Cast<ABilliardist>(GetPawn()) == nullptr)
         return;
 
     auto Rotation = GetControlRotation();
@@ -458,55 +375,117 @@ void ABilliardistController::MoveRight(float Value)
 
 void ABilliardistController::ActionPressHandle()
 {
-    if (m_pControlledBilliardist)
-        m_pControlledBilliardist->ActionPressHandle();
-    return;
-
-    auto Bill = Cast<ABilliardist>(GetPawn());
-
-    if (!Bill)
+    switch (m_eState)
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ActionPressHandle"),
-            *GetName());
-        return;
-    }
+        case FBilliardistState::WALKING:
+        {
+            SetState(FBilliardistState::PICKING);
 
-    Bill->ActionPressHandle();
+            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            // when we press LMB while PIKING and we found some ball, we should 
+            // 1. set the selected ball
+            ABall* FoundBall = nullptr;
+            if (TryRaycastBall(FoundBall))
+            {
+                UE_LOG(LogPool, Log, TEXT("Found ball %s "), *GetName());
+                SetBall(FoundBall);
+                SetState(FBilliardistState::AIMING);
+                UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
+
+                // 2. switch the pawn to aiming camera
+                APawn* aimCamera = nullptr;
+                if (m_pCameraManager && m_pCameraManager->AimingPawn)
+                    aimCamera = m_pCameraManager->AimingPawn;
+
+                auto location = PlayerCameraManager->GetCameraLocation();
+                auto rotation = PlayerCameraManager->GetCameraRotation();
+
+                aimCamera->SetActorLocationAndRotation(location, rotation);
+
+                Server_SwitchPawn(aimCamera);
+            }
+            
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // set observing
+            // 1. get the current hit strength and look vector
+
+            // 2. handle ball push
+            // 3. in this state it is possible to switch between additional cameras
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set any state, but it is possible only to set examining (handled in setstate)
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // return to the previous state
+            break;
+        }
+    }
 }
 
 void ABilliardistController::ReturnPressHandle()
 {
-    if (m_pControlledBilliardist)
-        m_pControlledBilliardist->ReturnPressHandle();
-    return;
-
-    auto Bill = Cast<ABilliardist>(GetPawn());
-
-    if (!Bill)
+    switch (m_eState)
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ReturnPressHandle"),
-            *GetName());
-        return;
-    }
+        case FBilliardistState::WALKING:
+        {
+            // nowhere to return, it is a default state
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            SetState(FBilliardistState::WALKING);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // when we are aiming, Billiardist is not current Pawn.
+            // Therefore, it does not have active owning connection
+            // and we process all input in BP_AimingCamera
 
-    Bill->ReturnPressHandle();
+            // 1. clear selected ball
+            SetBall(nullptr);
+            // 2. set picking
+            SetState(FBilliardistState::PICKING);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
+            // 3. return to default pawn if we are not controlling it
+            if (Cast<ABilliardist>(GetPawn()) == nullptr)
+                Server_SwitchPawn(m_pControlledBilliardist);
+
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set examining
+            // we cannot return to anything except examining
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // return to the previous state
+            SetState(m_ePreviousState);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
+            break;
+        }
+    }
 }
 
 void ABilliardistController::ExaminingPressHandle()
 {
-    if (m_pControlledBilliardist)
-        m_pControlledBilliardist->ExaminingPressHandle();
-    return;
-
-    auto Bill = Cast<ABilliardist>(GetPawn());
-
-    if (!Bill)
-    {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast its pawn to ABilliardist in ExaminingPressHandle"),
-            *GetName());
-        return;
-    }
-
-    Bill->ExaminingPressHandle();
+    if (m_eState != FBilliardistState::EXAMINING)
+        SetState(FBilliardistState::EXAMINING);
+    else
+        SetState(m_ePreviousState);
 }
 

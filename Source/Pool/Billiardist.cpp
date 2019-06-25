@@ -9,23 +9,11 @@
 #include "DrawDebugHelpers.h"
 
 #include "Ball.h"
-#include "BilliardistController.h"
 #include "Components/ActorComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Pool.h"
 
-#ifndef STATE_MACHINE
-#define STATE_MACHINE
-// observing is the state that takes place after a hit - when we are waiting for the balls to stop
-int BillStateMachine[5][5] = { // state machine of transferring from one state to another
-    // W, P, A, O, E
-    { 1, 1, 1, 0, 1 }, // Walking
-    { 1, 1, 1, 0, 1 }, // Picking
-    { 0, 1, 1, 1, 1 }, // Aiming - cant return directly to moving
-    { 0, 0, 0, 1, 1 }, // Observing - cant return to any state
-    { 1, 1, 1, 1, 1 }  // Examining
-};
-#endif
+
 
 // Sets default values
 ABilliardist::ABilliardist()
@@ -42,14 +30,28 @@ void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutL
     // Replicate to everyone
     //DOREPLIFETIME(ABilliardist, m_pTable);
     DOREPLIFETIME(ABilliardist, m_pSplinePath);
-    DOREPLIFETIME(ABilliardist, m_eState);
-    DOREPLIFETIME(ABilliardist, m_ePreviousState);
 }
+
+bool ABilliardist::Server_SubscribeToStateChange_Validate() { return true; }
+void ABilliardist::Server_SubscribeToStateChange_Implementation()
+{
+    auto controller = Cast<ABilliardistController>(GetController());
+    if (controller)
+        controller->OnStateChange.AddDynamic(this, &ABilliardist::OnPlayerStateChanged);
+}
+
 
 // Called when the game starts or when spawned
 void ABilliardist::BeginPlay()
 {
     Super::BeginPlay();
+    Server_SubscribeToStateChange();
+}
+
+void ABilliardist::OnPlayerStateChanged(FBilliardistState newState)
+{
+    UE_LOG(LogPool, Warning, TEXT("%s sees that player state changed to %d"),
+        *GetName(), static_cast<uint8>(newState));
 }
 
 // Called every frame
@@ -57,139 +59,39 @@ void ABilliardist::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    switch (m_eState)
+    FBilliardistState currState = FBilliardistState::WALKING;
+    if (Cast<ABilliardistController>(GetController()) != nullptr)
     {
-        case FBilliardistState::WALKING:
+        currState = Cast<ABilliardistController>(GetController())->GetState();
+
+        switch (currState)
         {
-            break;
-        }
-        case FBilliardistState::PICKING:
-        {
-            // highlight a ball that may be picked right now
-            break;
-        }
-        case FBilliardistState::AIMING:
-        {
-            // update the hit strength
-           
-            
-            break;
-        }
-        case FBilliardistState::OBSERVING:
-        {
-            break;
-        }
-        case FBilliardistState::EXAMINING:
-        {
-            break;
+            case FBilliardistState::WALKING:
+            {
+                break;
+            }
+            case FBilliardistState::PICKING:
+            {
+                // highlight a ball that may be picked right now
+                break;
+            }
+            case FBilliardistState::AIMING:
+            {
+                // update the hit strength
+
+
+                break;
+            }
+            case FBilliardistState::OBSERVING:
+            {
+                break;
+            }
+            case FBilliardistState::EXAMINING:
+            {
+                break;
+            }
         }
     }
-}
-
-// when action button is pressed, here we check the next possible state to switch
-void ABilliardist::ActionPressHandle()
-{
-    switch (m_eState)
-    {
-        case FBilliardistState::WALKING:
-        {
-            SetState(FBilliardistState::PICKING);
-            break;
-        }
-        case FBilliardistState::PICKING:
-        {
-            // when we press LMB while PIKING, we should 
-            // 1. set the selected ball
-            auto BillController = Cast<ABilliardistController>(GetController());
-            if (!BillController)
-            {
-                UE_LOG(LogPool, Error, TEXT("%s could not cast its controller %s to ABilliardistController"), *GetName(), *GetController()->GetName());
-                return;
-            }
-            ABall* FoundBall = nullptr;
-            if (BillController->TryRaycastBall(FoundBall))
-            {
-                UE_LOG(LogPool, Log, TEXT("%s found ball %s with its controller"), *GetName(), *FoundBall->GetName());
-                BillController->SetBall(FoundBall);
-                SetState(FBilliardistState::AIMING);
-            }
-            // 2. blend the camera (in controller actually) to it
-            // camera blending is implemented in BilliardistController BP
-            break;
-        }
-        case FBilliardistState::AIMING:
-        {
-            // set observing
-            // 1. get the current hit strength and look vector
-            
-            // 2. handle ball push
-            // 3. in this state it is possible to switch between additional cameras
-            break;
-        }
-        case FBilliardistState::OBSERVING:
-        {
-            // set any state, but it is possible only to set examining (handled in setstate)
-            break;
-        }
-        case FBilliardistState::EXAMINING:
-        {
-            // return to the previous state
-            break;
-        }
-    }
-}
-
-// when return button is pressed, here we check the next possible state to switch
-void ABilliardist::ReturnPressHandle()
-{
-    switch (m_eState)
-    {
-        case FBilliardistState::WALKING:
-        {
-            // nowhere to return, it is a default state
-            break;
-        }
-        case FBilliardistState::PICKING:
-        {
-            SetState(FBilliardistState::WALKING);
-            break;
-        }
-        case FBilliardistState::AIMING:
-        {
-            // 1. clear selected ball
-            auto BillController = Cast<ABilliardistController>(GetController());
-            if (!BillController)
-            {
-                UE_LOG(LogPool, Error, TEXT("%s tried to setBall in his controller but could not cast it to billController."), *GetName());
-                return;
-            }
-            BillController->SetBall(nullptr);
-
-            // 2. set picking
-            SetState(FBilliardistState::PICKING);
-            break;
-        }
-        case FBilliardistState::OBSERVING:
-        {
-            // set examining
-            // we cannot return to anything except examining
-            break;
-        }
-        case FBilliardistState::EXAMINING:
-        {
-            // return to the previous state
-            SetState(m_ePreviousState);
-            break;
-        }
-    }
-}
-
-void ABilliardist::ExaminingPressHandle()
-{
-    if (m_eState == FBilliardistState::EXAMINING)
-        SetState(m_ePreviousState);
-    else
-        SetState(FBilliardistState::EXAMINING);
 }
 
 void ABilliardist::SetTable(ATable* NewTable)
@@ -229,24 +131,3 @@ void ABilliardist::Server_SetTable_Implementation(ATable* NewTable)
     }
 }
 
-void ABilliardist::SetState(FBilliardistState NewState)
-{
-    Server_SetState(NewState);
-}
-
-bool ABilliardist::Server_SetState_Validate(FBilliardistState) { return true; }
-
-void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
-{
-    if (m_eState == NewState)
-        return;
-
-    if (BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
-                                                  // then we update the state. It is replicated automatically
-                                                  // by UPROPERTY
-    {
-        m_ePreviousState = m_eState;
-        m_eState = NewState;
-        OnStateChange.Broadcast(m_eState);
-    }
-}

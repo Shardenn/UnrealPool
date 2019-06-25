@@ -4,13 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "Billiardist.h"
 #include "Ball.h"
 #include "PoolGameModeBase.h"
 #include "BilliardistController.generated.h"
 
 class ACameraManager;
+class ABilliardist;
+class USplineComponent;
 
+UENUM(BlueprintType)
+enum class FBilliardistState : uint8
+{
+    WALKING     UMETA(DisplayName = "Walking"),     // just walking around the table, examining
+    PICKING     UMETA(DisplayName = "Picking"),     // if we are playing RU billiard, we can pick any ball for the shot
+    AIMING      UMETA(DisplayName = "Aiming"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
+    OBSERVING   UMETA(DisplayName = "Observing"),  // observing the balls after a shot
+    EXAMINING   UMETA(DisplayName = "Examinging"),  // watching from the top of the table
+    POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistState, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
 
 /**
@@ -28,7 +41,18 @@ public:
     virtual void SetupInputComponent() override;
 
     UPROPERTY(BlueprintAssignable)
+    FOnPlayerStateChange OnStateChange;
+    UPROPERTY(BlueprintAssignable)
     FOnSelectedBallUpdated OnSelectedBallUpdate;
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Set State"))
+    void SetState(FBilliardistState NewState);
+
+    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get State"))
+    FBilliardistState GetState() { return m_eState; }
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Get stored billiardist"))
+    ABilliardist* GetBilliardist()                           { return m_pControlledBilliardist; }
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Initialize billiardist controller"))
     void Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
@@ -47,6 +71,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Try raycast ball"))
     bool TryRaycastBall(ABall*& Ball);
 
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Switch pawn"))
+    void SwitchPawn(APawn* newPawn);
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Lock outgoing camera"))
     bool m_bLockOutgoing{ false };
@@ -63,9 +89,11 @@ protected:
     float m_fRaycastLength{ 200.f };
 
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Player spline")) // needs to be replicated for movement along spline
-    USplineComponent* m_pPlayerSpline{ nullptr };
+    USplineComponent* m_pPlayerSpline = nullptr;
+
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Selected ball"))
     ABall* m_pSelectedBall { nullptr };    
+
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Camera manager"))
     ACameraManager* m_pCameraManager; // TODO camera manager is not replicated : 
     // if controller tries to self-initialize it when it is not assigned,
@@ -85,11 +113,10 @@ private:
     void Multicast_MovePlayer(FVector NewLocation);
     
     UFUNCTION(reliable, server, WithValidation)
-    void Server_SetBall(ABall* NewBall);
+    void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
 
     UFUNCTION(reliable, server, WithValidation)
-    void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
-    
+    void Server_SetBall(ABall* NewBall);
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetTable(ATable* NewTable);
     UFUNCTION(reliable, server, WithValidation)
@@ -97,14 +124,12 @@ private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetCameraManager(ACameraManager* CamMan);
 
-    // need to be run on the client as this function handles camera
-    UFUNCTION()
-    void OnPlayerStateChanged(FBilliardistState NewState);
-    UFUNCTION(Client, reliable)
-    void Client_OnPlayerStateChanged(FBilliardistState NewState);
-
-    UFUNCTION(reliable, server, WithValidation)
-    void Server_SubscribeToStateChange();
+    UFUNCTION(server, reliable, WithValidation)
+    void Server_SetState(FBilliardistState NewState);
+    UPROPERTY(Replicated)
+    FBilliardistState m_eState         { FBilliardistState::WALKING };
+    UPROPERTY(Replicated)
+    FBilliardistState m_ePreviousState { FBilliardistState::WALKING };
 
     UPROPERTY(Replicated)
     ABilliardist* m_pControlledBilliardist{ nullptr };
