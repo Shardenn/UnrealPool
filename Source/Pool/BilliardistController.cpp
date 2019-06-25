@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "CameraManager.h"
 #include "AimingCamera.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -94,11 +95,29 @@ void ABilliardistController::Tick(float DeltaTime)
             }
             case FBilliardistState::AIMING:
             {
-                // we follow only the selected ball - camera flies around it
-                // LBM down -> we start gaining/losing the strength meter
+                m_fHitStrengthAlpha = (m_fCurrentHitStrength - m_fHitStrengthMin) /
+                    (m_fHitStrengthMax - m_fHitStrengthMin);
+
+                float koeff = FMath::Lerp(m_fHitStrengthChangeSpeed, m_fHitStrengthChangeHigh,
+                    m_fHitStrengthAlpha);
                 
-                
-                // LBM up -> hit occurs, we go to the observing state
+                m_fHitStrengthAlpha += DeltaTime * koeff * (m_bStrengthIncreasing ? 1 : -1);
+
+                if (m_fHitStrengthAlpha > 1.f)
+                {
+                    m_fHitStrengthAlpha = 1.f;
+                    m_bStrengthIncreasing = false;
+                }
+                if (m_fHitStrengthAlpha < 0.f)
+                {
+                    m_fHitStrengthAlpha = 0.f;
+                    m_bStrengthIncreasing = true;
+                }
+
+                m_fCurrentHitStrength = m_fHitStrengthMin + m_fHitStrengthAlpha *
+                    (m_fHitStrengthMax - m_fHitStrengthMin);
+
+                UE_LOG(LogPool, Log, TEXT("Current hit strength is %f"), m_fCurrentHitStrength);
                 break;
             }
             case FBilliardistState::OBSERVING:
@@ -397,9 +416,11 @@ void ABilliardistController::ActionPressHandle()
                 UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
 
                 // 2. switch the pawn to aiming camera
-                APawn* aimCamera = nullptr;
+                AAimingCamera* aimCamera = nullptr;
                 if (m_pCameraManager && m_pCameraManager->AimingPawn)
-                    aimCamera = m_pCameraManager->AimingPawn;
+                    aimCamera = Cast<AAimingCamera>(m_pCameraManager->AimingPawn);
+
+                check(aimCamera != nullptr);
 
                 auto location = PlayerCameraManager->GetCameraLocation();
                 auto rotation = PlayerCameraManager->GetCameraRotation();
@@ -407,6 +428,9 @@ void ABilliardistController::ActionPressHandle()
                 aimCamera->SetActorLocationAndRotation(location, rotation);
 
                 Server_SwitchPawn(aimCamera);
+
+                aimCamera->SetBall(FoundBall);
+                aimCamera->SetState(FAimingCameraState::GoingIn);
             }
             
             break;
@@ -453,15 +477,19 @@ void ABilliardistController::ReturnPressHandle()
             // when we are aiming, Billiardist is not current Pawn.
             // Therefore, it does not have active owning connection
             // and we process all input in BP_AimingCamera
-
-            // 1. clear selected ball
-            SetBall(nullptr);
+            
             // 2. set picking
-            SetState(FBilliardistState::PICKING);
+            
             UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
             // 3. return to default pawn if we are not controlling it
-            if (Cast<ABilliardist>(GetPawn()) == nullptr)
-                Server_SwitchPawn(m_pControlledBilliardist);
+            SetBall(nullptr);
+
+            auto aimCam = Cast<AAimingCamera>(m_pCameraManager->AimingPawn);
+            aimCam->SetState(FAimingCameraState::GoingOut);
+
+            //SetState(FBilliardistState::PICKING);
+            //if (Cast<ABilliardist>(GetPawn()) == nullptr)
+              //  Server_SwitchPawn(m_pControlledBilliardist);
 
             break;
         }

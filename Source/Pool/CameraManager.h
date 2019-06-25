@@ -50,13 +50,7 @@ public:
         meta = (DisplayName = "Aiming pawn with camera"))
     APawn* AimingPawn = nullptr;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Aiming Camera | Settings",
-        meta = (DisplayName = "Aiming camera blend time"))
-    float AimingCameraBlendTime = 0.2f;
-
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Aiming Camera | Settings",
-        meta = (DisplayName = "Lock outgoing aiming camera"))
-    bool bLockOutgoingAimingCamera = false;
+    
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

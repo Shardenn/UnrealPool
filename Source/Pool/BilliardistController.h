@@ -51,6 +51,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get State"))
     FBilliardistState GetState() { return m_eState; }
 
+    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Hit Strength Alpha"))
+    float GetHitStrengthAlpha() { return m_fHitStrengthAlpha; }
+
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Get stored billiardist"))
     ABilliardist* GetBilliardist()                           { return m_pControlledBilliardist; }
 
@@ -81,11 +84,11 @@ protected:
 
     float m_fDistanceAlongSpline{ 0.0f };
 
-    UPROPERTY(EditAnywhere, Category = "Billiardist controller | Casting to a ball", meta = (DisplayName = "Crosshair X location"))
+    UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair X location"))
     float m_fCrosshairXLocation{ 0.5f };
-    UPROPERTY(EditAnywhere, Category = "Billiardist controller | Casting to a ball", meta = (DisplayName = "Crosshair Y location"))
+    UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair Y location"))
     float m_fCrosshairYLocation{ 0.5f };
-    UPROPERTY(EditAnywhere, Category = "Billiardist controller | Casting to a ball", meta = (DisplayName = "Ball search raycast length"))
+    UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Ball search raycast length"))
     float m_fRaycastLength{ 200.f };
 
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Player spline")) // needs to be replicated for movement along spline
@@ -95,9 +98,20 @@ protected:
     ABall* m_pSelectedBall { nullptr };    
 
     UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Camera manager"))
-    ACameraManager* m_pCameraManager; // TODO camera manager is not replicated : 
-    // if controller tries to self-initialize it when it is not assigned,
-    // then camera manager is set on server, but on client it is  null.
+    ACameraManager* m_pCameraManager;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "MIN hit strength"))
+    float m_fHitStrengthMin = 50.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "MAX hit strength"))
+    float m_fHitStrengthMax = 500.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Hit strength change speed"))
+    float m_fHitStrengthChangeSpeed = 1.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "High hit strength chenge speed"))
+    float m_fHitStrengthChangeHigh = 2.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Hit strength alpha from 0 to 1"))
+    float m_fHitStrengthAlpha = 0.f; // from 0 to 1
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Gameplay process", meta = (DisplayName = "Current hit strength"))
+    float m_fCurrentHitStrength = m_fHitStrengthMin;
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist controller", meta = (DisplayName = "On Player State Changed"))
     void OnPlayerStateChangedEvent(FBilliardistState NewState);
@@ -133,6 +147,8 @@ private:
 
     UPROPERTY(Replicated)
     ABilliardist* m_pControlledBilliardist{ nullptr };
+
+    bool m_bStrengthIncreasing = true;
 
     FVector Direction{ FVector::ZeroVector }; // direction that the pawn would go in case we do not have a spline path
 

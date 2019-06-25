@@ -57,12 +57,6 @@ public:
     USplineComponent* GetSpline() { return m_pSplinePath; }
     
     FVector m_fCurrentMoveDirection = FVector(0);
-
-    UPROPERTY(EditAnywhere, Category = "Gameplay", meta = (DisplayName = "Hit strength"))
-    float m_fHitStrength = 0.0f;
-
-    UPROPERTY(EditAnywhere, Category = "Gameplay", meta = (DisplayName = "Hit strength multiplier"))
-    float m_fHitStrengthMultiplier = 10.0f;
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
