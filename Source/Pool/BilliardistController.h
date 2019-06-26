@@ -82,6 +82,9 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Default camera blend time"))
     float m_fCameraBlendTime { 0.5f };
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Current observing camera"))
+    int32 m_dCameraNumber = 0;
+
     float m_fDistanceAlongSpline{ 0.0f };
 
     UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair X location"))
@@ -126,6 +129,12 @@ private:
     UFUNCTION(reliable, NetMulticast, WithValidation)
     void Multicast_MovePlayer(FVector NewLocation);
     
+    // launches ball on server with multicasting
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_LaunchBall(FVector Velocity);
+    UFUNCTION(reliable, NetMulticast, WithValidation)
+    void Multicast_LaunchBall(FVector Velocity);
+
     UFUNCTION(reliable, server, WithValidation)
     void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
 

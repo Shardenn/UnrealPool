@@ -15,6 +15,8 @@ class POOL_API ABall : public AActor
 public:
     // Sets default values for this actor's properties
     ABall();
+    virtual void Tick(float DeltaTime) override;
+
 
 protected:
     // Called when the game starts or when spawned
@@ -34,10 +36,8 @@ protected:
 
     UPROPERTY(EditAnywhere, Meta = (DisplayName = "SPawn location on start"))
     FVector m_SpawnLocation = FVector(0);
-public:
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
 
+private:
 
 
 };

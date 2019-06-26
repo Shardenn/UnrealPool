@@ -283,7 +283,8 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
     if (m_eState == NewState)
         return;
 
-    if (BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
+    // TODO remove "true &&" here. Added for debugging OBSERVING state
+    if (true && BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
                                                   // then we update the state. It is replicated automatically
                                                   // by UPROPERTY
     {
@@ -294,7 +295,17 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
     }
 }
 
+bool ABilliardistController::Server_LaunchBall_Validate(FVector) { return true; }
+void ABilliardistController::Server_LaunchBall_Implementation(FVector Velocity)
+{
+    Multicast_LaunchBall(Velocity);
+}
 
+bool ABilliardistController::Multicast_LaunchBall_Validate(FVector) { return true; }
+void ABilliardistController::Multicast_LaunchBall_Implementation(FVector Velocity)
+{
+    Cast<USphereComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
+}
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
 {
@@ -437,21 +448,47 @@ void ABilliardistController::ActionPressHandle()
         }
         case FBilliardistState::AIMING:
         {
-            // set observing
-            // 1. get the current hit strength and look vector
+            check(m_pSelectedBall != nullptr);
 
+            // set observing
+            SetState(FBilliardistState::OBSERVING);
+
+            // 1. get the current hit strength and look vector
+            auto ballHitDirection = GetControlRotation().Vector();
+            ballHitDirection.Z = 0.f;
+            auto hitVector = ballHitDirection * m_fCurrentHitStrength;
+            
             // 2. handle ball push
+            Server_LaunchBall(hitVector);
             // 3. in this state it is possible to switch between additional cameras
+            
+            Server_SwitchPawn(m_pControlledBilliardist);
+
+            m_fHitStrengthAlpha = 0.f;
+            m_fCurrentHitStrength = m_fHitStrengthMin;
+
             break;
         }
         case FBilliardistState::OBSERVING:
         {
             // set any state, but it is possible only to set examining (handled in setstate)
+            int32 camerasNumber = m_pCameraManager->ControlledCameras.Num(); // without "-1" -> aiming camera
+            m_dCameraNumber = (m_dCameraNumber + 1) % (camerasNumber + 1);
+
+            if (m_dCameraNumber == camerasNumber)
+                SetViewTargetWithBlend(m_pCameraManager->AimingPawn,
+                    Cast<AAimingCamera>(m_pCameraManager->AimingPawn)->BlendInSpeed);
+            else
+                SetViewTargetWithBlend(
+                    m_pCameraManager->ControlledCameras[m_dCameraNumber].Camera,
+                    m_pCameraManager->ControlledCameras[m_dCameraNumber].fBlendTime);
+
             break;
         }
         case FBilliardistState::EXAMINING:
         {
-            // return to the previous state
+            SetState(m_ePreviousState);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
             break;
         }
     }
@@ -469,6 +506,7 @@ void ABilliardistController::ReturnPressHandle()
         case FBilliardistState::PICKING:
         {
             SetState(FBilliardistState::WALKING);
+            SetBall(nullptr);
             UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
             break;
         }
@@ -487,15 +525,16 @@ void ABilliardistController::ReturnPressHandle()
             auto aimCam = Cast<AAimingCamera>(m_pCameraManager->AimingPawn);
             aimCam->SetState(FAimingCameraState::GoingOut);
 
-            //SetState(FBilliardistState::PICKING);
-            //if (Cast<ABilliardist>(GetPawn()) == nullptr)
-              //  Server_SwitchPawn(m_pControlledBilliardist);
+            m_fHitStrengthAlpha = 0.f;
+            m_fCurrentHitStrength = m_fHitStrengthMin;
 
             break;
         }
         case FBilliardistState::OBSERVING:
         {
             // set examining
+            Server_SwitchPawn(m_pControlledBilliardist);
+            SetState(FBilliardistState::WALKING);
             // we cannot return to anything except examining
             break;
         }
