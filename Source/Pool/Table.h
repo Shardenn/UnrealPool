@@ -21,17 +21,17 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-    UPROPERTY(EditAnywhere, meta = (DisplayName = "Table mesh"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (DisplayName = "Table mesh"))
     UStaticMeshComponent* m_pTableMesh = nullptr;
 
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Triangle front ball location"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Triangle front ball location"))
     USceneComponent* m_pFrontBallLocation = nullptr;
 
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Ball fall registrator"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Ball fall registrator"))
     UBoxComponent* m_pBallRegistrator = nullptr;
 
     // Spline path for player movement along the table
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Spline player path"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Spline player path"))
     USplineComponent* m_pSplinePath = nullptr;
 public:
     // Called every frame
