@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Ball.generated.h"
 
 UCLASS()
@@ -22,22 +22,22 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Static mesh"))
-    UStaticMeshComponent* m_pSphereMesh = nullptr;
-
+    
+    /*
     UPROPERTY(EditAnywhere, Meta = (DisplayName = "Sphere collision"))
     USphereComponent* m_pSphereCollision = nullptr;
-
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Points score"))
+    */
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Points score"))
     int32 m_Points = 1;
 
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Is it a cue ball"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Is it a cue ball"))
     bool m_bCueBall = false;
 
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "SPawn location on start"))
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Spawn location on start"))
     FVector m_SpawnLocation = FVector(0);
 
 private:
-
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", DisplayName = "Static mesh"))
+    UStaticMeshComponent* m_pSphereMesh;
 
 };

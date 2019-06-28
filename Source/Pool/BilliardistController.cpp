@@ -10,6 +10,7 @@
 #include "CameraManager.h"
 #include "AimingCamera.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/StaticMeshComponent.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -304,7 +305,7 @@ void ABilliardistController::Server_LaunchBall_Implementation(FVector Velocity)
 bool ABilliardistController::Multicast_LaunchBall_Validate(FVector) { return true; }
 void ABilliardistController::Multicast_LaunchBall_Implementation(FVector Velocity)
 {
-    Cast<USphereComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
+    Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
 }
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
