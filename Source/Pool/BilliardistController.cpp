@@ -170,24 +170,8 @@ void ABilliardistController::SetBilliardist(ABilliardist* BillPawn)
 bool ABilliardistController::Server_SetBilliardist_Validate(ABilliardist*) { return true; }
 void ABilliardistController::Server_SetBilliardist_Implementation(ABilliardist* BillPawn)
 {
-    if (BillPawn)
-    {
-        m_pControlledBilliardist = BillPawn;
-    }
-    else
-    {
-        UE_LOG(LogPool, Warning, TEXT("%s was assigned with null billiardist in Server_SetBill_Impl. Setting controlled pawn manually..."), *GetName());
-        auto PossessedPawn = Cast<ABilliardist>(GetPawn());
-        if (PossessedPawn)
-        {
-            m_pControlledBilliardist = PossessedPawn;
-            UE_LOG(LogPool, Log, TEXT("%s successfully self-assigned %s as controlled Billiardist."), *GetName(), *m_pControlledBilliardist->GetName());
-        }
-        else
-        {
-            UE_LOG(LogPool, Error, TEXT("Init failed: %s could not cast its possessed pawn to the billiardist in SelfInitializePawn."), *GetName());
-        }
-    }
+    check(BillPawn != nullptr);
+    m_pControlledBilliardist = BillPawn;
 }
 
 void ABilliardistController::SetTable(ATable* NewTable)
@@ -198,10 +182,8 @@ void ABilliardistController::SetTable(ATable* NewTable)
 bool ABilliardistController::Server_SetTable_Validate(ATable*) { return true; }
 void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
 {
-    if (NewTable)
-        m_pPlayerSpline = NewTable->GetSplinePath();
-    else
-        UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr Table in Server_SetTable_Impl."), *GetName());
+    check(NewTable != nullptr);
+    m_pPlayerSpline = NewTable->GetSplinePath();
 }
 
 void ABilliardistController::SetCameraManager(ACameraManager* CamMan)
@@ -218,7 +200,7 @@ void ABilliardistController::Server_SetCameraManager_Implementation(ACameraManag
     }
     else
     {
-        UE_LOG(LogPool, Error, TEXT("%s was assigned with nullptr CameraManager in Server_SetCamMan_Impl. Finfing camera manager manually..."), *GetName());
+        UE_LOG(LogPool, Warning, TEXT("%s was assigned with nullptr CameraManager in Server_SetCamMan_Impl. Finding camera manager manually..."), *GetName());
         for (TObjectIterator<ACameraManager> it; it; ++it)
         {
             auto FoundCamMan = *it;
@@ -231,7 +213,7 @@ void ABilliardistController::Server_SetCameraManager_Implementation(ACameraManag
         }
         if (m_pCameraManager == nullptr)
         {
-            UE_LOG(LogPool, Warning, TEXT("%s could not find any camera manager in the world. Check if one exists in the game world."), *GetName());
+            UE_LOG(LogPool, Error, TEXT("%s could not find any camera manager in the world. Check if one exists in the game world."), *GetName());
         }
     }
 }
@@ -261,15 +243,6 @@ bool ABilliardistController::Server_SetBall_Validate(ABall*) { return true; }
 void ABilliardistController::Server_SetBall_Implementation(ABall* NewBall)
 {
     m_pSelectedBall = NewBall;
-}
-
-bool ABilliardistController::Server_SwitchPawn_Validate(APawn*) { return true; }
-
-void ABilliardistController::Server_SwitchPawn_Implementation(APawn* newPawn)
-{
-    UnPossess();
-    Possess(newPawn);
-    newPawn->SetOwner(this);
 }
 
 void ABilliardistController::SetState(FBilliardistState NewState)
@@ -351,6 +324,14 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
 void ABilliardistController::SwitchPawn(APawn* newPawn)
 {
     Server_SwitchPawn(newPawn);
+}
+
+bool ABilliardistController::Server_SwitchPawn_Validate(APawn*) { return true; }
+void ABilliardistController::Server_SwitchPawn_Implementation(APawn* newPawn)
+{
+    UnPossess();
+    Possess(newPawn);
+    newPawn->SetOwner(this);
 }
 
 bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const
@@ -488,8 +469,6 @@ void ABilliardistController::ActionPressHandle()
         }
         case FBilliardistState::EXAMINING:
         {
-            SetState(m_ePreviousState);
-            UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
             break;
         }
     }
@@ -542,6 +521,8 @@ void ABilliardistController::ReturnPressHandle()
         case FBilliardistState::EXAMINING:
         {
             // return to the previous state
+
+            // TODO call return from examingin here
             SetState(m_ePreviousState);
             UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
             break;
@@ -551,9 +532,24 @@ void ABilliardistController::ReturnPressHandle()
 
 void ABilliardistController::ExaminingPressHandle()
 {
+    // TODO split in two funcs - GoToExamining and ReturnFromExaminging
     if (m_eState != FBilliardistState::EXAMINING)
+    {
+        FControlledCamera* examCam = nullptr;
+        for (auto cam : m_pCameraManager->ControlledCameras)
+            if (cam.eCameraType == FCameraType::TopDown)
+            {
+                examCam = &cam;
+                break;
+            }
+
+        SetViewTargetWithBlend(examCam->Camera,
+            examCam->fBlendTime);
         SetState(FBilliardistState::EXAMINING);
+    }
     else
+    {
         SetState(m_ePreviousState);
+    }
 }
 
