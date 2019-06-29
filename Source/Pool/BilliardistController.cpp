@@ -1,16 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BilliardistController.h"
-#include "Billiardist.h"
 #include "Pool.h"
-#include "Components/InputComponent.h"
-#include "Camera/CameraComponent.h"
-#include "UnrealNetwork.h"
-#include "Kismet/GameplayStatics.h"
-#include "CameraManager.h"
 #include "AimingCamera.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "Billiardist.h"
+#include "CameraManager.h"
+
+#include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
+
+#include "UnrealNetwork.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#include "DrawDebugHelpers.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -59,6 +64,7 @@ void ABilliardistController::Tick(float DeltaTime)
         switch (m_eState)
         {
             case FBilliardistState::WALKING:
+            case FBilliardistState::OBSERVING:
             {
                 if (!m_pPlayerSpline)
                 {
@@ -121,13 +127,7 @@ void ABilliardistController::Tick(float DeltaTime)
                 UE_LOG(LogPool, Log, TEXT("Current hit strength is %f"), m_fCurrentHitStrength);
                 break;
             }
-            case FBilliardistState::OBSERVING:
-            {
-                // we are allowed to switch between different cameras aroung the whole room
-                // we are not allowed to move or freely control the camera generally
-                // if the player selects the camera in his own playable charater, then he can move, but he only observes
-                break;
-            }
+            
             case FBilliardistState::EXAMINING:
             {
                 break;
@@ -272,7 +272,8 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
 bool ABilliardistController::Server_LaunchBall_Validate(FVector) { return true; }
 void ABilliardistController::Server_LaunchBall_Implementation(FVector Velocity)
 {
-    Multicast_LaunchBall(Velocity);
+    //Multicast_LaunchBall(Velocity);
+    Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
 }
 
 bool ABilliardistController::Multicast_LaunchBall_Validate(FVector) { return true; }
@@ -323,6 +324,11 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
 
 void ABilliardistController::SwitchPawn(APawn* newPawn)
 {
+    if (Cast<AAimingCamera>(newPawn) != nullptr)
+        PlayerCameraManager->ViewPitchMax = m_fAimingPitchMin;
+    if (Cast<ABilliardist>(newPawn) != nullptr)
+        PlayerCameraManager->ViewPitchMax = 90;
+    
     Server_SwitchPawn(newPawn);
 }
 
@@ -420,7 +426,7 @@ void ABilliardistController::ActionPressHandle()
 
                 aimCamera->SetActorLocationAndRotation(location, rotation);
 
-                Server_SwitchPawn(aimCamera);
+                SwitchPawn(aimCamera);
 
                 aimCamera->SetBall(FoundBall);
                 aimCamera->SetState(FAimingCameraState::GoingIn);
@@ -432,22 +438,24 @@ void ABilliardistController::ActionPressHandle()
         {
             check(m_pSelectedBall != nullptr);
 
-            // set observing
-            SetState(FBilliardistState::OBSERVING);
-
-            // 1. get the current hit strength and look vector
+            // get the current hit strength and look vector
             auto ballHitDirection = GetControlRotation().Vector();
             ballHitDirection.Z = 0.f;
             auto hitVector = ballHitDirection * m_fCurrentHitStrength;
-            
-            // 2. handle ball push
-            Server_LaunchBall(hitVector);
-            // 3. in this state it is possible to switch between additional cameras
-            
-            Server_SwitchPawn(m_pControlledBilliardist);
 
+            // nil hit strength related stuff
             m_fHitStrengthAlpha = 0.f;
             m_fCurrentHitStrength = m_fHitStrengthMin;
+
+            // push the ball
+            Server_LaunchBall(hitVector);
+
+            SwitchPawn(m_pControlledBilliardist);
+
+            // make controller (and camera) look at ball
+            LookAtBall();
+
+            SetState(FBilliardistState::OBSERVING);
 
             break;
         }
@@ -496,7 +504,7 @@ void ABilliardistController::ReturnPressHandle()
             // Therefore, it does not have active owning connection
             // and we process all input in BP_AimingCamera
             
-            // 2. set picking
+            // 2. set picking is handled in AimingCamera class after it finishes blending
             
             UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
             // 3. return to default pawn if we are not controlling it
@@ -513,7 +521,7 @@ void ABilliardistController::ReturnPressHandle()
         case FBilliardistState::OBSERVING:
         {
             // set examining
-            Server_SwitchPawn(m_pControlledBilliardist);
+            SwitchPawn(m_pControlledBilliardist);
             SetState(FBilliardistState::WALKING);
             // we cannot return to anything except examining
             break;
@@ -521,8 +529,7 @@ void ABilliardistController::ReturnPressHandle()
         case FBilliardistState::EXAMINING:
         {
             // return to the previous state
-
-            // TODO call return from examingin here
+            ReturnFromExaminingView();
             SetState(m_ePreviousState);
             UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
             break;
@@ -535,21 +542,61 @@ void ABilliardistController::ExaminingPressHandle()
     // TODO split in two funcs - GoToExamining and ReturnFromExaminging
     if (m_eState != FBilliardistState::EXAMINING)
     {
-        FControlledCamera* examCam = nullptr;
-        for (auto cam : m_pCameraManager->ControlledCameras)
-            if (cam.eCameraType == FCameraType::TopDown)
-            {
-                examCam = &cam;
-                break;
-            }
-
-        SetViewTargetWithBlend(examCam->Camera,
-            examCam->fBlendTime);
+        SetExaminingView();
         SetState(FBilliardistState::EXAMINING);
     }
     else
     {
+        ReturnFromExaminingView();
         SetState(m_ePreviousState);
     }
 }
 
+void ABilliardistController::SetExaminingView()
+{
+    FControlledCamera* examCam = nullptr;
+    for (auto cam : m_pCameraManager->ControlledCameras)
+        if (cam.eCameraType == FCameraType::TopDown)
+        {
+            examCam = &cam;
+            break;
+        }
+
+    SetViewTargetWithBlend(examCam->Camera,
+        examCam->fBlendTime,
+        EViewTargetBlendFunction::VTBlend_Linear,
+        0.0f,
+        examCam->bLockOutgoing);
+}
+
+void ABilliardistController::ReturnFromExaminingView()
+{
+    FControlledCamera* examCam = nullptr;
+    for (auto cam : m_pCameraManager->ControlledCameras)
+        if (cam.eCameraType == FCameraType::TopDown)
+        {
+            examCam = &cam;
+            break;
+        }
+
+    SetViewTargetWithBlend(m_pControlledBilliardist,
+        examCam->fBlendTime,
+        EViewTargetBlendFunction::VTBlend_Linear,
+        0.0f,
+        examCam->bLockOutgoing);
+}
+
+void ABilliardistController::LookAtBall()
+{
+    FMinimalViewInfo cameraInfo;
+    m_pControlledBilliardist->CalcCamera(
+        UGameplayStatics::GetWorldDeltaSeconds(GetWorld()),
+        cameraInfo);
+
+    auto rot = UKismetMathLibrary::FindLookAtRotation(
+        cameraInfo.Location,
+        m_pSelectedBall->GetActorLocation());
+
+    // make character look at ball
+    SetControlRotation(rot);
+}

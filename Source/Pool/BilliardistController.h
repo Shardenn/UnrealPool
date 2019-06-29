@@ -40,6 +40,8 @@ public:
     
     virtual void SetupInputComponent() override;
 
+    void LookAtBall();
+
     UPROPERTY(BlueprintAssignable)
     FOnPlayerStateChange OnStateChange;
     UPROPERTY(BlueprintAssignable)
@@ -81,7 +83,8 @@ protected:
     bool m_bLockOutgoing{ false };
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Default camera blend time"))
     float m_fCameraBlendTime { 0.5f };
-
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Aiming pawn pitch min"))
+    float m_fAimingPitchMin = -10.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist controller | Camera management", meta = (DisplayName = "Current observing camera"))
     int32 m_dCameraNumber = 0;
 
@@ -162,6 +165,9 @@ private:
     FVector Direction{ FVector::ZeroVector }; // direction that the pawn would go in case we do not have a spline path
 
     bool GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const;
+
+    void SetExaminingView();
+    void ReturnFromExaminingView();
 
     UFUNCTION()
     void MoveForward(float Value);

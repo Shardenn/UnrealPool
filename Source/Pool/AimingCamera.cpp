@@ -3,6 +3,8 @@
 #include "Billiardist.h"
 #include "Ball.h"
 #include "Pool.h"
+#include "Kismet/KismetMathLibrary.h"
+
 // Sets default values
 AAimingCamera::AAimingCamera()
 {
@@ -41,6 +43,7 @@ void AAimingCamera::Tick(float DeltaTime)
 
             if (m_fAlpha >= 1.f)
             {
+                SetActorLocation(m_vFinishLocation);
                 m_fAlpha = 0.f;
                 SetState(FAimingCameraState::InBall);
             }
@@ -90,8 +93,8 @@ void AAimingCamera::SetState(FAimingCameraState newState)
 
     if (m_eState == FAimingCameraState::GoingIn)
     {
-        m_vStartingLocation = GetActorLocation() + GetActorForwardVector().GetSafeNormal() *
-            m_fSpringArmLength;
+        m_vStartingLocation = GetActorLocation() +
+            UKismetMathLibrary::GetForwardVector(GetControlRotation()) * m_fSpringArmLength;
         m_vLastPlayerLocation = m_vStartingLocation;
         m_vFinishLocation = m_pSelectedBall->GetActorLocation();
     }
@@ -101,12 +104,4 @@ void AAimingCamera::SetState(FAimingCameraState newState)
         m_vStartingLocation = m_pSelectedBall->GetActorLocation();
     }
 }
-
-void AAimingCamera::ReturnPressHandle()
-{
-    auto controller = Cast<ABilliardistController>(GetController());
-    check(controller != nullptr);
-
-}
-
 

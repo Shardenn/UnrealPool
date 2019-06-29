@@ -29,8 +29,6 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    void ReturnPressHandle();
-
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Settings",
         meta = (DisplayName = "Camera blend IN speed"))
     float BlendInSpeed = 3.f;

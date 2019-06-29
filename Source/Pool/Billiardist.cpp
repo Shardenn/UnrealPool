@@ -1,19 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Billiardist.h"
-#include "Components/InputComponent.h"
-#include "UObject/UObjectIterator.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "UnrealNetwork.h"
-
-#include "DrawDebugHelpers.h"
-
 #include "Ball.h"
-#include "Components/ActorComponent.h"
-#include "Camera/CameraComponent.h"
 #include "Pool.h"
 
+#include "Components/InputComponent.h"
+#include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
+#include "UObject/UObjectIterator.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 ABilliardist::ABilliardist()
