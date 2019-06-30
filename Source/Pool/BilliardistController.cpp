@@ -257,8 +257,8 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
     if (m_eState == NewState)
         return;
 
-    // TODO remove "true &&" here. Added for debugging OBSERVING state
-    if (true && BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
+    // TODO remove "true ||" here. Added for debugging OBSERVING state
+    if (true || BillStateMachine[(int)m_eState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
                                                   // then we update the state. It is replicated automatically
                                                   // by UPROPERTY
     {
@@ -272,8 +272,8 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
 bool ABilliardistController::Server_LaunchBall_Validate(FVector) { return true; }
 void ABilliardistController::Server_LaunchBall_Implementation(FVector Velocity)
 {
-    //Multicast_LaunchBall(Velocity);
-    Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
+    Multicast_LaunchBall(Velocity);
+    //Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
 }
 
 bool ABilliardistController::Multicast_LaunchBall_Validate(FVector) { return true; }
@@ -462,16 +462,12 @@ void ABilliardistController::ActionPressHandle()
         case FBilliardistState::OBSERVING:
         {
             // set any state, but it is possible only to set examining (handled in setstate)
-            int32 camerasNumber = m_pCameraManager->ControlledCameras.Num(); // without "-1" -> aiming camera
-            m_dCameraNumber = (m_dCameraNumber + 1) % (camerasNumber + 1);
+            int32 camerasNumber = m_pCameraManager->ControlledCameras.Num() - 1;
+            m_dCameraNumber = (m_dCameraNumber + 1) % camerasNumber;
 
-            if (m_dCameraNumber == camerasNumber)
-                SetViewTargetWithBlend(m_pCameraManager->AimingPawn,
-                    Cast<AAimingCamera>(m_pCameraManager->AimingPawn)->BlendInSpeed);
-            else
-                SetViewTargetWithBlend(
-                    m_pCameraManager->ControlledCameras[m_dCameraNumber].Camera,
-                    m_pCameraManager->ControlledCameras[m_dCameraNumber].fBlendTime);
+            SetViewTargetWithBlend(
+                m_pCameraManager->ControlledCameras[m_dCameraNumber].Camera,
+                m_pCameraManager->ControlledCameras[m_dCameraNumber].fBlendTime);
 
             break;
         }
@@ -508,14 +504,13 @@ void ABilliardistController::ReturnPressHandle()
             
             UE_LOG(LogPool, Warning, TEXT("%s just entered PICKING state."), *GetName());
             // 3. return to default pawn if we are not controlling it
-            SetBall(nullptr);
+            
 
             auto aimCam = Cast<AAimingCamera>(m_pCameraManager->AimingPawn);
             aimCam->SetState(FAimingCameraState::GoingOut);
 
             m_fHitStrengthAlpha = 0.f;
             m_fCurrentHitStrength = m_fHitStrengthMin;
-
             break;
         }
         case FBilliardistState::OBSERVING:
@@ -579,11 +574,18 @@ void ABilliardistController::ReturnFromExaminingView()
             break;
         }
 
-    SetViewTargetWithBlend(m_pControlledBilliardist,
-        examCam->fBlendTime,
-        EViewTargetBlendFunction::VTBlend_Linear,
-        0.0f,
-        examCam->bLockOutgoing);
+    if (m_ePreviousState == FBilliardistState::AIMING)
+        SetViewTargetWithBlend(m_pCameraManager->AimingPawn,
+            examCam->fBlendTime,
+            EViewTargetBlendFunction::VTBlend_Linear,
+            0.0f,
+            examCam->bLockOutgoing);
+    else
+        SetViewTargetWithBlend(m_pControlledBilliardist,
+            examCam->fBlendTime,
+            EViewTargetBlendFunction::VTBlend_Linear,
+            0.0f,
+            examCam->bLockOutgoing);
 }
 
 void ABilliardistController::LookAtBall()
