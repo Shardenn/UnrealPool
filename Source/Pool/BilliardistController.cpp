@@ -20,12 +20,14 @@ void ABilliardistController::BeginPlay()
     Super::BeginPlay();
 }
 
-bool ABilliardistController::Server_SubscribeToStateChange_Validate() { return true; }
-void ABilliardistController::Server_SubscribeToStateChange_Implementation()
+void ABilliardistController::SubscribeToPlayerStateChange(ABilliardist* Billiardist)
 {
-    auto Billiardist = Cast<ABilliardist>(GetPawn());
-    if (!ensure(Billiardist)) { return; }
-    
+    Server_SubscribeToStateChange(Billiardist);
+}
+
+bool ABilliardistController::Server_SubscribeToStateChange_Validate(ABilliardist* Billiardist) { return true; }
+void ABilliardistController::Server_SubscribeToStateChange_Implementation(ABilliardist* Billiardist)
+{
     Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
 }
 
@@ -33,30 +35,10 @@ void ABilliardistController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 }
-/*
-void ABilliardistController::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    // Replicate to everyone
-    //DOREPLIFETIME(ABilliardistController, );
-}
-*/
-void ABilliardistController::Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan)
-{
-    Server_Initialize(Table, BillPawn, CamMan);
-}
-
-bool ABilliardistController::Server_Initialize_Validate(ATable*, ABilliardist*, ACameraManager*) { return true; }
-void ABilliardistController::Server_Initialize_Implementation(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan)
-{
-
-}
 
 void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState)
 {
-    UE_LOG(LogPool, Warning, TEXT("%s sees that player state changed to %d"),
-        *GetName(), static_cast<uint8>(newState));
+    OnPlayerStateChangedEvent(newState);
 }
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)

@@ -8,9 +8,7 @@
 #include "PoolGameModeBase.h"
 #include "BilliardistController.generated.h"
 
-class ACameraManager;
 class ABilliardist;
-class USplineComponent;
 
 /**
  * 
@@ -26,13 +24,16 @@ public:
     
     void LookAtBall();
 
-    UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Initialize billiardist controller"))
-    void Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
-
-    UFUNCTION(BlueprintCallable, Category = "Billiardist controller", meta = (DisplayName = "Try raycast ball"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     bool TryRaycastBall(ABall*& Ball);
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
+    void SubscribeToPlayerStateChange(ABilliardist* Billardist);
 protected:
     virtual void BeginPlay() override;
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist controller", Meta = (DisplayName = "On Player State Changed"))
+    void OnPlayerStateChangedEvent(FBilliardistState NewState);
 
     UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair X location"))
     float CrosshairXLocation{ 0.5f };
@@ -45,10 +46,7 @@ protected:
     void OnPlayerStateChanged(FBilliardistState newState);
 private:
     UFUNCTION(reliable, server, WithValidation)
-    void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);
-
-    UFUNCTION(reliable, server, WithValidation)
-    void Server_SubscribeToStateChange();
+    void Server_SubscribeToStateChange(ABilliardist* Billardist);
 
     bool GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const;
 

@@ -142,7 +142,6 @@ void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutL
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     // Replicate to everyone
-    //DOREPLIFETIME(ABilliardist, Table);
     DOREPLIFETIME(ABilliardist, SplinePath);
     DOREPLIFETIME(ABilliardist, SelectedBall);
     DOREPLIFETIME(ABilliardist, BilliardistState);
@@ -236,6 +235,8 @@ void ABilliardist::ActionPressHandle()
             CurrentHitStrength = HitStrengthMin;
 
             // TODO ball launch here and camera handling
+            LaunchBall(SelectedBall, hitVector);
+            SetSelectedBall(nullptr);
 
             SetState(FBilliardistState::OBSERVING);
 
@@ -328,7 +329,7 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
         PreviousState = BilliardistState;
         BilliardistState = NewState;
         OnStateChange.Broadcast(BilliardistState);
-        OnPlayerStateChangedEvent(BilliardistState);
+        OnPlayerStateChanged(BilliardistState);
     }
 }
 

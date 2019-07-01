@@ -79,6 +79,8 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Billiardist")
     float GetMoveSpeed() { return MoveSpeed; }
+    UFUNCTION(BlueprintPure, Category = "Billiardist")
+    float GetAimStrengthAlpha() { return HitStrengthAlpha; }
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist | Setup")
     void SetSplinePath(USplineComponent* NewSpline);
@@ -94,7 +96,7 @@ protected:
     virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist")
-    void OnPlayerStateChangedEvent(FBilliardistState NewState);
+    void OnPlayerStateChanged(FBilliardistState NewState);
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process") // needed for replication, tested
     USplineComponent* SplinePath { nullptr };
