@@ -16,28 +16,25 @@ class POOL_API ATable : public AActor
 public:
     // Sets default values for this actor's properties
     ATable();
-
-protected:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "Table mesh"))
-    UStaticMeshComponent* m_pTableMesh = nullptr;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Triangle front ball location"))
-    USceneComponent* m_pFrontBallLocation = nullptr;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Ball fall registrator"))
-    UBoxComponent* m_pBallRegistrator = nullptr;
-
-    // Spline path for player movement along the table
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Spline player path"))
-    USplineComponent* m_pSplinePath = nullptr;
-public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
     UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Spline Path"))
-    USplineComponent* GetSplinePath()                                        { return m_pSplinePath; }
+    USplineComponent* GetSplinePath()                  { return SplinePath; }
+protected:
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    UStaticMeshComponent* TableMesh = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    USceneComponent* FrontBallLocation = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    UBoxComponent* BallRegistrator = nullptr;
+
+    // Spline path for player movement along the table
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    USplineComponent* SplinePath = nullptr;
 };

@@ -3,11 +3,9 @@
 #pragma once
 
 #include "Engine/Engine.h"
-#include "Table.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Components/SplineComponent.h"
-#include "BilliardistController.h"
 #include "Billiardist.generated.h"
 
 /* for fast copy-paste in future
@@ -36,6 +34,19 @@ switch (m_eState)
     }
 */
 
+UENUM(BlueprintType)
+enum class FBilliardistState : uint8
+{
+    WALKING     UMETA(DisplayName = "Walking"),     // just walking around the table, examining
+    PICKING     UMETA(DisplayName = "Picking"),     // if we are playing RU billiard, we can pick any ball for the shot
+    AIMING      UMETA(DisplayName = "Aiming"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
+    OBSERVING   UMETA(DisplayName = "Observing"),  // observing the balls after a shot
+    EXAMINING   UMETA(DisplayName = "Examinging"),  // watching from the top of the table
+    POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistState, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
 
 UCLASS()
 class POOL_API ABilliardist : public ACharacter
@@ -45,42 +56,91 @@ class POOL_API ABilliardist : public ACharacter
 public:
     // Sets default values for this character's properties
     ABilliardist();
-
-    UFUNCTION(BlueprintCallable, Category = "Billiardist Character", meta = (DisplayName = "Set Table"))
-    void SetTable(ATable* NewTable);
-    // Called every frame
     virtual void Tick(float DeltaTime) override;
+    virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
-    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Move Speed"))
-    float GetMoveSpeed() { return m_fMoveSpeed; }
-    UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Spline"))
-    USplineComponent* GetSpline() { return m_pSplinePath; }
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerStateChange OnStateChange;
+    UPROPERTY(BlueprintAssignable)
+    FOnSelectedBallUpdated OnSelectedBallUpdate;
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist | Setup")
+    void Initialize(USplineComponent* Spline);
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist")
+    void SetState(FBilliardistState NewState);
+    UFUNCTION(BlueprintPure, Category = "Billiardist")
+    FBilliardistState GetState() { return BilliardistState; }
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist")
+    void SetSelectedBall(ABall* NewBall);
+    UFUNCTION(BlueprintPure, Category = "Billiardist")
+    ABall* GetSelectedBall() { return SelectedBall; }
+
+    UFUNCTION(BlueprintPure, Category = "Billiardist")
+    float GetMoveSpeed() { return MoveSpeed; }
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist | Setup")
+    void SetSplinePath(USplineComponent* NewSpline);
+    UFUNCTION(BlueprintPure, Category = "Billiardist")
+    USplineComponent* GetSpline() { return SplinePath; }
     
-    UFUNCTION(BlueprintCallable, Category = "Gameplay", meta = (DisplayName = "Launch Ball"))
+    UFUNCTION(BlueprintCallable, Category = "Billiardist")
     void LaunchBall(ABall* Ball, FVector Velocity);
 
-    FVector m_fCurrentMoveDirection = FVector(0);
+    FVector CurrentMoveDirection = FVector(0);
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-    // does not needs to be replicated for movement (only m_pSpline does)
-    // but may be needed for replication later
-    UPROPERTY(/*Replicated, */EditAnywhere, Category = "Billiardist Character", meta = (DisplayName = "Assigned billiard table"))
-    ATable* m_pTable = nullptr;
-    UPROPERTY(EditAnywhere, Category = "Billiardist Character", meta = (DisplayName = "Move speed"))
-    float m_fMoveSpeed = 1.0f;
+    UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist")
+    void OnPlayerStateChangedEvent(FBilliardistState NewState);
 
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process") // needed for replication, tested
+    USplineComponent* SplinePath { nullptr };
     
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process")
+    ABall* SelectedBall { nullptr };
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Controls")
+    float MoveSpeed = 200.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Controls")
+    float MouseSenseX = 1.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Controls")
+    float MouseSenseY = 1.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float HitStrengthMin = 50.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float HitStrengthMax = 500.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float HitStrengthChangeSpeed = 1.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float HitStrengthChangeHigh = 2.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float HitStrengthAlpha = 0.f; // from 0 to 1
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    float CurrentHitStrength = HitStrengthMin;
+
+    UPROPERTY(Replicated)
+    FBilliardistState PreviousState { FBilliardistState::WALKING };
+    UPROPERTY(Replicated)
+    FBilliardistState BilliardistState { FBilliardistState::WALKING };
 private:
-    UPROPERTY(Replicated) // needed for replication, tested
-    USplineComponent* m_pSplinePath { nullptr };
+    float DistanceAlongSpline{ 0.0f };
+    // for calculating aiming strength
+    bool StrengthIncreasing = true;
 
-    UFUNCTION(server, reliable, WithValidation)
-    void Server_SetTable(ATable* NewTable);
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_SetState(FBilliardistState NewState);
 
-    UFUNCTION(server, reliable, WithValidation)
-    void Server_SubscribeToStateChange();
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_SetSelectedBall(ABall* NewBall);
+
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_MovePlayer(FVector NewLocation);
+    UFUNCTION(reliable, NetMulticast, WithValidation)
+    void Multicast_MovePlayer(FVector NewLocation);
 
     // launches ball on server with multicasting
     UFUNCTION(reliable, server, WithValidation)
@@ -89,5 +149,17 @@ private:
     void Multicast_LaunchBall(ABall* Ball, FVector Velocity);
 
     UFUNCTION()
-    void OnPlayerStateChanged(FBilliardistState newState);
+    void MoveForward(float Value);
+    UFUNCTION()
+    void MoveRight(float Value);
+    UFUNCTION()
+    void Turn(float Value);
+    UFUNCTION()
+    void LookUp(float Value);
+    UFUNCTION()
+    void ActionPressHandle();
+    UFUNCTION()
+    void ReturnPressHandle();
+    UFUNCTION()
+    void ExaminingPressHandle();
 };

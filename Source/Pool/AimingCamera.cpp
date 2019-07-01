@@ -71,11 +71,7 @@ void AAimingCamera::Tick(float DeltaTime)
                 auto controller = Cast<ABilliardistController>(GetController());
                 if (!ensure(controller)) { return; }
 
-                controller->SwitchPawn(controller->GetBilliardist());
-                controller->LookAtBall();
-                controller->SetBall(nullptr);
-
-                controller->SetState(FBilliardistState::PICKING);
+                
             }
 
             break;

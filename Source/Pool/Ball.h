@@ -36,8 +36,7 @@ protected:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Spawn location on start"))
     FVector m_SpawnLocation = FVector(0);
 
-private:
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", DisplayName = "Static mesh"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "Static mesh"))
     UStaticMeshComponent* m_pSphereMesh;
 
 };

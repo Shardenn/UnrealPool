@@ -3,6 +3,7 @@
 #include "Billiardist.h"
 #include "Ball.h"
 #include "Pool.h"
+#include "BilliardistController.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"
@@ -12,121 +13,336 @@
 #include "UObject/UObjectIterator.h"
 #include "UnrealNetwork.h"
 
+#ifndef STATE_MACHINE
+#define STATE_MACHINE
+// observing is the state that takes place after a hit - when we are waiting for the balls to stop
+int BillStateMachine[5][5] = { // state machine of transferring from one state to another
+    // W, P, A, O, E
+    { 1, 1, 1, 0, 1 }, // Walking
+    { 1, 1, 1, 0, 1 }, // Picking
+    { 0, 1, 1, 1, 1 }, // Aiming - cant return directly to moving
+    { 0, 0, 0, 1, 1 }, // Observing - cant return to any state
+    { 1, 1, 1, 1, 1 }  // Examining
+};
+#endif
+
 // Sets default values
 ABilliardist::ABilliardist()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 }
-
-// VisualStudio shows IntelliSense error, but it actually compiles
-void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    // Replicate to everyone
-    //DOREPLIFETIME(ABilliardist, m_pTable);
-    DOREPLIFETIME(ABilliardist, m_pSplinePath);
-}
-
-bool ABilliardist::Server_SubscribeToStateChange_Validate() { return true; }
-void ABilliardist::Server_SubscribeToStateChange_Implementation()
-{
-    auto controller = Cast<ABilliardistController>(GetController());
-    if (controller)
-        controller->OnStateChange.AddDynamic(this, &ABilliardist::OnPlayerStateChanged);
-}
-
 
 // Called when the game starts or when spawned
 void ABilliardist::BeginPlay()
 {
     Super::BeginPlay();
-    Server_SubscribeToStateChange();
 }
 
-void ABilliardist::OnPlayerStateChanged(FBilliardistState newState)
+void ABilliardist::Initialize(USplineComponent* NewSpline)
 {
-    UE_LOG(LogPool, Warning, TEXT("%s sees that player state changed to %d"),
-        *GetName(), static_cast<uint8>(newState));
+    SetSplinePath(NewSpline);
 }
 
-// Called every frame
+void ABilliardist::SetSplinePath(USplineComponent* NewSpline)
+{
+    SplinePath = NewSpline;
+}
+
 void ABilliardist::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-
-    FBilliardistState currState = FBilliardistState::WALKING;
-    if (Cast<ABilliardistController>(GetController()) != nullptr)
+    switch (BilliardistState)
     {
-        currState = Cast<ABilliardistController>(GetController())->GetState();
-
-        switch (currState)
+        case FBilliardistState::WALKING:
+        case FBilliardistState::OBSERVING:
         {
-            case FBilliardistState::WALKING:
-            {
+            if (!SplinePath) 
+            { 
+                UE_LOG(LogPool, Warning, TEXT("%s does not have any spline path assigned."), *GetName());
                 break;
             }
-            case FBilliardistState::PICKING:
-            {
-                // highlight a ball that may be picked right now
-                break;
-            }
-            case FBilliardistState::AIMING:
-            {
-                // update the hit strength
 
+            if (CurrentMoveDirection != FVector::ZeroVector)
+            {
+                auto SplineTangent = SplinePath->GetDirectionAtDistanceAlongSpline(DistanceAlongSpline, ESplineCoordinateSpace::World);
+                float cosin = FVector::DotProduct(SplineTangent, CurrentMoveDirection) /
+                    (SplineTangent.Size() * CurrentMoveDirection.Size()); // cos between spline tangent and move direction without spline
+                DistanceAlongSpline += cosin * DeltaTime * GetMoveSpeed();
 
-                break;
+                if (DistanceAlongSpline >= SplinePath->GetSplineLength())
+                    DistanceAlongSpline -= SplinePath->GetSplineLength();
+                else if (DistanceAlongSpline < 0)
+                    DistanceAlongSpline += SplinePath->GetSplineLength();
+
+                Server_MovePlayer(SplinePath->GetLocationAtDistanceAlongSpline(DistanceAlongSpline,
+                    ESplineCoordinateSpace::World));
+
+                CurrentMoveDirection = FVector::ZeroVector;
             }
-            case FBilliardistState::OBSERVING:
+
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            // allow only camera controls
+            // small crosshair for ball selecting is visible
+            // on LBM we pick a ball and goto aiming state
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            HitStrengthAlpha = (CurrentHitStrength - HitStrengthMin) /
+                (HitStrengthMax - HitStrengthMin);
+
+            float koeff = FMath::Lerp(HitStrengthChangeSpeed, HitStrengthChangeHigh,
+                HitStrengthAlpha);
+
+            HitStrengthAlpha += DeltaTime * koeff * (StrengthIncreasing ? 1 : -1);
+
+            if (HitStrengthAlpha > 1.f)
             {
-                break;
+                HitStrengthAlpha = 1.f;
+                StrengthIncreasing = false;
             }
-            case FBilliardistState::EXAMINING:
+            if (HitStrengthAlpha < 0.f)
             {
-                break;
+                HitStrengthAlpha = 0.f;
+                StrengthIncreasing = true;
             }
+
+            CurrentHitStrength = HitStrengthMin + HitStrengthAlpha *
+                (HitStrengthMax - HitStrengthMin);
+
+            break;
+        }
+
+        case FBilliardistState::EXAMINING:
+        {
+            break;
         }
     }
 }
 
-void ABilliardist::SetTable(ATable* NewTable)
+void ABilliardist::SetupPlayerInputComponent(UInputComponent* InputComponent)
 {
-    Server_SetTable(NewTable);
-    auto GotController = Cast<ABilliardistController>(GetController());
-    if (GotController)
+    Super::SetupPlayerInputComponent(InputComponent);
+
+    InputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
+    InputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
+    InputComponent->BindAxis("Turn", this, &ABilliardist::Turn);
+    InputComponent->BindAxis("LookUp", this, &ABilliardist::LookUp);
+
+    InputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
+    InputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
+    InputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
+}
+
+void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    // Replicate to everyone
+    //DOREPLIFETIME(ABilliardist, Table);
+    DOREPLIFETIME(ABilliardist, SplinePath);
+    DOREPLIFETIME(ABilliardist, SelectedBall);
+    DOREPLIFETIME(ABilliardist, BilliardistState);
+    DOREPLIFETIME(ABilliardist, PreviousState);
+}
+
+void ABilliardist::MoveForward(float Value)
+{
+    if (Value == 0.0f)
+        return;
+
+    auto Rotation = GetControlRotation();
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+    CurrentMoveDirection += Direction * Value;
+}
+
+void ABilliardist::MoveRight(float Value)
+{
+    if (Value == 0.0f)
+        return;
+
+    auto Rotation = GetControlRotation();
+    const auto Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+    CurrentMoveDirection += Direction * Value;
+}
+
+bool ABilliardist::Server_MovePlayer_Validate(FVector) { return true; }
+void ABilliardist::Server_MovePlayer_Implementation(FVector NewLocation)
+{
+    Multicast_MovePlayer(NewLocation);
+}
+
+bool ABilliardist::Multicast_MovePlayer_Validate(FVector NewLocation) { return true; }
+void ABilliardist::Multicast_MovePlayer_Implementation(FVector NewLocation)
+{
+    SetActorLocation(NewLocation);
+}
+
+void ABilliardist::Turn(float Value)
+{
+    AddControllerYawInput(Value * MouseSenseX);
+}
+
+void ABilliardist::LookUp(float Value)
+{
+    AddControllerPitchInput(Value * MouseSenseY);
+}
+
+void ABilliardist::ActionPressHandle()
+{
+    switch (BilliardistState)
     {
-        GotController->SetTable(NewTable);
+        case FBilliardistState::WALKING:
+        {
+            SetState(FBilliardistState::PICKING);
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            // when we press LMB while PIKING and we found some ball, we should 
+            // 1. set the selected ball
+            ABall* FoundBall = nullptr;
+            ABilliardistController* Controller = Cast<ABilliardistController>(GetController());
+
+            if (!ensure(Controller)) { return; }
+
+            if (Controller->TryRaycastBall(FoundBall))
+            {
+                UE_LOG(LogPool, Log, TEXT("Found ball %s "), *GetName());
+                SetSelectedBall(FoundBall);
+                SetState(FBilliardistState::AIMING);
+                UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
+
+                // 2. switch the pawn to aiming camera
+                // TODO camera handling here
+            }
+
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            if (!ensure(SelectedBall)) { return; }
+
+            // get the current hit strength and look vector
+            auto ballHitDirection = GetControlRotation().Vector();
+            ballHitDirection.Z = 0.f;
+            auto hitVector = ballHitDirection * CurrentHitStrength;
+
+            // nil hit strength related stuff
+            HitStrengthAlpha = 0.f;
+            CurrentHitStrength = HitStrengthMin;
+
+            // TODO ball launch here and camera handling
+
+            SetState(FBilliardistState::OBSERVING);
+
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set any state, but it is possible only to set examining (handled in setstate)
+            // TODO camera switching here
+
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            break;
+        }
+    }
+}
+
+void ABilliardist::ReturnPressHandle()
+{
+    switch (BilliardistState)
+    {
+        case FBilliardistState::WALKING:
+        {
+            // nowhere to return, it is a default state
+            break;
+        }
+        case FBilliardistState::PICKING:
+        {
+            SetState(FBilliardistState::WALKING);
+            SetSelectedBall(nullptr);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
+            break;
+        }
+        case FBilliardistState::AIMING:
+        {
+            // TODO returning from aiming
+            HitStrengthAlpha = 0.f;
+            CurrentHitStrength = HitStrengthMin;
+            break;
+        }
+        case FBilliardistState::OBSERVING:
+        {
+            // set examining
+            SetState(FBilliardistState::WALKING);
+            // we cannot return to anything except examining
+            break;
+        }
+        case FBilliardistState::EXAMINING:
+        {
+            // return to the previous state
+            SetState(PreviousState);
+            UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
+            break;
+        }
+    }
+}
+
+void ABilliardist::ExaminingPressHandle()
+{
+    // TODO split in two funcs - GoToExamining and ReturnFromExaminging
+    if (BilliardistState != FBilliardistState::EXAMINING)
+    {
+        SetState(FBilliardistState::EXAMINING);
     }
     else
     {
-        if (GetController())
-        {
-            UE_LOG(LogPool, Error, TEXT("%s: Tried to tell controller %s to update the table but failed - got null on controller cast"),
-                *GetName(),
-                *GetController()->GetName());
-        }
-        else
-        {
-            UE_LOG(LogPool, Error, TEXT("%s: does not have controller at all. What?"), *GetName());
-        }
+        SetState(PreviousState);
     }
 }
 
-bool ABilliardist::Server_SetTable_Validate(ATable*) { return true; }
-
-void ABilliardist::Server_SetTable_Implementation(ATable* NewTable)
+void ABilliardist::SetState(FBilliardistState NewState)
 {
-    m_pTable = NewTable;
-    if (m_pTable)
-        m_pSplinePath = m_pTable->GetSplinePath();
-    else
+    Server_SetState(NewState);
+}
+
+bool ABilliardist::Server_SetState_Validate(FBilliardistState) { return true; }
+
+void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
+{
+    if (BilliardistState == NewState)
+        return;
+
+    // TODO remove "true ||" here. Added for debugging OBSERVING state
+    if (true || BillStateMachine[(int)BilliardistState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
+                                                  // then we update the state. It is replicated automatically
+                                                  // by UPROPERTY
     {
-        m_pSplinePath = nullptr;
-        UE_LOG(LogTemp, Warning, TEXT("%s was assigned with the null table and therefore null spline path"), *GetName());
+        PreviousState = BilliardistState;
+        BilliardistState = NewState;
+        OnStateChange.Broadcast(BilliardistState);
+        OnPlayerStateChangedEvent(BilliardistState);
     }
 }
+
+void ABilliardist::SetSelectedBall(ABall* NewBall)
+{
+    Server_SetSelectedBall(NewBall);
+}
+
+bool ABilliardist::Server_SetSelectedBall_Validate(ABall*) { return true; }
+void ABilliardist::Server_SetSelectedBall_Implementation(ABall* NewBall)
+{
+    SelectedBall = NewBall;
+}
+
 
 void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 {
@@ -142,7 +358,5 @@ void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocit
 bool ABilliardist::Multicast_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
-    if (Role < ROLE_Authority)
-        UE_LOG(LogPool, Log, TEXT("%s is launching ball %s out"), *GetName(), *Ball->GetName());
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddForce(Velocity);
 }
