@@ -69,7 +69,7 @@ void AAimingCamera::Tick(float DeltaTime)
                 m_fAlpha = 0.f;
                 SetState(FAimingCameraState::InPlayer);
                 auto controller = Cast<ABilliardistController>(GetController());
-                check(controller != nullptr);
+                if (!ensure(controller)) { return; }
 
                 controller->SwitchPawn(controller->GetBilliardist());
                 controller->LookAtBall();

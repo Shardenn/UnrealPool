@@ -56,6 +56,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "Billiardist Character", meta = (DisplayName = "Get Spline"))
     USplineComponent* GetSpline() { return m_pSplinePath; }
     
+    UFUNCTION(BlueprintCallable, Category = "Gameplay", meta = (DisplayName = "Launch Ball"))
+    void LaunchBall(ABall* Ball, FVector Velocity);
+
     FVector m_fCurrentMoveDirection = FVector(0);
 protected:
     // Called when the game starts or when spawned
@@ -78,6 +81,12 @@ private:
 
     UFUNCTION(server, reliable, WithValidation)
     void Server_SubscribeToStateChange();
+
+    // launches ball on server with multicasting
+    UFUNCTION(reliable, server, WithValidation)
+    void Server_LaunchBall(ABall* Ball, FVector Velocity);
+    UFUNCTION(reliable, NetMulticast, WithValidation)
+    void Multicast_LaunchBall(ABall* Ball, FVector Velocity);
 
     UFUNCTION()
     void OnPlayerStateChanged(FBilliardistState newState);

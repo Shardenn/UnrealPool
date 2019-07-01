@@ -132,11 +132,7 @@ private:
     UFUNCTION(reliable, NetMulticast, WithValidation)
     void Multicast_MovePlayer(FVector NewLocation);
     
-    // launches ball on server with multicasting
-    UFUNCTION(reliable, server, WithValidation)
-    void Server_LaunchBall(FVector Velocity);
-    UFUNCTION(reliable, NetMulticast, WithValidation)
-    void Multicast_LaunchBall(FVector Velocity);
+    
 
     UFUNCTION(reliable, server, WithValidation)
     void Server_Initialize(ATable* Table, ABilliardist* BillPawn, ACameraManager* CamMan);

@@ -124,7 +124,6 @@ void ABilliardistController::Tick(float DeltaTime)
                 m_fCurrentHitStrength = m_fHitStrengthMin + m_fHitStrengthAlpha *
                     (m_fHitStrengthMax - m_fHitStrengthMin);
 
-                UE_LOG(LogPool, Log, TEXT("Current hit strength is %f"), m_fCurrentHitStrength);
                 break;
             }
             
@@ -170,7 +169,7 @@ void ABilliardistController::SetBilliardist(ABilliardist* BillPawn)
 bool ABilliardistController::Server_SetBilliardist_Validate(ABilliardist*) { return true; }
 void ABilliardistController::Server_SetBilliardist_Implementation(ABilliardist* BillPawn)
 {
-    check(BillPawn != nullptr);
+    if (!ensure(BillPawn)) { return; }
     m_pControlledBilliardist = BillPawn;
 }
 
@@ -182,7 +181,7 @@ void ABilliardistController::SetTable(ATable* NewTable)
 bool ABilliardistController::Server_SetTable_Validate(ATable*) { return true; }
 void ABilliardistController::Server_SetTable_Implementation(ATable* NewTable)
 {
-    check(NewTable != nullptr);
+    if (!ensure(NewTable)) { return; }
     m_pPlayerSpline = NewTable->GetSplinePath();
 }
 
@@ -267,19 +266,6 @@ void ABilliardistController::Server_SetState_Implementation(FBilliardistState Ne
         OnStateChange.Broadcast(m_eState);
         OnPlayerStateChangedEvent(m_eState);
     }
-}
-
-bool ABilliardistController::Server_LaunchBall_Validate(FVector) { return true; }
-void ABilliardistController::Server_LaunchBall_Implementation(FVector Velocity)
-{
-    Multicast_LaunchBall(Velocity);
-    //Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
-}
-
-bool ABilliardistController::Multicast_LaunchBall_Validate(FVector) { return true; }
-void ABilliardistController::Multicast_LaunchBall_Implementation(FVector Velocity)
-{
-    Cast<UStaticMeshComponent>(m_pSelectedBall->GetRootComponent())->AddForce(Velocity);
 }
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
@@ -419,7 +405,7 @@ void ABilliardistController::ActionPressHandle()
                 if (m_pCameraManager && m_pCameraManager->AimingPawn)
                     aimCamera = Cast<AAimingCamera>(m_pCameraManager->AimingPawn);
 
-                check(aimCamera != nullptr);
+                if (!ensure(aimCamera)) { return; }
 
                 auto location = PlayerCameraManager->GetCameraLocation();
                 auto rotation = PlayerCameraManager->GetCameraRotation();
@@ -436,7 +422,7 @@ void ABilliardistController::ActionPressHandle()
         }
         case FBilliardistState::AIMING:
         {
-            check(m_pSelectedBall != nullptr);
+            if (!ensure(m_pSelectedBall)) { return; }
 
             // get the current hit strength and look vector
             auto ballHitDirection = GetControlRotation().Vector();
@@ -447,10 +433,8 @@ void ABilliardistController::ActionPressHandle()
             m_fHitStrengthAlpha = 0.f;
             m_fCurrentHitStrength = m_fHitStrengthMin;
 
-            // push the ball
-            Server_LaunchBall(hitVector);
-
             SwitchPawn(m_pControlledBilliardist);
+            m_pControlledBilliardist->LaunchBall(m_pSelectedBall, hitVector);
 
             // make controller (and camera) look at ball
             LookAtBall();

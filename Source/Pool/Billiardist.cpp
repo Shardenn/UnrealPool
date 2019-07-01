@@ -128,3 +128,21 @@ void ABilliardist::Server_SetTable_Implementation(ATable* NewTable)
     }
 }
 
+void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
+{
+    Server_LaunchBall(Ball, Velocity);
+}
+
+bool ABilliardist::Server_LaunchBall_Validate(ABall*, FVector) { return true; }
+void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
+{
+    Multicast_LaunchBall(Ball, Velocity);
+}
+
+bool ABilliardist::Multicast_LaunchBall_Validate(ABall*, FVector) { return true; }
+void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
+{
+    if (Role < ROLE_Authority)
+        UE_LOG(LogPool, Log, TEXT("%s is launching ball %s out"), *GetName(), *Ball->GetName());
+    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddForce(Velocity);
+}
