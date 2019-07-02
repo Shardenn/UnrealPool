@@ -33,7 +33,7 @@ protected:
     virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist controller", Meta = (DisplayName = "On Player State Changed"))
-    void OnPlayerStateChangedEvent(FBilliardistState NewState);
+    void OnPlayerStateChangedEvent(FBilliardistState NewState, FBilliardistState OldState);
 
     UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair X location"))
     float CrosshairXLocation{ 0.5f };
@@ -43,7 +43,7 @@ protected:
     float RaycastLength{ 200.f };
 
     UFUNCTION()
-    void OnPlayerStateChanged(FBilliardistState newState);
+    void OnPlayerStateChanged(FBilliardistState newState, FBilliardistState OldState);
 private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SubscribeToStateChange(ABilliardist* Billardist);

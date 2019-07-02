@@ -36,9 +36,9 @@ void ABilliardistController::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
-void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState)
+void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState, FBilliardistState OldState)
 {
-    OnPlayerStateChangedEvent(newState);
+    OnPlayerStateChangedEvent(newState, OldState);
 }
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)

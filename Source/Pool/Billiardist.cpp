@@ -275,6 +275,8 @@ void ABilliardist::ReturnPressHandle()
         case FBilliardistState::AIMING:
         {
             // TODO returning from aiming
+            SetState(FBilliardistState::PICKING);
+
             HitStrengthAlpha = 0.f;
             CurrentHitStrength = HitStrengthMin;
             break;
@@ -328,8 +330,9 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
     {
         PreviousState = BilliardistState;
         BilliardistState = NewState;
-        OnStateChange.Broadcast(BilliardistState);
-        OnPlayerStateChanged(BilliardistState);
+
+        OnStateChange.Broadcast(BilliardistState, PreviousState);
+        OnPlayerStateChanged(BilliardistState, PreviousState);
     }
 }
 
@@ -342,6 +345,7 @@ bool ABilliardist::Server_SetSelectedBall_Validate(ABall*) { return true; }
 void ABilliardist::Server_SetSelectedBall_Implementation(ABall* NewBall)
 {
     SelectedBall = NewBall;
+    OnSelectedBallUpdate.Broadcast(SelectedBall);
 }
 
 

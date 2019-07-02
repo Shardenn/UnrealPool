@@ -45,7 +45,7 @@ enum class FBilliardistState : uint8
     POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistState, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerStateChange, FBilliardistState, NewState, FBilliardistState, OldState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
 
 UCLASS()
@@ -96,7 +96,7 @@ protected:
     virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist")
-    void OnPlayerStateChanged(FBilliardistState NewState);
+    void OnPlayerStateChanged(FBilliardistState NewState, FBilliardistState OldState);
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process") // needed for replication, tested
     USplineComponent* SplinePath { nullptr };
