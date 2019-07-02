@@ -4,8 +4,6 @@
 #include "Pool.h"
 #include "Billiardist.h"
 
-#include "UnrealNetwork.h"
-
 #include "Kismet/GameplayStatics.h"
 
 #include "DrawDebugHelpers.h"

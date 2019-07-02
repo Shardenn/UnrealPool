@@ -141,13 +141,13 @@ private:
 
     UFUNCTION(reliable, server, WithValidation)
     void Server_MovePlayer(FVector NewLocation);
-    UFUNCTION(reliable, NetMulticast, WithValidation)
+    UFUNCTION(reliable, NetMulticast)
     void Multicast_MovePlayer(FVector NewLocation);
 
     // launches ball on server with multicasting
     UFUNCTION(reliable, server, WithValidation)
     void Server_LaunchBall(ABall* Ball, FVector Velocity);
-    UFUNCTION(reliable, NetMulticast, WithValidation)
+    UFUNCTION(reliable, NetMulticast)
     void Multicast_LaunchBall(ABall* Ball, FVector Velocity);
 
     UFUNCTION()

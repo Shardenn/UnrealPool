@@ -4,6 +4,7 @@
 #include "Ball.h"
 #include "Pool.h"
 #include "BilliardistController.h"
+#include "AimingComponent.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"
@@ -11,7 +12,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "UObject/UObjectIterator.h"
-#include "UnrealNetwork.h"
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -129,8 +129,8 @@ void ABilliardist::SetupPlayerInputComponent(UInputComponent* InputComponent)
 
     InputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
     InputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
-    InputComponent->BindAxis("Turn", this, &ABilliardist::Turn);
-    InputComponent->BindAxis("LookUp", this, &ABilliardist::LookUp);
+    //InputComponent->BindAxis("Turn", this, &ABilliardist::Turn);
+    //InputComponent->BindAxis("LookUp", this, &ABilliardist::LookUp);
 
     InputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
     InputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
@@ -174,7 +174,6 @@ void ABilliardist::Server_MovePlayer_Implementation(FVector NewLocation)
     Multicast_MovePlayer(NewLocation);
 }
 
-bool ABilliardist::Multicast_MovePlayer_Validate(FVector NewLocation) { return true; }
 void ABilliardist::Multicast_MovePlayer_Implementation(FVector NewLocation)
 {
     SetActorLocation(NewLocation);
@@ -223,12 +222,19 @@ void ABilliardist::ActionPressHandle()
         }
         case FBilliardistState::AIMING:
         {
+            // TODO where to hangle it? BP or ++ ?
+            SetState(FBilliardistState::OBSERVING);
+            break;
+
             if (!ensure(SelectedBall)) { return; }
 
             // get the current hit strength and look vector
-            auto ballHitDirection = GetControlRotation().Vector();
-            ballHitDirection.Z = 0.f;
-            auto hitVector = ballHitDirection * CurrentHitStrength;
+            auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
+            if (!ensure(AimingComponent)) { return; }
+            auto BallHitDirection = Cast<USceneComponent>(AimingComponent)->GetComponentToWorld().Rotator().Vector();
+
+            BallHitDirection.Z = 0.f;
+            auto hitVector = BallHitDirection * CurrentHitStrength;
 
             // nil hit strength related stuff
             HitStrengthAlpha = 0.f;
@@ -238,7 +244,7 @@ void ABilliardist::ActionPressHandle()
             LaunchBall(SelectedBall, hitVector);
             SetSelectedBall(nullptr);
 
-            SetState(FBilliardistState::OBSERVING);
+            
 
             break;
         }
@@ -360,7 +366,6 @@ void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocit
     Multicast_LaunchBall(Ball, Velocity);
 }
 
-bool ABilliardist::Multicast_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddForce(Velocity);
