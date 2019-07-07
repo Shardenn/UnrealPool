@@ -1,6 +1,8 @@
 #include "PoolGameInstance.h"
 #include "Pool.h"
 #include "MenuSystem/MainMenu.h"
+#include "MenuSystem/MenuWidget.h"
+#include "MenuSystem/InGameMenu.h"
 
 #include "OnlineSubsystem.h"
 #include "Engine/Engine.h"
@@ -10,17 +12,21 @@
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
-    ConstructorHelpers::FClassFinder<UMainMenu> MenuBPClass(TEXT("/Game/UI/MenuSystem/WBP_MainMenu"));
-    if (!ensure(MenuBPClass.Class != nullptr)) return;
+    ConstructorHelpers::FClassFinder<UMainMenu> MainMenuBPClass(TEXT("/Game/UI/MenuSystem/WBP_MainMenu"));
+    if (!ensure(MainMenuBPClass.Class != nullptr)) return;
+
+    ConstructorHelpers::FClassFinder<UInGameMenu> InGameBPClass(TEXT("/Game/UI/MenuSystem/WBP_InGameMenu"));
+    if (!ensure(InGameBPClass.Class != nullptr)) return;
 
     // Store MainMenu class for displaying later
-    MenuClass = MenuBPClass.Class;
+    MainMenuClass = MainMenuBPClass.Class;
+    InGameMenuClass = InGameBPClass.Class;
 }
 
 void UPoolGameInstance::Init()
 {
     UE_LOG(LogPool, Warning, TEXT("PoolGameInstance::Init()"));
-    UE_LOG(LogPool, Warning, TEXT("Found MenuClass %s"), *MenuClass.Get()->GetName());
+    UE_LOG(LogPool, Warning, TEXT("Found MenuClass %s"), *MainMenuClass.Get()->GetName());
 
     IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
     if (Subsystem != nullptr)
@@ -40,23 +46,24 @@ void UPoolGameInstance::Init()
 
 void UPoolGameInstance::LoadMenu()
 {
-    if (!ensure(MenuClass != nullptr)) return;
+    if (!ensure(MainMenuClass != nullptr)) return;
 
-    UMainMenu* Menu = CreateWidget<UMainMenu>(this, MenuClass);
+    Menu = CreateWidget<UMainMenu>(this, MainMenuClass);
     if (!ensure(Menu != nullptr)) return;
 
-    Menu->AddToViewport();
-
-    APlayerController* PlayerController = GetFirstLocalPlayerController();
-    if (!ensure(PlayerController != nullptr)) return;
-
-    FInputModeUIOnly InputModeData;
-    InputModeData.SetWidgetToFocus(Menu->TakeWidget());
-    InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    PlayerController->SetInputMode(InputModeData);
-    PlayerController->bShowMouseCursor = true;
-
+    Menu->Setup();
     Menu->SetMenuInterface(this);
+}
+
+void UPoolGameInstance::LoadMenuInGame()
+{
+    if (!ensure(InGameMenuClass != nullptr)) return;
+
+    UMenuWidget* InGameMenu = CreateWidget<UMenuWidget>(this, InGameMenuClass);
+    if (!ensure(InGameMenu != nullptr)) return;
+
+    InGameMenu->Setup();
+    InGameMenu->SetMenuInterface(this);
 }
 
 void UPoolGameInstance::Host()
@@ -68,6 +75,9 @@ void UPoolGameInstance::Host()
 
     UWorld* World = GetWorld();
     if (!ensure(World != nullptr)) return;
+
+    if (Menu)
+        Menu->Teardown();
 
     World->ServerTravel("/Game/Maps/Pool_cozy_room?listen");
 }
@@ -82,5 +92,16 @@ void UPoolGameInstance::Join(const FString& Address)
     APlayerController* PlayerController = GetFirstLocalPlayerController();
     if (!ensure(PlayerController != nullptr)) return;
 
+    if (Menu)
+        Menu->Teardown();
+
     PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+}
+
+void UPoolGameInstance::LoadMainMenuLevel()
+{
+    APlayerController* PlayerController = GetFirstLocalPlayerController();
+    if (!ensure(PlayerController != nullptr)) return;
+
+    PlayerController->ClientTravel("/Game/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
 }
