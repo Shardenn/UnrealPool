@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSessionInterface.h"
 
 #include "MenuSystem/MenuInterface.h"
 #include "PoolGameInstance.generated.h"
@@ -32,7 +33,7 @@ public:
     void Host() override;
 
     UFUNCTION(Exec)
-    void Join(const FString& Address) override;
+    void Join(uint32 Index) override;
 
     void RequestFindSessions() override;
 
@@ -47,6 +48,7 @@ private:
     void OnSessionCreated(FName Name, bool bSuccess);
     void OnSessionDestroy(FName Name, bool bSuccess);
     void OnSessionsSearchComplete(bool bFound);
+    void OnSessionJoinComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
     void CreateSession();
 

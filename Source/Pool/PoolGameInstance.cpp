@@ -7,7 +7,6 @@
 #include "Engine/Engine.h"
 #include "UObject/ConstructorHelpers.h"
 #include "OnlineSessionSettings.h"
-#include "OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 
 #include "Blueprint/UserWidget.h"
@@ -42,6 +41,7 @@ void UPoolGameInstance::Init()
             SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionCreated);
             SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionDestroy);
             SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionsSearchComplete);
+            SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionJoinComplete);
         }
     }
     else
@@ -123,6 +123,22 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
     }
 }
 
+void UPoolGameInstance::OnSessionJoinComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+{
+    FString TravelURL;
+
+    if (!SessionInterface->GetResolvedConnectString(SessionName, TravelURL))
+    {
+        UE_LOG(LogPool, Warning, TEXT("Could not get resolved connect string"));
+        return;
+    }
+
+    APlayerController* PlayerController = GetFirstLocalPlayerController();
+    if (!ensure(PlayerController != nullptr)) return;
+
+    PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute);
+}
+
 void UPoolGameInstance::CreateSession()
 {
     if (SessionInterface.IsValid())
@@ -152,23 +168,17 @@ void UPoolGameInstance::Host()
     }
 }
 
-void UPoolGameInstance::Join(const FString& Address)
+void UPoolGameInstance::Join(uint32 Index)
 {
-    //UEngine* Engine = GetEngine();
-    //if (!ensure(Engine != nullptr)) return;
-
-    //Engine->AddOnScreenDebugMessage(0, 5, FColor::Green, FString::Printf(TEXT("Joining %s"), *Address));
-
-    //APlayerController* PlayerController = GetFirstLocalPlayerController();
-    //if (!ensure(PlayerController != nullptr)) return;
+    if (!SessionInterface.IsValid()) return;
 
     if (Menu)
     {
-        //Menu->Teardown();
-        Menu->SetServerList({ "Test1", "Test2" });
+        Menu->Teardown();
     }
 
-    //PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+    if (!SessionSearch.IsValid()) return;
+    SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[Index]);
 }
 
 void UPoolGameInstance::RequestFindSessions()
