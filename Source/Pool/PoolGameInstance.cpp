@@ -4,11 +4,14 @@
 #include "MenuSystem/MenuWidget.h"
 #include "MenuSystem/InGameMenu.h"
 
-#include "OnlineSubsystem.h"
 #include "Engine/Engine.h"
 #include "UObject/ConstructorHelpers.h"
+#include "OnlineSessionSettings.h"
+#include "OnlineSessionInterface.h"
 
 #include "Blueprint/UserWidget.h"
+
+const static FName SESSION_NAME = TEXT("My session game");
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -32,10 +35,11 @@ void UPoolGameInstance::Init()
     if (Subsystem != nullptr)
     {
         UE_LOG(LogPool, Warning, TEXT("Found online subsystem named %s"), *Subsystem->GetSubsystemName().ToString());
-        auto SessionInterface = Subsystem->GetSessionInterface();
+        SessionInterface = Subsystem->GetSessionInterface();
         if (SessionInterface.IsValid())
         {
-            UE_LOG(LogPool, Warning, TEXT("Found session interface"));
+            SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionCreated);
+            SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionDestroy);
         }
     }
     else
@@ -66,8 +70,14 @@ void UPoolGameInstance::LoadMenuInGame()
     InGameMenu->SetMenuInterface(this);
 }
 
-void UPoolGameInstance::Host()
+void UPoolGameInstance::OnSessionCreated(FName Name, bool bSuccess)
 {
+    if (!bSuccess)
+    {
+        UE_LOG(LogPool, Error, TEXT("Session could not be created"));
+        return;
+    }
+
     UEngine* Engine = GetEngine();
     if (!ensure(Engine != nullptr)) return;
 
@@ -80,6 +90,40 @@ void UPoolGameInstance::Host()
         Menu->Teardown();
 
     World->ServerTravel("/Game/Maps/Pool_cozy_room?listen");
+}
+
+void UPoolGameInstance::OnSessionDestroy(FName Name, bool bSuccess)
+{
+    if (bSuccess)
+    {
+        CreateSession();
+    }
+}
+
+void UPoolGameInstance::CreateSession()
+{
+    if (SessionInterface.IsValid())
+    {
+        FOnlineSessionSettings SessionSettings;
+        SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
+    }
+}
+
+void UPoolGameInstance::Host()
+{
+    if (SessionInterface.IsValid())
+    {
+        auto ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);
+        if (ExistingSession != nullptr)
+        {
+            // it will automatically call CreateSession, see OnSessionDestroy above
+            SessionInterface->DestroySession(SESSION_NAME);
+        }
+        else
+        {
+            CreateSession();
+        }
+    }
 }
 
 void UPoolGameInstance::Join(const FString& Address)

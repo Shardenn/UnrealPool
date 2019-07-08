@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "OnlineSubsystem.h"
+
 #include "MenuSystem/MenuInterface.h"
 #include "PoolGameInstance.generated.h"
 
@@ -26,6 +28,8 @@ public:
     UFUNCTION(BlueprintCallable)
     void LoadMenuInGame();
 
+    
+
     UFUNCTION(Exec)
     void Host() override;
 
@@ -37,6 +41,13 @@ public:
 private:
     TSubclassOf<class UUserWidget> MainMenuClass;
     TSubclassOf<class UUserWidget> InGameMenuClass;
+
+    IOnlineSessionPtr SessionInterface;
+
+    void OnSessionCreated(FName Name, bool bSuccess);
+    void OnSessionDestroy(FName Name, bool bSuccess);
+
+    void CreateSession();
 
     class UMainMenu* Menu;
 };
