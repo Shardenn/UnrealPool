@@ -14,6 +14,10 @@ UCLASS()
 class POOL_API UMainMenu : public UMenuWidget
 {
     GENERATED_BODY()
+public:
+    UMainMenu(const FObjectInitializer& ObjectInitializer);
+
+    void SetServerList(TArray<FString> ServerNames);
 protected:
     virtual bool Initialize() override;
     virtual void OnLevelRemovedFromWorld(class ULevel* InLevel, 
@@ -31,8 +35,13 @@ private:
     UPROPERTY(meta = (BindWidget))
     class UButton* ButtonJoinConfirm;
 
+    // scroll box of servers
     UPROPERTY(meta = (BindWidget))
-    class UEditableText* AddressField;
+    class UPanelWidget* ServerList;
+
+    TSubclassOf<class UUserWidget> ServerRowClass;
+
+    //class UServerRow* ServerRow;
     
     UPROPERTY(meta = (BindWidget))
     class UWidgetSwitcher* MenuSwitcher;
@@ -42,7 +51,7 @@ private:
 
     UPROPERTY(meta = (BindWidget))
     class UWidget* JoinMenu;
-    
+
     UFUNCTION()
     void HostServer();
     UFUNCTION()

@@ -1,9 +1,21 @@
 #include "MainMenu.h"
 #include "Pool.h"
+#include "ServerRow.h"
 
+#include "UObject/ConstructorHelpers.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableText.h"
+#include "Components/PanelWidget.h"
+#include "Components/TextBlock.h"
+
+UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
+{
+    ConstructorHelpers::FClassFinder<UUserWidget> ServerRowBPClass(TEXT("/Game/UI/MenuSystem/WBP_ServerRow"));
+    if (!ensure(ServerRowBPClass.Class != nullptr)) return;
+
+    ServerRowClass = ServerRowBPClass.Class;
+}
 
 bool UMainMenu::Initialize()
 {
@@ -25,7 +37,9 @@ bool UMainMenu::Initialize()
     if (!ensure(ButtonQuitGame != nullptr)) return false;
     ButtonQuitGame->OnClicked.AddDynamic(this, &UMainMenu::QuitPressed);
 
-    if (!ensure(AddressField != nullptr)) return false;
+    if (!ensure(ServerList != nullptr)) return false;
+
+    
 
     return true;
 }
@@ -43,12 +57,27 @@ void UMainMenu::HostServer()
     }
 }
 
+void UMainMenu::SetServerList(TArray<FString> ServerNames)
+{
+    ServerList->ClearChildren();
+
+    for (const FString& ServerName : ServerNames)
+    {
+        UServerRow* ServerRow = CreateWidget<UServerRow>(this, ServerRowClass);
+        if (!ensure(ServerRow != nullptr)) continue;
+
+        ServerRow->ServerName->SetText(FText::FromString(ServerName));
+
+        ServerList->AddChild(ServerRow);
+    }
+}
+
 void UMainMenu::JoinServer()
 {
     if (MenuInterface != nullptr)
     {
-        FString Address = AddressField->GetText().ToString();
-        MenuInterface->Join(Address);
+        //FString Address = AddressField->GetText().ToString();
+        //MenuInterface->Join("");
     }
 }
 
@@ -64,6 +93,11 @@ void UMainMenu::OpenJoinMenu()
     if (!ensure(MenuSwitcher != nullptr)) return;
     if (!ensure(JoinMenu != nullptr)) return;
     MenuSwitcher->SetActiveWidget(JoinMenu);
+
+    if (MenuInterface)
+    {
+        MenuInterface->RequestFindSessions();
+    }
 }
 
 void UMainMenu::QuitPressed()
