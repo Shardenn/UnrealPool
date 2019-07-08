@@ -28,8 +28,6 @@ public:
     UFUNCTION(BlueprintCallable)
     void LoadMenuInGame();
 
-    
-
     UFUNCTION(Exec)
     void Host() override;
 
@@ -46,8 +44,11 @@ private:
 
     void OnSessionCreated(FName Name, bool bSuccess);
     void OnSessionDestroy(FName Name, bool bSuccess);
+    void OnSessionsSearchComplete(bool bFound);
 
     void CreateSession();
+
+    TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 
     class UMainMenu* Menu;
 };

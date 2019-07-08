@@ -8,6 +8,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSessionInterface.h"
+#include "OnlineSessionSettings.h"
 
 #include "Blueprint/UserWidget.h"
 
@@ -40,6 +41,15 @@ void UPoolGameInstance::Init()
         {
             SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionCreated);
             SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionDestroy);
+            SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UPoolGameInstance::OnSessionsSearchComplete);
+
+            // search for sessions
+            SessionSearch = MakeShareable(new FOnlineSessionSearch());
+            if (SessionSearch.IsValid())
+            {
+                UE_LOG(LogPool, Warning, TEXT("Starting searching for sessions..."));
+                SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+            }
         }
     }
     else
@@ -97,6 +107,18 @@ void UPoolGameInstance::OnSessionDestroy(FName Name, bool bSuccess)
     if (bSuccess)
     {
         CreateSession();
+    }
+}
+
+void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
+{
+    if (bFound)
+    {
+        UE_LOG(LogPool, Warning, TEXT("Found sessions"));
+    }
+    else
+    {
+        UE_LOG(LogPool, Warning, TEXT("Did not find sessions"));
     }
 }
 
