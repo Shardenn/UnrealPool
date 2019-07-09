@@ -5,8 +5,7 @@
 // Sets default values
 ABall::ABall()
 {
-    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
 
     m_pSphereMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere mesh"));
     RootComponent = m_pSphereMesh;
@@ -22,11 +21,3 @@ void ABall::BeginPlay()
 
     m_pSphereMesh->SetSimulatePhysics(true);
 }
-
-// Called every frame
-void ABall::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-
-}
-

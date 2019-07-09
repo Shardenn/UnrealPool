@@ -31,6 +31,7 @@ ABilliardist::ABilliardist()
 {
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -74,8 +75,9 @@ void ABilliardist::Tick(float DeltaTime)
                 else if (DistanceAlongSpline < 0)
                     DistanceAlongSpline += SplinePath->GetSplineLength();
 
-                Server_MovePlayer(SplinePath->GetLocationAtDistanceAlongSpline(DistanceAlongSpline,
-                    ESplineCoordinateSpace::World));
+                FVector NewLocation = SplinePath->GetLocationAtDistanceAlongSpline(DistanceAlongSpline,
+                    ESplineCoordinateSpace::World);
+                MovePlayer(NewLocation);
 
                 CurrentMoveDirection = FVector::ZeroVector;
             }
@@ -168,13 +170,16 @@ void ABilliardist::MoveRight(float Value)
     CurrentMoveDirection += Direction * Value;
 }
 
-bool ABilliardist::Server_MovePlayer_Validate(FVector) { return true; }
-void ABilliardist::Server_MovePlayer_Implementation(FVector NewLocation)
+
+void ABilliardist::MovePlayer(FVector NewLocation)
 {
-    Multicast_MovePlayer(NewLocation);
+    SetActorLocation(NewLocation);
+    Server_MovePlayer(NewLocation);
 }
 
-void ABilliardist::Multicast_MovePlayer_Implementation(FVector NewLocation)
+
+bool ABilliardist::Server_MovePlayer_Validate(FVector) { return true; }
+void ABilliardist::Server_MovePlayer_Implementation(FVector NewLocation)
 {
     SetActorLocation(NewLocation);
 }
@@ -212,7 +217,6 @@ void ABilliardist::ActionPressHandle()
                 UE_LOG(LogPool, Log, TEXT("Found ball %s "), *GetName());
                 SetSelectedBall(FoundBall);
                 SetState(FBilliardistState::AIMING);
-                UE_LOG(LogPool, Warning, TEXT("%s just entered AIMING state."), *GetName());
 
                 // 2. switch the pawn to aiming camera
                 // TODO camera handling here
@@ -275,7 +279,6 @@ void ABilliardist::ReturnPressHandle()
         {
             SetState(FBilliardistState::WALKING);
             SetSelectedBall(nullptr);
-            UE_LOG(LogPool, Warning, TEXT("%s just entered WALKING state."), *GetName());
             break;
         }
         case FBilliardistState::AIMING:
@@ -298,7 +301,6 @@ void ABilliardist::ReturnPressHandle()
         {
             // return to the previous state
             SetState(PreviousState);
-            UE_LOG(LogPool, Warning, TEXT("%s just entered previous state from EXAMINING state."), *GetName());
             break;
         }
     }
@@ -362,11 +364,6 @@ void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 
 bool ABilliardist::Server_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
-{
-    Multicast_LaunchBall(Ball, Velocity);
-}
-
-void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddForce(Velocity);
 }

@@ -144,9 +144,11 @@ void UPoolGameInstance::CreateSession()
     if (SessionInterface.IsValid())
     {
         FOnlineSessionSettings SessionSettings;
-        SessionSettings.bIsLANMatch = true;
+        SessionSettings.bIsLANMatch = false;
         SessionSettings.NumPublicConnections = 2;
         SessionSettings.bShouldAdvertise = true; // visible via search
+        SessionSettings.bUsesPresence = true;
+
         SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
     }
 }
@@ -188,7 +190,9 @@ void UPoolGameInstance::RequestFindSessions()
     if (SessionSearch.IsValid())
     {
         SessionSearch->bIsLanQuery = true;
-        //SessionSearch->QuerySettings.Get / Set for later, for Steam
+        SessionSearch->MaxSearchResults = 100;
+        // for steam presence enabled
+        SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
         UE_LOG(LogPool, Warning, TEXT("Starting searching for sessions..."));
         SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
     }
