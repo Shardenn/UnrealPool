@@ -5,7 +5,6 @@
 #include "Engine/Engine.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Components/SplineComponent.h"
 #include "Billiardist.generated.h"
 
 /* for fast copy-paste in future
@@ -47,6 +46,8 @@ enum class FBilliardistState : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerStateChange, FBilliardistState, NewState, FBilliardistState, OldState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
+
+class USplineComponent;
 
 UCLASS()
 class POOL_API ABilliardist : public ACharacter

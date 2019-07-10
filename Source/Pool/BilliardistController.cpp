@@ -3,7 +3,7 @@
 #include "BilliardistController.h"
 #include "Pool.h"
 #include "Billiardist.h"
-#include "Ball.h"
+#include "Objects/Ball.h"
 
 #include "Kismet/GameplayStatics.h"
 

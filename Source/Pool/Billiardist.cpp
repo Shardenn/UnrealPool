@@ -1,15 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Billiardist.h"
-#include "Ball.h"
+#include "Objects/Ball.h"
 #include "Pool.h"
 #include "BilliardistController.h"
 #include "AimingComponent.h"
-#include "PoolPlayerState.h"
+#include "AmericanPool/PoolPlayerState.h"
 #include "AmericanPool/PoolGameMode.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"
+#include "Components/SplineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"

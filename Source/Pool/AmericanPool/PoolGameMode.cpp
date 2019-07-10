@@ -1,11 +1,12 @@
 #include "PoolGameMode.h"
 
-#include "Table.h"
+#include "Objects/Table/Table.h"
 #include "Billiardist.h"
 #include "PoolGameState.h"
 
 #include "EngineUtils.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SplineComponent.h"
 
 bool APoolGameMode::ReadyToStartMatch_Implementation()
 {
