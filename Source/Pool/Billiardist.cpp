@@ -128,19 +128,19 @@ void ABilliardist::Tick(float DeltaTime)
     }
 }
 
-void ABilliardist::SetupPlayerInputComponent(UInputComponent* InputComponent)
+void ABilliardist::SetupPlayerInputComponent(UInputComponent* InInputComponent)
 {
-    Super::SetupPlayerInputComponent(InputComponent);
+    Super::SetupPlayerInputComponent(InInputComponent);
 
-    InputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
-    InputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
+    InInputComponent->BindAxis("MoveForward", this, &ABilliardist::MoveForward);
+    InInputComponent->BindAxis("MoveRight", this, &ABilliardist::MoveRight);
     //InputComponent->BindAxis("Turn", this, &ABilliardist::Turn);
     //InputComponent->BindAxis("LookUp", this, &ABilliardist::LookUp);
 
-    InputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
-    InputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
-    InputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
-    InputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardist::ReadyPressHandle);
+    InInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
+    InInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
+    InInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
+    InInputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardist::ReadyPressHandle);
 }
 
 void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -198,9 +198,9 @@ void ABilliardist::LookUp(float Value)
 
 void ABilliardist::ReadyPressHandle()
 {
-    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    if (!ensure(PlayerState != nullptr)) return;
-    PlayerState->ToggleReady();
+    APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (!ensure(PoolPlayerState != nullptr)) return;
+    PoolPlayerState->ToggleReady();
 }
 
 void ABilliardist::ActionPressHandle()
@@ -217,11 +217,11 @@ void ABilliardist::ActionPressHandle()
             // when we press LMB while PIKING and we found some ball, we should 
             // 1. set the selected ball
             ABall* FoundBall = nullptr;
-            ABilliardistController* Controller = Cast<ABilliardistController>(GetController());
+            ABilliardistController* BillController = Cast<ABilliardistController>(GetController());
 
-            if (!ensure(Controller)) { return; }
+            if (!ensure(BillController)) { return; }
 
-            if (Controller->TryRaycastBall(FoundBall))
+            if (BillController->TryRaycastBall(FoundBall))
             {
                 UE_LOG(LogPool, Log, TEXT("Found ball %s "), *GetName());
                 SetSelectedBall(FoundBall);
