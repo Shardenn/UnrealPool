@@ -170,13 +170,11 @@ void ABilliardist::MoveRight(float Value)
     CurrentMoveDirection += Direction * Value;
 }
 
-
 void ABilliardist::MovePlayer(FVector NewLocation)
 {
     SetActorLocation(NewLocation);
     Server_MovePlayer(NewLocation);
 }
-
 
 bool ABilliardist::Server_MovePlayer_Validate(FVector) { return true; }
 void ABilliardist::Server_MovePlayer_Implementation(FVector NewLocation)
@@ -339,9 +337,14 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
         PreviousState = BilliardistState;
         BilliardistState = NewState;
 
-        OnStateChange.Broadcast(BilliardistState, PreviousState);
         OnPlayerStateChanged(BilliardistState, PreviousState);
     }
+}
+
+void ABilliardist::OnRep_StateReplicated()
+{
+    UE_LOG(LogPool, Warning, TEXT("I am auth : %d"), HasAuthority());
+    OnStateChange.Broadcast(BilliardistState, PreviousState);
 }
 
 void ABilliardist::SetSelectedBall(ABall* NewBall)
@@ -353,9 +356,12 @@ bool ABilliardist::Server_SetSelectedBall_Validate(ABall*) { return true; }
 void ABilliardist::Server_SetSelectedBall_Implementation(ABall* NewBall)
 {
     SelectedBall = NewBall;
-    OnSelectedBallUpdate.Broadcast(SelectedBall);
 }
 
+void ABilliardist::OnRep_SelectedBallReplicated()
+{
+    OnSelectedBallUpdate.Broadcast(SelectedBall);
+}
 
 void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 {

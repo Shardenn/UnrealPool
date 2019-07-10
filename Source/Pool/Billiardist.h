@@ -101,7 +101,7 @@ protected:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process") // needed for replication, tested
     USplineComponent* SplinePath { nullptr };
     
-    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process")
+    UPROPERTY(ReplicatedUsing=OnRep_SelectedBallReplicated, VisibleAnywhere, BlueprintReadWrite, Category = "Billiardist | Gameplay process")
     ABall* SelectedBall { nullptr };
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Controls")
@@ -119,14 +119,14 @@ protected:
     float HitStrengthChangeSpeed = 1.0f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
     float HitStrengthChangeHigh = 2.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Billiardist | Hit strength")
     float HitStrengthAlpha = 0.f; // from 0 to 1
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Billiardist | Hit strength")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Billiardist | Hit strength")
     float CurrentHitStrength = HitStrengthMin;
 
     UPROPERTY(Replicated)
     FBilliardistState PreviousState { FBilliardistState::WALKING };
-    UPROPERTY(Replicated)
+    UPROPERTY(ReplicatedUsing=OnRep_StateReplicated)
     FBilliardistState BilliardistState { FBilliardistState::WALKING };
 private:
     float DistanceAlongSpline{ 0.0f };
@@ -136,8 +136,14 @@ private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetState(FBilliardistState NewState);
 
+    UFUNCTION()
+    void OnRep_StateReplicated();
+
     UFUNCTION(reliable, server, WithValidation)
     void Server_SetSelectedBall(ABall* NewBall);
+
+    UFUNCTION()
+    void OnRep_SelectedBallReplicated();
 
     void MovePlayer(FVector NewLocation);
     UFUNCTION(reliable, server, WithValidation)
