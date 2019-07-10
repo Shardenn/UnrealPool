@@ -7,11 +7,18 @@
 #include "PoolPlayerState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class POOL_API APoolPlayerState : public APlayerState
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
+public:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ToggleReady();
+
+protected:
+    UPROPERTY(replicated)
+    bool bIsReady = false;
 };

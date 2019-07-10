@@ -64,14 +64,12 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
         ECollisionChannel::ECC_GameTraceChannel1
     ))
     {
-        UE_LOG(LogPool, Warning, TEXT("%s could not RayCast in LineTraceSingleByChannel."), *GetName());
         return false;
     }
 
     auto HittedActor = Cast<ABall>(HitResult.Actor);
     if (!HittedActor)
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not cast %s to ABall."), *GetName(), *HitResult.Actor->GetName());
         return false;
     }
     

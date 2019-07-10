@@ -167,4 +167,6 @@ private:
     void ReturnPressHandle();
     UFUNCTION()
     void ExaminingPressHandle();
+    UFUNCTION()
+    void ReadyPressHandle();
 };

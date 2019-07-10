@@ -12,8 +12,8 @@
 UCLASS()
 class POOL_API APoolGameMode : public AGameMode
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 public:
     /**
     * Overrides GameModeBase restartPlayer.

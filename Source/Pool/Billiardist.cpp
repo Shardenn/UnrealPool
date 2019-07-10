@@ -5,6 +5,7 @@
 #include "Pool.h"
 #include "BilliardistController.h"
 #include "AimingComponent.h"
+#include "PoolPlayerState.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"
@@ -59,7 +60,6 @@ void ABilliardist::Tick(float DeltaTime)
         {
             if (!SplinePath) 
             { 
-                UE_LOG(LogPool, Warning, TEXT("%s does not have any spline path assigned."), *GetName());
                 break;
             }
 
@@ -137,6 +137,7 @@ void ABilliardist::SetupPlayerInputComponent(UInputComponent* InputComponent)
     InputComponent->BindAction("Action", IE_Pressed, this, &ABilliardist::ActionPressHandle);
     InputComponent->BindAction("Return", IE_Pressed, this, &ABilliardist::ReturnPressHandle);
     InputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardist::ExaminingPressHandle);
+    InputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardist::ReadyPressHandle);
 }
 
 void ABilliardist::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -190,6 +191,13 @@ void ABilliardist::Turn(float Value)
 void ABilliardist::LookUp(float Value)
 {
     AddControllerPitchInput(Value * MouseSenseY);
+}
+
+void ABilliardist::ReadyPressHandle()
+{
+    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (!ensure(PlayerState != nullptr)) return;
+    PlayerState->ToggleReady();
 }
 
 void ABilliardist::ActionPressHandle()
@@ -343,7 +351,6 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 
 void ABilliardist::OnRep_StateReplicated()
 {
-    UE_LOG(LogPool, Warning, TEXT("I am auth : %d"), HasAuthority());
     OnStateChange.Broadcast(BilliardistState, PreviousState);
 }
 

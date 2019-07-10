@@ -7,11 +7,17 @@
 #include "PoolGameState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class POOL_API APoolGameState : public AGameState
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
+public:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void SetPlayersReadyNum(uint32 PlayersReady);
+
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+    int32 PlayersReadyNum = 0;
 };

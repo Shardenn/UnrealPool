@@ -8,12 +8,12 @@
 
 bool APoolGameMode::ReadyToStartMatch_Implementation()
 {
-    Super::ReadyToStartMatch();
     return false;
 }
 
 void APoolGameMode::PostLogin(APlayerController* NewPlayer)
 {
+    Super::PostLogin(NewPlayer);
     PlayerControllers.Add(NewPlayer);
     RestartPlayer(NewPlayer);
 }
@@ -41,8 +41,6 @@ void APoolGameMode::RestartPlayer(AController* Controller)
     Controller->Possess(Pawn);
 
     Controller->ClientSetRotation(Controller->GetPawn()->GetActorRotation(), true);
-
-    UE_LOG(LogGameMode, Warning, TEXT("Number of players is %d"), NumPlayers);
 }
 
 bool APoolGameMode::InitializeTable()
