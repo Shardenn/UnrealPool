@@ -6,11 +6,13 @@
 #include "BilliardistController.h"
 #include "AimingComponent.h"
 #include "PoolPlayerState.h"
+#include "AmericanPool/PoolGameMode.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "UObject/UObjectIterator.h"
 

@@ -25,6 +25,9 @@ public:
 
     bool InitializeTable();
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    int32 RequiredPlayersReadyNum = 2;
+
 protected:
     class ATable* GameTable = nullptr;
     TArray<AController*> PlayerControllers;

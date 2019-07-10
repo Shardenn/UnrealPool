@@ -2,12 +2,21 @@
 
 #include "Table.h"
 #include "Billiardist.h"
+#include "PoolGameState.h"
 
 #include "EngineUtils.h"
 #include "Kismet/KismetMathLibrary.h"
 
 bool APoolGameMode::ReadyToStartMatch_Implementation()
 {
+    APoolGameState* GameState = GetGameState<APoolGameState>();
+    if (!ensure(GameState != nullptr)) return false;
+
+    if (GameState->PlayersReadyNum >= RequiredPlayersReadyNum)
+    {
+        return true;
+    }
+
     return false;
 }
 
