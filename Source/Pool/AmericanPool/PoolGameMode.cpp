@@ -12,7 +12,7 @@ bool APoolGameMode::ReadyToStartMatch_Implementation()
     APoolGameState* GameState = GetGameState<APoolGameState>();
     if (!ensure(GameState != nullptr)) return false;
 
-    if (GameState->PlayersReadyNum >= RequiredPlayersReadyNum)
+    if (GameState->PlayersReadyNum == RequiredPlayersReadyNum)
     {
         return true;
     }

@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "Ball.h"
-#include "PoolGameModeBase.h"
 #include "BilliardistController.generated.h"
 
 class ABilliardist;
@@ -25,7 +23,7 @@ public:
     void LookAtBall();
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
-    bool TryRaycastBall(ABall*& Ball);
+    bool TryRaycastBall(class ABall*& Ball);
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     void SubscribeToPlayerStateChange(ABilliardist* Billardist);
