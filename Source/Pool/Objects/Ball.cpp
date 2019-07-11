@@ -1,14 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Ball.h"
+#include "Pool.h"
+#include "AmericanPool/PoolGameState.h"
+
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ABall::ABall()
 {
     bReplicates = true;
 
-    m_pSphereMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere mesh"));
-    RootComponent = m_pSphereMesh;
+    SphereMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sphere mesh"));
+    SetRootComponent(SphereMesh);
+    
+    SphereMesh->SetSimulatePhysics(true);
+    SphereMesh->BodyInstance.bGenerateWakeEvents = true;
 }
 
 // Called when the game starts or when spawned
@@ -16,8 +21,12 @@ void ABall::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!m_pSphereMesh)
-        UE_LOG(LogTemp, Error, TEXT("Object %s has no sphere mesh."), *GetName());
+    if (HasAuthority())
+    {
+        GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
+        if (!ensure(GameState != nullptr)) return;
 
-    m_pSphereMesh->SetSimulatePhysics(true);
+        SphereMesh->OnComponentWake.AddDynamic(GameState, &APoolGameState::AddMovingBall);
+        SphereMesh->OnComponentSleep.AddDynamic(GameState, &APoolGameState::RemoveMovingBall);
+    }
 }

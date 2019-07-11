@@ -20,21 +20,18 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
-    
-    /*
-    UPROPERTY(EditAnywhere, Meta = (DisplayName = "Sphere collision"))
-    USphereComponent* m_pSphereCollision = nullptr;
-    */
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Points score"))
-    int32 m_Points = 1;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    int32 Points = 1;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Is it a cue ball"))
-    bool m_bCueBall = false;
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    bool CueBall = false;
 
-    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (DisplayName = "Spawn location on start"))
-    FVector m_SpawnLocation = FVector(0);
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    FVector SpawnLocation = FVector(0);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "Static mesh"))
-    UStaticMeshComponent* m_pSphereMesh;
+    UStaticMeshComponent* SphereMesh;
 
+private:
+    class APoolGameState* GameState = nullptr;
 };

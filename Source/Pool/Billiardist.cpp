@@ -7,6 +7,7 @@
 #include "AimingComponent.h"
 #include "AmericanPool/PoolPlayerState.h"
 #include "AmericanPool/PoolGameMode.h"
+#include "AmericanPool/PoolGameState.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"

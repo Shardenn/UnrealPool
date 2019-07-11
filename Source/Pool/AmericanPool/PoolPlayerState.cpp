@@ -25,3 +25,14 @@ void APoolPlayerState::ToggleReady_Implementation()
     uint32 Offset = bIsReady ? 1 : -1;
     GameState->SetPlayersReadyNum(GameState->PlayersReadyNum + Offset);
 }
+
+bool APoolPlayerState::IsMyTurn()
+{
+    APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
+    if (!ensure(GameState != nullptr)) return false;
+
+    if (GameState->RequestIsPlayerTurn(this))
+        return true;
+
+    return false;
+}

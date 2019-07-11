@@ -20,4 +20,20 @@ public:
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
+
+    UFUNCTION()
+    void AddMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
+    UFUNCTION()
+    void RemoveMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
+
+    bool RequestIsPlayerTurn(APlayerState* PlayerState);
+
+protected:
+    virtual void BeginPlay() override;
+
+private:
+    TArray<class ABall*> MovingBalls;
+
+    UPROPERTY(Replicated)
+    uint32 PlayerIndexTurn;
 };

@@ -18,7 +18,10 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void ToggleReady();
 
+    bool IsMyTurn();
+
 protected:
     UPROPERTY(replicated)
     bool bIsReady = false;
+
 };
