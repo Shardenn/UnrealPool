@@ -210,11 +210,16 @@ void ABilliardist::ActionPressHandle()
     {
         case FBilliardistState::WALKING:
         {
+            if (!Cast<APoolPlayerState>(GetPlayerState())->GetIsMyTurn())
+                break;
+            
             SetState(FBilliardistState::PICKING);
             break;
         }
         case FBilliardistState::PICKING:
         {
+            if (!Cast<APoolPlayerState>(GetPlayerState())->GetIsMyTurn())
+                break;
             // when we press LMB while PIKING and we found some ball, we should 
             // 1. set the selected ball
             ABall* FoundBall = nullptr;
@@ -236,11 +241,17 @@ void ABilliardist::ActionPressHandle()
         }
         case FBilliardistState::AIMING:
         {
+            if (!Cast<APoolPlayerState>(GetPlayerState())->GetIsMyTurn())
+                break;
             // TODO where to hangle it? BP or ++ ?
             SetState(FBilliardistState::OBSERVING);
             break;
 
             if (!ensure(SelectedBall)) { return; }
+            // Finish turn locally
+            Cast<APoolPlayerState>(GetPlayerState())->SetIsMyTurn(false);
+            // Turn to the next player will be handled automatically
+            // on server after all balls stop moving
 
             // get the current hit strength and look vector
             auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
@@ -254,11 +265,8 @@ void ABilliardist::ActionPressHandle()
             HitStrengthAlpha = 0.f;
             CurrentHitStrength = HitStrengthMin;
 
-            // TODO ball launch here and camera handling
             LaunchBall(SelectedBall, hitVector);
             SetSelectedBall(nullptr);
-
-            
 
             break;
         }
@@ -280,11 +288,6 @@ void ABilliardist::ReturnPressHandle()
 {
     switch (BilliardistState)
     {
-        case FBilliardistState::WALKING:
-        {
-            // nowhere to return, it is a default state
-            break;
-        }
         case FBilliardistState::PICKING:
         {
             SetState(FBilliardistState::WALKING);
@@ -335,7 +338,6 @@ void ABilliardist::SetState(FBilliardistState NewState)
 }
 
 bool ABilliardist::Server_SetState_Validate(FBilliardistState) { return true; }
-
 void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 {
     if (BilliardistState == NewState)

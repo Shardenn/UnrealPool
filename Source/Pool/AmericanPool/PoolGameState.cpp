@@ -4,7 +4,7 @@
 #include "Objects/Ball.h"
 
 #include "UnrealNetwork.h"
-#include "GameFramework/PlayerState.h"
+#include "PoolPlayerState.h"
 
 void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -17,6 +17,15 @@ void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void APoolGameState::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void APoolGameState::OnRep_UpdatePlayerStateTurn()
+{
+    uint32 FormerIndex = (PlayerIndexTurn - 1);
+    if (FormerIndex < 0)
+        FormerIndex += PlayerArray.Num();
+
+    Cast<APoolPlayerState>(PlayerArray[FormerIndex])->SetIsMyTurn(false);
 }
 
 bool APoolGameState::SetPlayersReadyNum_Validate(uint32 PlayersReady) { return true; }
@@ -32,6 +41,12 @@ void APoolGameState::AddMovingBall(UPrimitiveComponent* Comp, FName BoneName)
         return;
 
     MovingBalls.AddUnique(NewBall);
+
+    if (MovingBalls.Num() > 0)
+    {
+        APoolPlayerState* PlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        PlayerTurn->SetIsMyTurn(false);
+    }
 }
 
 void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
@@ -45,9 +60,20 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 
     if (MovingBalls.Num() == 0)
     {
-        PlayerIndexTurn = (PlayerIndexTurn + 1) % PlayerArray.Num();
-        UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
+        SwitchTurn();
     }
+}
+
+bool APoolGameState::SwitchTurn_Validate() { return true; }
+void APoolGameState::SwitchTurn_Implementation()
+{
+    APoolPlayerState* FormerPlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    FormerPlayerTurn->SetIsMyTurn(false);
+
+    PlayerIndexTurn = (PlayerIndexTurn + 1) % PlayerArray.Num();
+    UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
+    APoolPlayerState* NewPlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    NewPlayerTurn->SetIsMyTurn(true);
 }
 
 bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)

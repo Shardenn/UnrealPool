@@ -18,10 +18,19 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void ToggleReady();
 
-    bool IsMyTurn();
+    //UFUNCTION(Server, Reliable, WithValidation)
+    void SetIsMyTurn(bool bInMyTurn);
+
+    UFUNCTION(BlueprintCallable)
+    const bool GetIsMyTurn() const { return bMyTurn; }
+
+    UFUNCTION(BlueprintCallable)
+    const bool GetIsReady() const { return bIsReady; }
 
 protected:
     UPROPERTY(replicated)
     bool bIsReady = false;
 
+    UPROPERTY(replicated)
+    bool bMyTurn = false;
 };

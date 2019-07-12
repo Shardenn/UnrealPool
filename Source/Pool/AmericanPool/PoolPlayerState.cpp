@@ -12,6 +12,7 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(APoolPlayerState, bIsReady);
+    DOREPLIFETIME(APoolPlayerState, bMyTurn);
 }
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
@@ -26,13 +27,8 @@ void APoolPlayerState::ToggleReady_Implementation()
     GameState->SetPlayersReadyNum(GameState->PlayersReadyNum + Offset);
 }
 
-bool APoolPlayerState::IsMyTurn()
+//bool APoolPlayerState::SetIsMyTurn_Validate(bool bInIsMyTurn) { return true; }
+void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 {
-    APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
-    if (!ensure(GameState != nullptr)) return false;
-
-    if (GameState->RequestIsPlayerTurn(this))
-        return true;
-
-    return false;
+    bMyTurn = bInIsMyTurn;
 }

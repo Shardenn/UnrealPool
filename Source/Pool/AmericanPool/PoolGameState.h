@@ -21,10 +21,18 @@ public:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
 
+    // they are attached to awake and sleep events in ABall class.
+    // NOTE And they are attached only on the server.
+    // So the function is only called on server.
+    // Only works if balls are correctly processed on server
+    // (like LaunchBall is called as server function)
     UFUNCTION()
     void AddMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
     UFUNCTION()
     void RemoveMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void SwitchTurn();
 
     bool RequestIsPlayerTurn(APlayerState* PlayerState);
 
@@ -34,6 +42,8 @@ protected:
 private:
     TArray<class ABall*> MovingBalls;
 
-    UPROPERTY(Replicated)
+    UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
     uint32 PlayerIndexTurn;
+
+    void OnRep_UpdatePlayerStateTurn();
 };
