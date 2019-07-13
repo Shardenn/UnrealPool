@@ -22,10 +22,10 @@ public:
     void SetIsMyTurn(bool bInMyTurn);
 
     UFUNCTION(BlueprintCallable)
-    const bool GetIsMyTurn() const { return bMyTurn; }
+    bool GetIsMyTurn() const { return bMyTurn; }
 
     UFUNCTION(BlueprintCallable)
-    const bool GetIsReady() const { return bIsReady; }
+    bool GetIsReady() const { return bIsReady; }
 
 protected:
     UPROPERTY(replicated)

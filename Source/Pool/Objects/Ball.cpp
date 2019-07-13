@@ -13,7 +13,14 @@ ABall::ABall()
     SetRootComponent(SphereMesh);
     
     SphereMesh->SetSimulatePhysics(true);
+    SphereMesh->SetEnableGravity(true);
     SphereMesh->BodyInstance.bGenerateWakeEvents = true;
+    SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
+    SphereMesh->SetAngularDamping(0.6);
+    SphereMesh->SetLinearDamping(0.2);
+
+    SphereMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    SphereMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 }
 
 // Called when the game starts or when spawned
