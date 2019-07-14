@@ -41,15 +41,38 @@ void UBallSpawner::Spawn()
     ABall* Ball = World->SpawnActor<ABall>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
     BallDiameter = Ball->GetRootComponent()->Bounds.SphereRadius * 2;
 
-    for (int i = 1; i < RowsNum; i++)
-    {
-        CurrentBallLocation = HeadBallLocation + i * RowsIncreaseDirection * BallDiameter;
-        CurrentBallLocation += i * ColumnsIncreaseDirection * (BallDiameter / 2.0f + BallsSpacing);
+    auto Locations = GetTriangleSpawnPoints(HeadBallLocation, RowsIncreaseDirection,
+        ColumnsIncreaseDirection, BallDiameter);
 
-        for (int j = 0; j <= i; j++)
+    for (auto& Location : Locations)
+    {
+        World->SpawnActor<ABall>(BallClass, Location, FRotator::ZeroRotator);
+    }
+}
+
+TArray<FVector> UBallSpawner::GetTriangleSpawnPoints(const FVector& HeadLocation,
+    const FVector& RowsIncreaseDir, const FVector& ColsIncreaseDir,
+    const float& InBallDiameter)
+{
+    // BallsCount in the triangle except the very first ball.
+    // https://en.wikipedia.org/wiki/Arithmetic_progression
+    TArray<FVector> Ret;
+    uint32 BallsCount = (RowsNum - 1) * (2 + RowsNum) / 2;
+    Ret.Init(HeadLocation, BallsCount);
+    uint32 RetIndex = 0;
+
+    FVector CurrentBallLocation = HeadLocation;
+    for (uint8 i = 1; i < RowsNum; i++)
+    {
+        CurrentBallLocation = HeadLocation + i * RowsIncreaseDir * InBallDiameter;
+        CurrentBallLocation += i * ColsIncreaseDir * (InBallDiameter / 2.f);
+
+        for (uint8 j = 0; j <= i; j++)
         {
-            World->SpawnActor<ABall>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
-            CurrentBallLocation += -(ColumnsIncreaseDirection)* (BallDiameter + BallsSpacing);
+            Ret[RetIndex++] = CurrentBallLocation;
+            CurrentBallLocation += -(ColsIncreaseDir) * (InBallDiameter);
         }
     }
+
+    return Ret;
 }

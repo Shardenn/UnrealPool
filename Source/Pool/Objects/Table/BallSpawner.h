@@ -16,7 +16,9 @@ public:
     UBallSpawner();
     
     virtual void Spawn();
-
+    TArray<FVector> GetTriangleSpawnPoints(const FVector& HeadLocation,
+        const FVector& RowsIncreaseDir, const FVector& ColsIncreaseDir,
+        const float& BallDiameter);
 protected:
     virtual void BeginPlay() override;
 

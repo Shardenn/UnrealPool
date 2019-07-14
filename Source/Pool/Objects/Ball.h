@@ -13,11 +13,9 @@ class POOL_API ABall : public AActor
     GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
     ABall();
 
 protected:
-    // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -29,7 +27,7 @@ protected:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FVector SpawnLocation = FVector(0);
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "Static mesh"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* SphereMesh;
 
 private:
