@@ -25,5 +25,10 @@ class POOL_API ABallAmerican : public ABall
     GENERATED_BODY()
 
 public:
+    ABallAmerican();
+    ABallAmerican(uint8 BallNum);
     FBallType BallType = FBallType::NotInitialized;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 BallNumber = 1;
 };
