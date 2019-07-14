@@ -53,6 +53,13 @@ void APoolGameMode::RestartPlayer(AController* Controller)
     Controller->ClientSetRotation(Controller->GetPawn()->GetActorRotation(), true);
 }
 
+void APoolGameMode::HandleMatchHasStarted()
+{
+    Super::HandleMatchHasStarted();
+
+    GameTable->SpawnBalls();
+}
+
 bool APoolGameMode::InitializeTable()
 {
     UWorld* World = GetWorld();

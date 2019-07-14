@@ -23,6 +23,8 @@ public:
     virtual bool ReadyToStartMatch_Implementation() override;
     virtual void PostLogin(APlayerController* NewPlayer) override;
 
+    virtual void HandleMatchHasStarted() override;
+
     bool InitializeTable();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

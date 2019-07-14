@@ -28,9 +28,6 @@ UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer
 
 void UPoolGameInstance::Init()
 {
-    UE_LOG(LogPool, Warning, TEXT("PoolGameInstance::Init()"));
-    UE_LOG(LogPool, Warning, TEXT("Found MenuClass %s"), *MainMenuClass.Get()->GetName());
-
     IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
     if (Subsystem != nullptr)
     {

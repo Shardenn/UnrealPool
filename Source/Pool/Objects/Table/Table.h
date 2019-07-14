@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 #pragma once
 
@@ -14,11 +14,14 @@ class POOL_API ATable : public AActor
 public:
     // Sets default values for this actor's properties
     ATable();
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
 
     UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Spline Path"))
     USplineComponent* GetSplinePath()                  { return SplinePath; }
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    USceneComponent* FrontBallLocation = nullptr;
+
+    virtual void SpawnBalls();
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -26,8 +29,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* TableMesh = nullptr;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    USceneComponent* FrontBallLocation = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     class UBoxComponent* BallRegistrator = nullptr;
@@ -35,4 +36,7 @@ protected:
     // Spline path for player movement along the table
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     class USplineComponent* SplinePath = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    class UBallSpawner* BallSpawner = nullptr;
 };

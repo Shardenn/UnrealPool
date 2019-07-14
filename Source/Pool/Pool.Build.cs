@@ -10,8 +10,6 @@ public class Pool : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "OnlineSubsystem", "OnlineSubsystemSteam" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
-
-        PrivateDependencyModuleNames.Add("OnlineSubsystem");
+		PrivateDependencyModuleNames.AddRange(new string[] { "OnlineSubsystem" });
     }
 }
