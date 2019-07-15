@@ -64,4 +64,10 @@ void UEightBallSpawner::Spawn()
 
         BallsNum.RemoveAt(NumberIndex);
     }
+
+    // Spawn cue ball
+    SpawnComponent = Table->CueBallLocation;
+    FVector Location = SpawnComponent->GetComponentTransform().GetLocation();
+    Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
+    Ball->SetBallNumber(16);
 }

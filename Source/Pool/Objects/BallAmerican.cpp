@@ -24,8 +24,10 @@ void ABallAmerican::SetBallNumber_Implementation(uint8 Number)
         SetBallType(FBallType::Solid);
     else if (Number == 8)
         SetBallType(FBallType::Black);
-    else
+    else if (Number <= 15)
         SetBallType(FBallType::Stripe);
+    else if (Number == 16) // cue ball
+        SetBallType(FBallType::Cue);
 
     BallNumber = Number;
     SetupColorAndNumber();

@@ -21,6 +21,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* FrontBallLocation = nullptr;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    USceneComponent* CueBallLocation = nullptr;
+
     virtual void SpawnBalls();
 protected:
     // Called when the game starts or when spawned
