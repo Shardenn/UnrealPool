@@ -29,6 +29,6 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     float BallsSpacing = 0.1f;
-private:
+
     TSubclassOf<class ABall> BallClass;
 };

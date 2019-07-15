@@ -15,6 +15,6 @@ class POOL_API UEightBallSpawner : public UBallSpawner
 	GENERATED_BODY()
 	
 public:
+    UEightBallSpawner();
     virtual void Spawn() override;
-
 };
