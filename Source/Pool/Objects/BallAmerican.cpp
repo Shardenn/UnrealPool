@@ -3,12 +3,21 @@
 
 #include "BallAmerican.h"
 
+#include "UnrealNetwork.h"
+
 ABallAmerican::ABallAmerican() :
     ABall()
 {}
 
-ABallAmerican::ABallAmerican(uint8 BallNum) :
-    ABall(), BallNumber(BallNum)
+void ABallAmerican::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    DOREPLIFETIME(ABallAmerican, BallNumber);
+    DOREPLIFETIME(ABallAmerican, BallType);
+}
+
+void ABallAmerican::OnRep_BallNumber()
+{
+    SetupMaterial();
 }

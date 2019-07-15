@@ -32,14 +32,38 @@ void UEightBallSpawner::Spawn()
     FVector ColumnsIncreaseDirection = -(SpawnComponent->GetRightVector().GetSafeNormal());
 
     FVector CurrentBallLocation = HeadBallLocation;
-    ABall* Ball = World->SpawnActor<ABall>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
+    
+    // Stores balls num for random ball init and remembering
+    // which balls are already inited
+    TArray<uint8> BallsNum;
+    BallsNum.Init(0, 15);
+    for (uint8 i = 0; i < BallsNum.Num(); i++)
+    {
+        BallsNum[i] = i + 1;
+    }
+
+    ABallAmerican* Ball = World->SpawnActor<ABallAmerican>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
+
+    uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
+    Ball->BallNumber = BallsNum[NumberIndex];
+    Ball->SetupMaterial();
+
+    BallsNum.RemoveAt(NumberIndex);
+
     BallDiameter = Ball->GetRootComponent()->Bounds.SphereRadius * 2;
 
     auto Locations = GetTriangleSpawnPoints(HeadBallLocation, RowsIncreaseDirection,
         ColumnsIncreaseDirection, BallDiameter);
 
-    for (auto& Location : Locations)
+    for (uint8 i = 0; i < Locations.Num(); i++)
     {
-        World->SpawnActor<ABall>(BallClass, Location, FRotator::ZeroRotator);
+        auto Location = Locations[i];
+        Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
+        
+        uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
+        Ball->BallNumber = BallsNum[NumberIndex];
+        Ball->SetupMaterial();
+
+        BallsNum.RemoveAt(NumberIndex);
     }
 }

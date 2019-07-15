@@ -26,9 +26,17 @@ class POOL_API ABallAmerican : public ABall
 
 public:
     ABallAmerican();
-    ABallAmerican(uint8 BallNum);
+
+    UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
     FBallType BallType = FBallType::NotInitialized;
     
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(ReplicatedUsing=OnRep_BallNumber, EditAnywhere, BlueprintReadWrite)
     int32 BallNumber = 1;
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void SetupMaterial();
+
+protected:
+    UFUNCTION()
+    void OnRep_BallNumber();
 };
