@@ -45,8 +45,7 @@ void UEightBallSpawner::Spawn()
     ABallAmerican* Ball = World->SpawnActor<ABallAmerican>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
 
     uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
-    Ball->BallNumber = BallsNum[NumberIndex];
-    Ball->SetupMaterial();
+    Ball->SetBallNumber(BallsNum[NumberIndex]);
 
     BallsNum.RemoveAt(NumberIndex);
 
@@ -61,8 +60,7 @@ void UEightBallSpawner::Spawn()
         Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
         
         uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
-        Ball->BallNumber = BallsNum[NumberIndex];
-        Ball->SetupMaterial();
+        Ball->SetBallNumber(BallsNum[NumberIndex]);
 
         BallsNum.RemoveAt(NumberIndex);
     }

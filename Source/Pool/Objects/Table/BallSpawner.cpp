@@ -64,8 +64,8 @@ TArray<FVector> UBallSpawner::GetTriangleSpawnPoints(const FVector& HeadLocation
     FVector CurrentBallLocation = HeadLocation;
     for (uint8 i = 1; i < RowsNum; i++)
     {
-        CurrentBallLocation = HeadLocation + i * RowsIncreaseDir * InBallDiameter;
-        CurrentBallLocation += i * ColsIncreaseDir * (InBallDiameter / 2.f);
+        CurrentBallLocation = HeadLocation + i * RowsIncreaseDir * (InBallDiameter * 0.9);
+        CurrentBallLocation += i * ColsIncreaseDir * (InBallDiameter * 0.5f);
 
         for (uint8 j = 0; j <= i; j++)
         {

@@ -17,7 +17,33 @@ void ABallAmerican::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutL
     DOREPLIFETIME(ABallAmerican, BallType);
 }
 
+bool ABallAmerican::SetBallNumber_Validate(uint8 Number) { return true; }
+void ABallAmerican::SetBallNumber_Implementation(uint8 Number)
+{
+    if (Number < 8)
+        SetBallType(FBallType::Solid);
+    else if (Number == 8)
+        SetBallType(FBallType::Black);
+    else
+        SetBallType(FBallType::Stripe);
+
+    BallNumber = Number;
+    SetupColorAndNumber();
+}
+
+bool ABallAmerican::SetBallType_Validate(FBallType Type) { return true; }
+void ABallAmerican::SetBallType_Implementation(FBallType Type)
+{
+    BallType = Type;
+    SetupStripeness();
+}
+
 void ABallAmerican::OnRep_BallNumber()
 {
-    SetupMaterial();
+    SetupColorAndNumber();
+}
+
+void ABallAmerican::OnRep_BallType()
+{
+    SetupStripeness();
 }
