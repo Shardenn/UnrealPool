@@ -24,7 +24,7 @@ protected:
 
     float BallDiameter = 10; // some default so any error could be seen
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     int32 RowsNum = 5;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

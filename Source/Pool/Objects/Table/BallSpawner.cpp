@@ -64,7 +64,10 @@ TArray<FVector> UBallSpawner::GetTriangleSpawnPoints(const FVector& HeadLocation
     FVector CurrentBallLocation = HeadLocation;
     for (uint8 i = 1; i < RowsNum; i++)
     {
-        CurrentBallLocation = HeadLocation + i * RowsIncreaseDir * (InBallDiameter * 0.9);
+        // when balls are arranged in triangle, they do not step directly Diameter from eatch other
+        // in rows. They are a bit closer. After solving a simple geometry, we get that they
+        // step from each other on  0.86602540378 of diameter (or sqrt(3) * Radius is the answer).
+        CurrentBallLocation = HeadLocation + i * RowsIncreaseDir * (InBallDiameter * 0.8661f);
         CurrentBallLocation += i * ColsIncreaseDir * (InBallDiameter * 0.5f);
 
         for (uint8 j = 0; j <= i; j++)
