@@ -11,7 +11,7 @@
 
 #include "Blueprint/UserWidget.h"
 
-const static FName SESSION_NAME = TEXT("My session game");
+const static FName SESSION_NAME = TEXT("My_session_game");
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -123,6 +123,7 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
 void UPoolGameInstance::OnSessionJoinComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
     FString TravelURL;
+    UE_LOG(LogPool, Warning, TEXT("Found session name is %s"), *SessionName.ToString());
 
     if (!SessionInterface->GetResolvedConnectString(SessionName, TravelURL))
     {
@@ -141,7 +142,7 @@ void UPoolGameInstance::CreateSession()
     if (SessionInterface.IsValid())
     {
         FOnlineSessionSettings SessionSettings;
-        SessionSettings.bIsLANMatch = false;
+        SessionSettings.bIsLANMatch = true;
         SessionSettings.NumPublicConnections = 2;
         SessionSettings.bShouldAdvertise = true; // visible via search
         SessionSettings.bUsesPresence = true;
