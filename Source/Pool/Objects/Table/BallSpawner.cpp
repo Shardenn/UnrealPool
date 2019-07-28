@@ -21,16 +21,18 @@ void UBallSpawner::BeginPlay()
     Super::BeginPlay();
 }
 
-void UBallSpawner::Spawn()
+TArray<class ABall*> UBallSpawner::Spawn()
 {
+    TArray<ABall*> Balls;
+
     ATable* Table = Cast<ATable>(GetOwner());
-    if (!ensure(Table != nullptr)) return;
+    if (!ensure(Table != nullptr)) return Balls;
 
     UWorld* World = GetWorld();
-    if (!ensure(World != nullptr)) return;
+    if (!ensure(World != nullptr)) return Balls;
 
     USceneComponent* SpawnComponent = Table->FrontBallLocation;
-    if (!ensure(SpawnComponent != nullptr)) return;
+    if (!ensure(SpawnComponent != nullptr)) return Balls;
 
     FVector HeadBallLocation = SpawnComponent->GetComponentTransform().GetLocation();
     
@@ -39,6 +41,8 @@ void UBallSpawner::Spawn()
 
     FVector CurrentBallLocation = HeadBallLocation;
     ABall* Ball = World->SpawnActor<ABall>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
+    Balls.Add(Ball);
+
     BallDiameter = Ball->GetRootComponent()->Bounds.SphereRadius * 2;
 
     auto Locations = GetTriangleSpawnPoints(HeadBallLocation, RowsIncreaseDirection,
@@ -46,8 +50,11 @@ void UBallSpawner::Spawn()
 
     for (auto& Location : Locations)
     {
-        World->SpawnActor<ABall>(BallClass, Location, FRotator::ZeroRotator);
+        Ball = World->SpawnActor<ABall>(BallClass, Location, FRotator::ZeroRotator);
+        Balls.Add(Ball);
     }
+
+    return Balls;
 }
 
 TArray<FVector> UBallSpawner::GetTriangleSpawnPoints(const FVector& HeadLocation,

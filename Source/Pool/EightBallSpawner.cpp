@@ -15,16 +15,18 @@ UEightBallSpawner::UEightBallSpawner()
     BallClass = (UClass*)BallBPObject.Object->GeneratedClass;
 }
 
-void UEightBallSpawner::Spawn()
+TArray<class ABall*> UEightBallSpawner::Spawn()
 {
+    TArray<ABall*> Balls;
+    
     ATable* Table = Cast<ATable>(GetOwner());
-    if (!ensure(Table != nullptr)) return;
+    if (!ensure(Table != nullptr)) return Balls;
 
     UWorld* World = GetWorld();
-    if (!ensure(World != nullptr)) return;
+    if (!ensure(World != nullptr)) return Balls;
 
     USceneComponent* SpawnComponent = Table->FrontBallLocation;
-    if (!ensure(SpawnComponent != nullptr)) return;
+    if (!ensure(SpawnComponent != nullptr)) return Balls;
 
     FVector HeadBallLocation = SpawnComponent->GetComponentTransform().GetLocation();
 
@@ -46,6 +48,7 @@ void UEightBallSpawner::Spawn()
 
     uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
     Ball->SetBallNumber(BallsNum[NumberIndex]);
+    Balls.Add(Ball);
 
     BallsNum.RemoveAt(NumberIndex);
 
@@ -61,6 +64,7 @@ void UEightBallSpawner::Spawn()
         
         uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
         Ball->SetBallNumber(BallsNum[NumberIndex]);
+        Balls.Add(Ball);
 
         BallsNum.RemoveAt(NumberIndex);
     }
@@ -70,4 +74,7 @@ void UEightBallSpawner::Spawn()
     FVector Location = SpawnComponent->GetComponentTransform().GetLocation();
     Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
     Ball->SetBallNumber(16);
+    Balls.Add(Ball);
+
+    return Balls;
 }

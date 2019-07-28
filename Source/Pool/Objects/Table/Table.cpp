@@ -32,9 +32,10 @@ ATable::ATable()
     BallSpawner = CreateDefaultSubobject<UBallSpawner>(TEXT("Ball spawner"));
 }
 
-void ATable::SpawnBalls()
+TArray<class ABall*> ATable::SpawnBalls()
 {
-    BallSpawner->Spawn();
+    auto Balls = BallSpawner->Spawn();
+    return Balls;
 }
 
 // Called when the game starts or when spawned

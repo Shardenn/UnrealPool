@@ -57,7 +57,10 @@ void APoolGameMode::HandleMatchHasStarted()
 {
     Super::HandleMatchHasStarted();
 
-    GameTable->SpawnBalls();
+    auto Balls = GameTable->SpawnBalls();
+
+    auto PoolGameState = GetGameState<APoolGameState>();
+    PoolGameState->ActiveBalls = Balls;
 }
 
 bool APoolGameMode::InitializeTable()

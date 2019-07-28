@@ -78,6 +78,44 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
     return true;
 }
 
+// TODO refactor this and function above. They are copy-paste of each other
+bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
+{
+    int32 ViewportSizeX, ViewportSizeY;
+    GetViewportSize(ViewportSizeX, ViewportSizeY);
+    auto ScreenLocation = FVector2D(ViewportSizeX * CrosshairXLocation, ViewportSizeY * CrosshairYLocation);
+
+    FVector Direction; // look direction
+    if (!GetLookDirection(ScreenLocation, Direction))
+    {
+        UE_LOG(LogPool, Error, TEXT("%s could not get LookDirection."), *GetName());
+        return false;
+    }
+
+    // TODO split in the other method later
+    FHitResult HitResult;
+    auto StartLocation = PlayerCameraManager->GetCameraLocation();
+    auto EndLocation = StartLocation + Direction * RaycastLength;
+
+    if (!GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        StartLocation,
+        EndLocation,
+        ECollisionChannel::ECC_GameTraceChannel2
+    ))
+    {
+        return false;
+    }
+    
+    if (!HitResult.ImpactNormal.Equals(FVector::UpVector, 0.1))
+    {
+        UE_LOG(LogPool, Warning, TEXT("Hit result on table is not up vectored"));
+        return false;
+    }
+    RaycastHit = HitResult.Location;
+    return true;
+}
+
 bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const
 {
     FVector CameraWorldLocation; // to de discarded

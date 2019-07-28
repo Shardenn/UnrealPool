@@ -39,6 +39,12 @@ public:
     UFUNCTION(BlueprintImplementableEvent)
     void SetupStripeness();
 
+    UFUNCTION(BlueprintPure)
+    int32 GetNumber() { return BallNumber; }
+
+    UFUNCTION(BlueprintPure)
+    FBallType GetType() { return BallType; }
+
 protected:
     UPROPERTY(ReplicatedUsing=OnRep_BallType, EditAnywhere, BlueprintReadWrite)
     FBallType BallType = FBallType::NotInitialized;

@@ -21,11 +21,16 @@ public:
     //UFUNCTION(Server, Reliable, WithValidation)
     void SetIsMyTurn(bool bInMyTurn);
 
-    UFUNCTION(BlueprintCallable)
+    void SetIsBallInHand(bool InbBallInHand);
+
+    UFUNCTION(BlueprintPure)
     bool GetIsMyTurn() const { return bMyTurn; }
 
-    UFUNCTION(BlueprintCallable)
+    UFUNCTION(BlueprintPure)
     bool GetIsReady() const { return bIsReady; }
+
+    UFUNCTION(BlueprintPure)
+    bool GetIsBallInHand() const { return bBallInHand; }
 
 protected:
     UPROPERTY(replicated)
@@ -33,4 +38,7 @@ protected:
 
     UPROPERTY(replicated)
     bool bMyTurn = false;
+
+    UPROPERTY(replicated)
+    bool bBallInHand = false;
 };

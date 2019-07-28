@@ -13,6 +13,7 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
     DOREPLIFETIME(APoolPlayerState, bIsReady);
     DOREPLIFETIME(APoolPlayerState, bMyTurn);
+    DOREPLIFETIME(APoolPlayerState, bBallInHand);
 }
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
@@ -31,4 +32,9 @@ void APoolPlayerState::ToggleReady_Implementation()
 void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 {
     bMyTurn = bInIsMyTurn;
+}
+
+void APoolPlayerState::SetIsBallInHand(bool InbBallInHand)
+{
+    bBallInHand = InbBallInHand;
 }

@@ -26,6 +26,9 @@ public:
     bool TryRaycastBall(class ABall*& Ball);
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
+    bool TryRaycastTable(FVector& RaycastHit);
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     void SubscribeToPlayerStateChange(ABilliardist* Billardist);
 protected:
     virtual void BeginPlay() override;

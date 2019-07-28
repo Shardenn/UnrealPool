@@ -34,13 +34,19 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void SwitchTurn();
 
+    UFUNCTION(Server, Reliable, WithValidation)
+    void GiveBallInHand(APoolPlayerState* PlayerState);
+
     bool RequestIsPlayerTurn(APlayerState* PlayerState);
 
+    // TODO maybe not public?
+    TArray<class ABall*> ActiveBalls;
 protected:
     virtual void BeginPlay() override;
 
 private:
     TArray<class ABall*> MovingBalls;
+    
 
     UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
     uint32 PlayerIndexTurn;

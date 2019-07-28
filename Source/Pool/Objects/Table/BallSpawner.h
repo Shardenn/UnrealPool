@@ -15,7 +15,7 @@ class POOL_API UBallSpawner : public UActorComponent
 public:
     UBallSpawner();
     
-    virtual void Spawn();
+    virtual TArray<class ABall*> Spawn();
     TArray<FVector> GetTriangleSpawnPoints(const FVector& HeadLocation,
         const FVector& RowsIncreaseDir, const FVector& ColsIncreaseDir,
         const float& BallDiameter);

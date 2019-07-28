@@ -17,6 +17,8 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "UObject/UObjectIterator.h"
+#include "DrawDebugHelpers.h"
+
 
 #ifndef STATE_MACHINE
 #define STATE_MACHINE
@@ -206,6 +208,25 @@ void ABilliardist::ReadyPressHandle()
 
 void ABilliardist::ActionPressHandle()
 {
+    APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (!ensure(PoolPlayerState != nullptr)) return;
+    
+    if (PoolPlayerState->GetIsBallInHand())
+    {
+        UE_LOG(LogPool, Warning, TEXT("%s has ball in hand"), *GetName());
+        FVector TablePoint;
+
+        ABilliardistController* BillController = Cast<ABilliardistController>(GetController());
+        if (!ensure(BillController)) { return; }
+
+        if (BillController->TryRaycastTable(TablePoint))
+        {
+            DrawDebugSphere(GetWorld(), TablePoint, 1, 8, FColor::Red, true, -1, 0, 2);
+        }
+
+        return;
+    }
+
     switch (BilliardistState)
     {
         case FBilliardistState::WALKING:

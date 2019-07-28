@@ -2,6 +2,7 @@
 
 #include "Pool.h"
 #include "Objects/Ball.h"
+#include "Objects/BallAmerican.h"
 
 #include "UnrealNetwork.h"
 #include "PoolPlayerState.h"
@@ -61,6 +62,9 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
     if (MovingBalls.Num() == 0)
     {
         SwitchTurn();
+        
+        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        GiveBallInHand(Player);
     }
 }
 
@@ -74,6 +78,25 @@ void APoolGameState::SwitchTurn_Implementation()
     UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
     APoolPlayerState* NewPlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
     NewPlayerTurn->SetIsMyTurn(true);
+}
+
+bool APoolGameState::GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }
+void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState)
+{
+    ABall* CueBall = nullptr;
+    for (auto& Ball : ActiveBalls)
+    {
+        auto AmBall = Cast<ABallAmerican>(Ball);
+        if (!AmBall)
+            continue;
+        if (AmBall->GetType() == FBallType::Cue)
+            CueBall = AmBall;
+    }
+
+    Cast<UPrimitiveComponent>(CueBall->GetRootComponent())->SetSimulatePhysics(false);
+
+    CueBall->SetActorLocation(FVector(0, 0, 100));
+    PlayerState->SetIsBallInHand(true);
 }
 
 bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)
