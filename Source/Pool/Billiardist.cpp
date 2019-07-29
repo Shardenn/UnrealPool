@@ -221,7 +221,8 @@ void ABilliardist::ActionPressHandle()
 
         if (BillController->TryRaycastTable(TablePoint))
         {
-            DrawDebugSphere(GetWorld(), TablePoint, 1, 8, FColor::Red, true, -1, 0, 2);
+            //DrawDebugSphere(GetWorld(), TablePoint, 1, 8, FColor::Red, true, -1, 0, 2);
+            PoolPlayerState->PlaceCueBall(TablePoint);
         }
 
         return;

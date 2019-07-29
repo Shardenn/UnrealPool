@@ -62,9 +62,6 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
     if (MovingBalls.Num() == 0)
     {
         SwitchTurn();
-        
-        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
-        GiveBallInHand(Player);
     }
 }
 
@@ -95,8 +92,25 @@ void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState
 
     Cast<UPrimitiveComponent>(CueBall->GetRootComponent())->SetSimulatePhysics(false);
 
+    if (!ensure(CueBall != nullptr)) return;
     CueBall->SetActorLocation(FVector(0, 0, 100));
-    PlayerState->SetIsBallInHand(true);
+
+    TakeBallFromHand();
+    
+    if (!PlayerState)
+        PlayerState = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+
+    PlayerState->SetBallInHand(CueBall);
+    PlayerWithCueBall = PlayerState;
+
+    UE_LOG(LogPool, Warning, TEXT("gave ball to the player with index %d"), PlayerIndexTurn);
+}
+
+bool APoolGameState::TakeBallFromHand_Validate() { return true; }
+void APoolGameState::TakeBallFromHand_Implementation()
+{
+    if (PlayerWithCueBall)
+        PlayerWithCueBall->SetBallInHand(nullptr);
 }
 
 bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)

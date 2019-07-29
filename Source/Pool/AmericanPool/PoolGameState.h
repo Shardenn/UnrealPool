@@ -35,21 +35,25 @@ public:
     void SwitchTurn();
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void GiveBallInHand(APoolPlayerState* PlayerState);
+    void GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void TakeBallFromHand();
 
     bool RequestIsPlayerTurn(APlayerState* PlayerState);
 
     // TODO maybe not public?
     TArray<class ABall*> ActiveBalls;
+    UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
+    uint32 PlayerIndexTurn;
 protected:
     virtual void BeginPlay() override;
 
 private:
     TArray<class ABall*> MovingBalls;
     
+    APoolPlayerState* PlayerWithCueBall = nullptr;
 
-    UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
-    uint32 PlayerIndexTurn;
 
     void OnRep_UpdatePlayerStateTurn();
 };

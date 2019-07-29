@@ -18,10 +18,15 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void ToggleReady();
 
+    UFUNCTION(Server, Reliable, WithValidation)
+    void PlaceCueBall(const FVector& TablePoint);
+
     //UFUNCTION(Server, Reliable, WithValidation)
     void SetIsMyTurn(bool bInMyTurn);
 
-    void SetIsBallInHand(bool InbBallInHand);
+    // if cue ball is valid - ball in hand
+    // if nullptr is given -> ball is not in hand
+    void SetBallInHand(class ABall* CueBall);
 
     UFUNCTION(BlueprintPure)
     bool GetIsMyTurn() const { return bMyTurn; }
@@ -30,7 +35,7 @@ public:
     bool GetIsReady() const { return bIsReady; }
 
     UFUNCTION(BlueprintPure)
-    bool GetIsBallInHand() const { return bBallInHand; }
+    bool GetIsBallInHand() const { return CueBallHanded != nullptr; }
 
 protected:
     UPROPERTY(replicated)
@@ -41,4 +46,8 @@ protected:
 
     UPROPERTY(replicated)
     bool bBallInHand = false;
+
+    // when ball in hand, it will contain a pointer to the cue ball
+    UPROPERTY(replicated)
+    class ABall* CueBallHanded = nullptr;
 };
