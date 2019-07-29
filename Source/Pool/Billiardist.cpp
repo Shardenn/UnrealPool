@@ -406,5 +406,5 @@ void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 bool ABilliardist::Server_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
-    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddForce(Velocity);
+    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
 }
