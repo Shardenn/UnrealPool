@@ -88,7 +88,6 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
     FVector Direction; // look direction
     if (!GetLookDirection(ScreenLocation, Direction))
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not get LookDirection."), *GetName());
         return false;
     }
 

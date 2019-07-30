@@ -59,6 +59,23 @@ void ABilliardist::SetSplinePath(USplineComponent* NewSpline)
 
 void ABilliardist::Tick(float DeltaTime)
 {
+    // TODO getPlayerState every tick. Warning!
+    APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+
+    if (PoolPlayerState && PoolPlayerState->GetIsBallInHand())
+    {
+        FVector TablePoint;
+
+        ABilliardistController* BillController = Cast<ABilliardistController>(GetController());
+        if (!ensure(BillController)) { return; }
+
+        if (BillController->TryRaycastTable(TablePoint))
+        {
+            DrawDebugSphere(GetWorld(), TablePoint, 5, 8, FColor::Red);
+            //PoolPlayerState->PlaceCueBall(TablePoint);
+        }
+    }
+
     switch (BilliardistState)
     {
         case FBilliardistState::WALKING:
@@ -209,9 +226,8 @@ void ABilliardist::ReadyPressHandle()
 void ABilliardist::ActionPressHandle()
 {
     APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    if (!ensure(PoolPlayerState != nullptr)) return;
     
-    if (PoolPlayerState->GetIsBallInHand())
+    if (PoolPlayerState && PoolPlayerState->GetIsBallInHand())
     {
         UE_LOG(LogPool, Warning, TEXT("%s has ball in hand"), *GetName());
         FVector TablePoint;
@@ -406,5 +422,11 @@ void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 bool ABilliardist::Server_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
+    UWorld* World = GetWorld();
+    APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
+    if (!ensure(State != nullptr)) return;
+
+    State->StartWatchingBallsMovement();
+
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
 }

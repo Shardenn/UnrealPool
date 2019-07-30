@@ -26,6 +26,7 @@ public:
 
     // if cue ball is valid - ball in hand
     // if nullptr is given -> ball is not in hand
+    //UFUNCTION(Server, Reliable, WithValidation)
     void SetBallInHand(class ABall* CueBall);
 
     UFUNCTION(BlueprintPure)

@@ -37,6 +37,9 @@ void APoolGameState::SetPlayersReadyNum_Implementation(uint32 PlayersReady)
 
 void APoolGameState::AddMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 {
+    if (!bWatchBallsMovement)
+        return;
+
     ABall* NewBall = Cast<ABall>(Comp->GetOwner());
     if (!NewBall)
         return;
@@ -52,6 +55,9 @@ void APoolGameState::AddMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 
 void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 {
+    if (!bWatchBallsMovement)
+        return;
+    
     ABall* Ball = Cast<ABall>(Comp->GetOwner());
     if (!Ball)
         return;
@@ -61,6 +67,7 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 
     if (MovingBalls.Num() == 0)
     {
+        bWatchBallsMovement = false;
         SwitchTurn();
     }
 }
@@ -90,13 +97,15 @@ void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState
             CueBall = AmBall;
     }
 
-    Cast<UPrimitiveComponent>(CueBall->GetRootComponent())->SetSimulatePhysics(false);
-
     if (!ensure(CueBall != nullptr)) return;
+    auto BallPrimComp = Cast<UStaticMeshComponent>(CueBall->GetRootComponent());
+    BallPrimComp->SetSimulatePhysics(false);
     CueBall->SetActorLocation(FVector(0, 0, 100));
 
     TakeBallFromHand();
     
+    // TODO it is debug feature, when we can pass nullptr to the func. Remove later?
+    // if nullptr is given as parameter, we will automatically give a ball to the current player
     if (!PlayerState)
         PlayerState = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
 
@@ -110,7 +119,10 @@ bool APoolGameState::TakeBallFromHand_Validate() { return true; }
 void APoolGameState::TakeBallFromHand_Implementation()
 {
     if (PlayerWithCueBall)
+    {
         PlayerWithCueBall->SetBallInHand(nullptr);
+        PlayerWithCueBall = nullptr;
+    }
 }
 
 bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)

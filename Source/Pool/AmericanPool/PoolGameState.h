@@ -21,6 +21,10 @@ public:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
 
+    // not Server. It is only called from LaunchBall, that is 
+    // already on Server. Maybe make it server later
+    void StartWatchingBallsMovement() { bWatchBallsMovement = true; }
+
     // they are attached to awake and sleep events in ABall class.
     // NOTE And they are attached only on the server.
     // So the function is only called on server.
@@ -50,10 +54,10 @@ protected:
     virtual void BeginPlay() override;
 
 private:
+    bool bWatchBallsMovement = false;
     TArray<class ABall*> MovingBalls;
     
     APoolPlayerState* PlayerWithCueBall = nullptr;
-
 
     void OnRep_UpdatePlayerStateTurn();
 };

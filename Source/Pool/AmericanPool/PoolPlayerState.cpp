@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "../Pool.h"
-
 #include "PoolPlayerState.h"
+#include "../Pool.h"
 #include "AmericanPool/PoolGameState.h"
 #include "Objects/BallAmerican.h"
 
@@ -16,6 +15,7 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(APoolPlayerState, bIsReady);
     DOREPLIFETIME(APoolPlayerState, bMyTurn);
     DOREPLIFETIME(APoolPlayerState, bBallInHand);
+    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
 }
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
@@ -41,8 +41,9 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
 
     float BallRadius = CueBallHanded->GetRootComponent()->Bounds.SphereRadius;
     
-    CueBallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius));
+    // If we first SetLocation and then SimulatePhys(true), then SetLocation not working
     Cast<UPrimitiveComponent>(CueBallHanded->GetRootComponent())->SetSimulatePhysics(true);
+    CueBallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
 
     APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
     if (!ensure(State != nullptr)) return;
@@ -56,7 +57,10 @@ void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
     bMyTurn = bInIsMyTurn;
 }
 
-void APoolPlayerState::SetBallInHand(ABall* CueBall)
+//bool APoolPlayerState::SetBallInHand_Validate(ABall* CueBall) { return true; }
+void APoolPlayerState::SetBallInHand/*_Implementation*/(ABall* CueBall)
 {
-    this->CueBallHanded = CueBall;
+    CueBallHanded = CueBall;
+
+    FString BallName = CueBall ? *CueBall->GetName() : FString("NULL");
 }

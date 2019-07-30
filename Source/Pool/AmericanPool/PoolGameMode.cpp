@@ -61,6 +61,8 @@ void APoolGameMode::HandleMatchHasStarted()
 
     auto PoolGameState = GetGameState<APoolGameState>();
     PoolGameState->ActiveBalls = Balls;
+
+    PoolGameState->SwitchTurn();
 }
 
 bool APoolGameMode::InitializeTable()
