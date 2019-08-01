@@ -46,6 +46,8 @@ public:
     FBallType GetType() { return BallType; }
 
 protected:
+    virtual void BeginPlay() override;
+
     UPROPERTY(ReplicatedUsing=OnRep_BallType, EditAnywhere, BlueprintReadWrite)
     FBallType BallType = FBallType::NotInitialized;
     UFUNCTION()

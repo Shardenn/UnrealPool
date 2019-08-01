@@ -1,13 +1,30 @@
 // Copyright 2019 Andrei Vikarchuk.
 
-
 #include "BallAmerican.h"
+#include "AmericanPool/PoolGameState.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "UnrealNetwork.h"
 
 ABallAmerican::ABallAmerican() :
     ABall()
 {}
+
+void ABallAmerican::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (HasAuthority())
+    {
+        if (BallType == FBallType::Cue)
+        {
+            APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
+            if (!ensure(GameState != nullptr)) return;
+
+            SphereMesh->OnComponentHit.AddDynamic(GameState, &APoolGameState::OnCueBallHit);
+        }
+    }
+}
 
 void ABallAmerican::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {

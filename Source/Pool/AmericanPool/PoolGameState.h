@@ -35,8 +35,33 @@ public:
     UFUNCTION()
     void RemoveMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
 
+    UFUNCTION()
+    void OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            int32 OtherBodyIndex,
+            bool bFromSweep,
+            const FHitResult& SweepResult);
+
+    UFUNCTION()
+        void OnCueBallHit(UPrimitiveComponent* HitComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            FVector NormalImpulse,
+            const FHitResult& Hit);
+
     UFUNCTION(Server, Reliable, WithValidation)
     void SwitchTurn();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void HandleTurnEnd();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void AssignFoul();
+
+    // Removes the ball from the active ones
+    UFUNCTION(Server, Reliable, WithValidation)
+    void RegisterBall(class ABallAmerican* Ball);
 
     UFUNCTION(Server, Reliable, WithValidation)
     void GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
@@ -55,8 +80,16 @@ protected:
 
 private:
     bool bWatchBallsMovement = false;
+    bool bTableOpened = true;
+    bool bPlayerFouled = false;
+    bool bShouldSwitchTurn = false;
+
+    // handle classes and their hiererchy
     TArray<class ABall*> MovingBalls;
-    
+    TArray<class ABallAmerican*> PocketedBalls;
+    TArray<class ABallAmerican*> BallsHittedByTheCue;
+    TArray<class ABallAmerican*> DroppedBalls;
+
     APoolPlayerState* PlayerWithCueBall = nullptr;
 
     void OnRep_UpdatePlayerStateTurn();

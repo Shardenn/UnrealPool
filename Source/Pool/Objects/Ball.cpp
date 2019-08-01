@@ -30,10 +30,12 @@ void ABall::BeginPlay()
 
     if (HasAuthority())
     {
-        GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
+        APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
         if (!ensure(GameState != nullptr)) return;
 
         SphereMesh->OnComponentWake.AddDynamic(GameState, &APoolGameState::AddMovingBall);
         SphereMesh->OnComponentSleep.AddDynamic(GameState, &APoolGameState::RemoveMovingBall);
+
+        SphereMesh->OnComponentBeginOverlap.AddDynamic(GameState, &APoolGameState::OnBallOverlap);
     }
 }

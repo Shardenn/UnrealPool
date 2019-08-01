@@ -1,11 +1,14 @@
 #include "PoolGameState.h"
 
 #include "Pool.h"
-#include "Objects/Ball.h"
+// TODO handle includes correctly, maybe refactor
+//#include "Objects/Ball.h"
 #include "Objects/BallAmerican.h"
+#include "Objects/Table/Table.h"
+#include "PoolPlayerState.h"
 
 #include "UnrealNetwork.h"
-#include "PoolPlayerState.h"
+#include "Components/BoxComponent.h"
 
 void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -68,9 +71,11 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
     if (MovingBalls.Num() == 0)
     {
         bWatchBallsMovement = false;
-        SwitchTurn();
+        //SwitchTurn();
+        HandleTurnEnd();
     }
 }
+
 
 bool APoolGameState::SwitchTurn_Validate() { return true; }
 void APoolGameState::SwitchTurn_Implementation()
@@ -82,6 +87,77 @@ void APoolGameState::SwitchTurn_Implementation()
     UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
     APoolPlayerState* NewPlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
     NewPlayerTurn->SetIsMyTurn(true);
+}
+
+void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent, 
+    AActor* OtherActor, 
+    UPrimitiveComponent* OtherComp, 
+    int32 OtherBodyIndex, 
+    bool bFromSweep, 
+    const FHitResult& SweepResult)
+{
+    UBoxComponent* BallRegistratorComp = Cast<UBoxComponent>(OtherComp);
+    if (!BallRegistratorComp)
+        return;
+
+    UE_LOG(LogPool, Warning, TEXT("Ball %s overlapped with ball registrator %s"), *OverlappedComponent->GetOwner()->GetName(), 
+        *BallRegistratorComp->GetName());
+
+    ABallAmerican* PocketedBall = Cast<ABallAmerican>(OverlappedComponent->GetOwner());
+    if (PocketedBall)
+        PocketedBalls.Add(PocketedBall);
+}
+
+void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent, 
+    AActor* OtherActor, 
+    UPrimitiveComponent* OtherComp, 
+    FVector NormalImpulse, 
+    const FHitResult& Hit)
+{
+    ABallAmerican* Ball = Cast<ABallAmerican>(OtherActor);
+    if (!Ball) return;
+
+    UE_LOG(LogPool, Warning, TEXT("The cue hitted the ball named %s"), *Ball->GetName());
+
+    // TODO AddUnique?
+    BallsHittedByTheCue.Add(Ball);
+}
+
+bool APoolGameState::HandleTurnEnd_Validate() { return true; }
+void APoolGameState::HandleTurnEnd_Implementation()
+{
+    for (auto Ball : PocketedBalls)
+    {
+        if (Ball->GetType() == FBallType::Black)
+        {
+            UE_LOG(LogPool, Warning, TEXT("The black ball was potted"));
+        }
+        else if (Ball->GetType() == FBallType::Cue)
+        {
+            AssignFoul();
+        }
+
+        // TODO handle named shot
+
+        RegisterBall(Ball);
+    }
+
+    if (BallsHittedByTheCue.Num() == 0)
+    {
+        AssignFoul();
+    }
+}
+
+bool APoolGameState::AssignFoul_Validate() { return true; }
+void APoolGameState::AssignFoul_Implementation()
+{
+    bPlayerFouled = true;
+}
+
+bool APoolGameState::RegisterBall_Validate(ABallAmerican*) { return true; }
+void APoolGameState::RegisterBall_Implementation(ABallAmerican* Ball)
+{
+    ActiveBalls.Remove(Ball);
 }
 
 bool APoolGameState::GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }

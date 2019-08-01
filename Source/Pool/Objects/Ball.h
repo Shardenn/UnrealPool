@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 #pragma once
 
@@ -30,6 +30,4 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* SphereMesh;
 
-private:
-    class APoolGameState* GameState = nullptr;
 };
