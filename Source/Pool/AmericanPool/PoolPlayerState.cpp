@@ -16,6 +16,7 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(APoolPlayerState, bMyTurn);
     DOREPLIFETIME(APoolPlayerState, bBallInHand);
     DOREPLIFETIME(APoolPlayerState, CueBallHanded);
+    DOREPLIFETIME(APoolPlayerState, AssignedBallType);
 }
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
@@ -61,6 +62,9 @@ void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 void APoolPlayerState::SetBallInHand/*_Implementation*/(ABall* CueBall)
 {
     CueBallHanded = CueBall;
+}
 
-    FString BallName = CueBall ? *CueBall->GetName() : FString("NULL");
+void APoolPlayerState::AssignBallType(FBallType Type)
+{
+    AssignedBallType = Type;
 }

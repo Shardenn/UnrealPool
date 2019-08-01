@@ -4,20 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Ball.h"
+#include "AmericanPool/EightPoolBallType.h"
 #include "BallAmerican.generated.h"
 
 /**
  *
  */
-UENUM(BlueprintType)
-enum class FBallType : uint8
-{
-    Stripe,
-    Solid,
-    Black,
-    Cue,
-    NotInitialized
-};
+
 
 UCLASS()
 class POOL_API ABallAmerican : public ABall
