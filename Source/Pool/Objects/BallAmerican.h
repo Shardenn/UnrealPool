@@ -50,4 +50,8 @@ protected:
     int32 BallNumber = 0;
     UFUNCTION()
     void OnRep_BallNumber();
+
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void RegisterOnHit();
 };

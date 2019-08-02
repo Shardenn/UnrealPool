@@ -9,6 +9,7 @@
 
 #include "UnrealNetwork.h"
 #include "Components/BoxComponent.h"
+#include "Objects/Table/BallRegistrator.h"
 
 void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -96,6 +97,7 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
     bool bFromSweep, 
     const FHitResult& SweepResult)
 {
+    // TODO cast to BallRegistrator, not to BoxComponent
     UBoxComponent* BallRegistratorComp = Cast<UBoxComponent>(OtherComp);
     if (!BallRegistratorComp)
         return;
@@ -106,6 +108,18 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
     ABallAmerican* PocketedBall = Cast<ABallAmerican>(OverlappedComponent->GetOwner());
     if (PocketedBall)
         PocketedBalls.Add(PocketedBall);
+
+    auto Comp = Cast<UStaticMeshComponent>(PocketedBall->GetRootComponent());
+    RemoveMovingBall(Comp, NAME_None);
+    
+    FBallType Type = PocketedBall->GetType();
+    if (Type != FBallType::Cue &&
+        Type != FBallType::Black)
+    {
+        Comp->SetSimulatePhysics(false);
+        Comp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+        PocketedBall->SetActorHiddenInGame(true);
+    }
 }
 
 void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent, 
@@ -116,8 +130,6 @@ void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent,
 {
     ABallAmerican* Ball = Cast<ABallAmerican>(OtherActor);
     if (!Ball) return;
-
-    UE_LOG(LogPool, Warning, TEXT("The cue hitted the ball named %s"), *Ball->GetName());
 
     // TODO AddUnique?
     BallsHittedByTheCue.Add(Ball);
@@ -130,6 +142,7 @@ void APoolGameState::HandleTurnEnd_Implementation()
     {
         if (Ball->GetType() == FBallType::Black)
         {
+            // TODO handle black ball potting
             UE_LOG(LogPool, Warning, TEXT("The black ball was potted"));
         }
         else if (Ball->GetType() == FBallType::Cue)
@@ -139,6 +152,15 @@ void APoolGameState::HandleTurnEnd_Implementation()
 
         // TODO handle named shot
 
+        if (!bTableOpened)
+        {
+            APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+            FBallType CurrentPlayerBallType = Player->GetAssignedBallType();
+
+            if (Ball->GetType() == CurrentPlayerBallType)
+                bShouldSwitchTurn = false;
+        }
+
         RegisterBall(Ball);
     }
 
@@ -146,6 +168,58 @@ void APoolGameState::HandleTurnEnd_Implementation()
     {
         AssignFoul();
     }
+
+    // assign balls type if not done yet
+    if (PocketedBalls.Num() > 0 &&
+        bBallsRackBroken &&
+        bTableOpened &&
+        !bPlayerFouled)
+    {
+        FBallType CurrentAssignedType, OtherAssignedType;
+        for (auto& Ball : PocketedBalls)
+        {
+            if (Ball->GetType() == FBallType::Solid)
+            {
+                CurrentAssignedType = FBallType::Solid;
+                OtherAssignedType = FBallType::Stripe;
+                break;
+            }
+            else if (Ball->GetType() == FBallType::Stripe)
+            {
+                CurrentAssignedType = FBallType::Stripe;
+                OtherAssignedType = FBallType::Solid;
+                break;
+            }
+        }
+
+        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        Player->AssignBallType(CurrentAssignedType);
+
+        // if we are playing standalone, then do not reassign another type to the player
+        if (PlayerArray.Num() > 1)
+        {
+            auto OtherPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
+            Player = Cast<APoolPlayerState>(PlayerArray[OtherPlayerIndex]);
+            Player->AssignBallType(OtherAssignedType);
+        }
+
+        // now the types are assigned
+        bTableOpened = false;
+    }
+
+    if (BallsHittedByTheCue.Num() > 0)
+    {
+        if (!bBallsRackBroken)
+            bBallsRackBroken = true;
+    }
+
+    if (bShouldSwitchTurn)
+        SwitchTurn();
+
+    if (bPlayerFouled)
+        GiveBallInHand();
+
+    ClearTurnStateVariables();
 }
 
 bool APoolGameState::AssignFoul_Validate() { return true; }
@@ -157,7 +231,20 @@ void APoolGameState::AssignFoul_Implementation()
 bool APoolGameState::RegisterBall_Validate(ABallAmerican*) { return true; }
 void APoolGameState::RegisterBall_Implementation(ABallAmerican* Ball)
 {
+    FBallType Type = Ball->GetType();
+    if (Type != FBallType::Cue &&
+        Type != FBallType::Black)
     ActiveBalls.Remove(Ball);
+}
+
+void APoolGameState::ClearTurnStateVariables()
+{
+    bPlayerFouled = false;
+    bShouldSwitchTurn = true;
+
+    PocketedBalls.Empty();
+    BallsHittedByTheCue.Empty();
+    DroppedBalls.Empty();
 }
 
 bool APoolGameState::GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }

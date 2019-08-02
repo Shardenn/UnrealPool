@@ -81,8 +81,9 @@ protected:
 private:
     bool bWatchBallsMovement = false;
     bool bTableOpened = true;
+    bool bBallsRackBroken = false;
     bool bPlayerFouled = false;
-    bool bShouldSwitchTurn = false;
+    bool bShouldSwitchTurn = true;
 
     // handle classes and their hiererchy
     TArray<class ABall*> MovingBalls;
@@ -93,4 +94,6 @@ private:
     APoolPlayerState* PlayerWithCueBall = nullptr;
 
     void OnRep_UpdatePlayerStateTurn();
+
+    void ClearTurnStateVariables();
 };
