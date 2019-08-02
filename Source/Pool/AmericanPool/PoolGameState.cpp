@@ -111,12 +111,12 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
 
     auto Comp = Cast<UStaticMeshComponent>(PocketedBall->GetRootComponent());
     RemoveMovingBall(Comp, NAME_None);
+    Comp->SetSimulatePhysics(false);
     
     FBallType Type = PocketedBall->GetType();
     if (Type != FBallType::Cue &&
         Type != FBallType::Black)
     {
-        Comp->SetSimulatePhysics(false);
         Comp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
         PocketedBall->SetActorHiddenInGame(true);
     }
@@ -162,6 +162,12 @@ void APoolGameState::HandleTurnEnd_Implementation()
         }
 
         RegisterBall(Ball);
+    }
+
+    if (bTableOpened && 
+        PocketedBalls.Num() > 0)
+    {
+        bShouldSwitchTurn = false;
     }
 
     if (BallsHittedByTheCue.Num() == 0)
@@ -213,8 +219,15 @@ void APoolGameState::HandleTurnEnd_Implementation()
             bBallsRackBroken = true;
     }
 
-    if (bShouldSwitchTurn)
+    if (bShouldSwitchTurn || bPlayerFouled)
         SwitchTurn();
+    else
+    {
+        // TODO move to other method
+        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        if (Player) 
+            Player->SetIsMyTurn(true);
+    }
 
     if (bPlayerFouled)
         GiveBallInHand();
