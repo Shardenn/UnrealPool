@@ -43,6 +43,12 @@ public:
 
     UFUNCTION(BlueprintPure)
     FBallType GetAssignedBallType() { return AssignedBallType; }
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void HandleFrameWon();
+
+    UFUNCTION(BlueprintPure)
+    uint8 GetFramesWon() { return FramesWon; }
 protected:
     UPROPERTY(replicated)
     bool bIsReady = false;
@@ -59,4 +65,7 @@ protected:
 
     UPROPERTY(replicated)
     FBallType AssignedBallType = FBallType::NotInitialized;
+
+    UPROPERTY(replicated)
+    uint8 FramesWon = 0;
 };

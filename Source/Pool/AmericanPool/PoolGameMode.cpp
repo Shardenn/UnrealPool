@@ -65,6 +65,13 @@ void APoolGameMode::HandleMatchHasStarted()
     PoolGameState->SwitchTurn();
 }
 
+void APoolGameMode::HandleMatchHasEnded()
+{
+    Super::HandleMatchHasEnded();
+
+    UE_LOG(LogGameMode, Warning, TEXT("Match has ended"));
+}
+
 bool APoolGameMode::InitializeTable()
 {
     UWorld* World = GetWorld();

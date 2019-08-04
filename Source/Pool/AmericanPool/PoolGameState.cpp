@@ -6,6 +6,7 @@
 #include "Objects/BallAmerican.h"
 #include "Objects/Table/Table.h"
 #include "PoolPlayerState.h"
+#include "PoolGameMode.h"
 
 #include "UnrealNetwork.h"
 #include "Components/BoxComponent.h"
@@ -138,11 +139,29 @@ void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent,
 bool APoolGameState::HandleTurnEnd_Validate() { return true; }
 void APoolGameState::HandleTurnEnd_Implementation()
 {
+    /*
+    DEBUG CODE. REMOVE LINES HANDLING GAME END
+    */
+    APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    Player->HandleFrameWon();
+    APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
+    if (Player->GetFramesWon() >= GM->RequiredFramesToWin)
+    {
+        UE_LOG(LogPool, Warning, TEXT("Player %s won the frame"), *Player->GetName());
+        GM->EndMatch();
+    }
+    //--------------------------
     for (auto Ball : PocketedBalls)
     {
         if (Ball->GetType() == FBallType::Black)
         {
             // TODO handle black ball potting
+            if (!bBallsRackBroken)
+            {
+                AGameMode* GameMode = Cast<AGameMode>(AuthorityGameMode);
+                if (GameMode)
+                    GameMode->RestartGame();
+            }
             UE_LOG(LogPool, Warning, TEXT("The black ball was potted"));
         }
         else if (Ball->GetType() == FBallType::Cue)

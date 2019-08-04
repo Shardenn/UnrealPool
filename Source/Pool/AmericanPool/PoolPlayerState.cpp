@@ -68,3 +68,9 @@ void APoolPlayerState::AssignBallType(FBallType Type)
 {
     AssignedBallType = Type;
 }
+
+bool APoolPlayerState::HandleFrameWon_Validate() { return true; }
+void APoolPlayerState::HandleFrameWon_Implementation()
+{
+    FramesWon++;
+}

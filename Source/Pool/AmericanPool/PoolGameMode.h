@@ -24,11 +24,15 @@ public:
     virtual void PostLogin(APlayerController* NewPlayer) override;
 
     virtual void HandleMatchHasStarted() override;
+    virtual void HandleMatchHasEnded() override;
 
     bool InitializeTable();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    int32 RequiredPlayersReadyNum = 2;
+    uint8 RequiredPlayersReadyNum = 2;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    uint8 RequiredFramesToWin = 1;
 
 protected:
     class ATable* GameTable = nullptr;
