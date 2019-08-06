@@ -44,11 +44,14 @@ public:
             const FHitResult& SweepResult);
 
     UFUNCTION()
-        void OnCueBallHit(UPrimitiveComponent* HitComponent,
+    void OnCueBallHit(UPrimitiveComponent* HitComponent,
             AActor* OtherActor,
             UPrimitiveComponent* OtherComp,
             FVector NormalImpulse,
             const FHitResult& Hit);
+
+    UFUNCTION()
+    void OnFrameRestarted();
 
     UFUNCTION(Server, Reliable, WithValidation)
     void SwitchTurn();
@@ -77,6 +80,13 @@ public:
     uint32 PlayerIndexTurn;
 protected:
     virtual void BeginPlay() override;
+
+    // returns true if the conditions for the win
+    // are satisfied. (Like every ball is pocketed
+    // BEFORE pocketed 8 ball).
+    virtual bool DecideWinCondition();
+
+    class ABallAmerican* CueBall = nullptr;
 
 private:
     bool bWatchBallsMovement = false;

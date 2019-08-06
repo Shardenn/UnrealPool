@@ -2,6 +2,7 @@
 
 #include "Objects/Table/Table.h"
 #include "Billiardist.h"
+#include "BilliardistController.h"
 #include "PoolGameState.h"
 
 #include "EngineUtils.h"
@@ -24,7 +25,10 @@ bool APoolGameMode::ReadyToStartMatch_Implementation()
 void APoolGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
-    PlayerControllers.Add(NewPlayer);
+    ABilliardistController* Controller = Cast<ABilliardistController>(NewPlayer);
+    if (!ensure(Controller != nullptr)) return;
+
+    PlayerControllers.Add(Controller);
     RestartPlayer(NewPlayer);
 }
 
@@ -57,19 +61,25 @@ void APoolGameMode::HandleMatchHasStarted()
 {
     Super::HandleMatchHasStarted();
 
-    auto Balls = GameTable->SpawnBalls();
-
-    auto PoolGameState = GetGameState<APoolGameState>();
-    PoolGameState->ActiveBalls = Balls;
-
-    PoolGameState->SwitchTurn();
+    RestartFrame();
 }
 
 void APoolGameMode::HandleMatchHasEnded()
 {
     Super::HandleMatchHasEnded();
 
+    for (auto Controller : PlayerControllers)
+    {
+        Controller->HandleMatchEnd();
+    }
+
     UE_LOG(LogGameMode, Warning, TEXT("Match has ended"));
+}
+
+void APoolGameMode::RestartFrame()
+{
+    if (OnFrameRestart.IsBound())
+        OnFrameRestart.Broadcast();
 }
 
 bool APoolGameMode::InitializeTable()

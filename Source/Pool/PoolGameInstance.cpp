@@ -1,8 +1,8 @@
 #include "PoolGameInstance.h"
 #include "Pool.h"
-#include "MenuSystem/MainMenu.h"
-#include "MenuSystem/MenuWidget.h"
-#include "MenuSystem/InGameMenu.h"
+#include "UI/MenuSystem/MainMenu.h"
+#include "UI/MenuSystem/MenuWidget.h"
+#include "UI/MenuSystem/InGameMenu.h"
 
 #include "Engine/Engine.h"
 #include "UObject/ConstructorHelpers.h"

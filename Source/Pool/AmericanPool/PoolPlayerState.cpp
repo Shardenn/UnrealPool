@@ -17,6 +17,7 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(APoolPlayerState, bBallInHand);
     DOREPLIFETIME(APoolPlayerState, CueBallHanded);
     DOREPLIFETIME(APoolPlayerState, AssignedBallType);
+    DOREPLIFETIME(APoolPlayerState, FramesWon);
 }
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }

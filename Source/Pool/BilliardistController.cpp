@@ -126,6 +126,14 @@ bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector 
     );
 }
 
+void ABilliardistController::HandleMatchEnd()
+{
+    FInputModeUIOnly InputMode;
+    SetInputMode(InputMode);
+    bShowMouseCursor = true;
+
+    OnMatchEnd();
+}
 
 void ABilliardistController::SetExaminingView()
 {

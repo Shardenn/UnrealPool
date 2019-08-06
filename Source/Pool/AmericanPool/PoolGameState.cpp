@@ -23,6 +23,14 @@ void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void APoolGameState::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (HasAuthority())
+    {
+        APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
+        if (!ensure(GM != nullptr)) return;
+
+        GM->OnFrameRestart.AddDynamic(this, &APoolGameState::OnFrameRestarted);
+    }
 }
 
 void APoolGameState::OnRep_UpdatePlayerStateTurn()
@@ -91,6 +99,8 @@ void APoolGameState::SwitchTurn_Implementation()
     NewPlayerTurn->SetIsMyTurn(true);
 }
 
+// Balls register event only on server,
+//so the function is always executed on the server
 void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent, 
     AActor* OtherActor, 
     UPrimitiveComponent* OtherComp, 
@@ -115,11 +125,16 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
     Comp->SetSimulatePhysics(false);
     
     FBallType Type = PocketedBall->GetType();
-    if (Type != FBallType::Cue &&
-        Type != FBallType::Black)
+
+    if (Type != FBallType::Cue)
     {
         Comp->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
         PocketedBall->SetActorHiddenInGame(true);
+    }
+    else
+    {
+        CueBall = PocketedBall;
+        CueBall->SetActorLocation(FVector(0, 0, 2000));
     }
 }
 
@@ -136,33 +151,61 @@ void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent,
     BallsHittedByTheCue.Add(Ball);
 }
 
+void APoolGameState::OnFrameRestarted()
+{
+    ClearTurnStateVariables();
+
+    bWatchBallsMovement = false;
+    bTableOpened = true;
+    bBallsRackBroken = false;
+
+    MovingBalls.Empty();
+    //ActiveBalls.Empty();
+
+    SwitchTurn();
+}
+
 bool APoolGameState::HandleTurnEnd_Validate() { return true; }
 void APoolGameState::HandleTurnEnd_Implementation()
 {
-    /*
-    DEBUG CODE. REMOVE LINES HANDLING GAME END
-    */
-    APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
-    Player->HandleFrameWon();
-    APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
-    if (Player->GetFramesWon() >= GM->RequiredFramesToWin)
-    {
-        UE_LOG(LogPool, Warning, TEXT("Player %s won the frame"), *Player->GetName());
-        GM->EndMatch();
-    }
-    //--------------------------
     for (auto Ball : PocketedBalls)
     {
         if (Ball->GetType() == FBallType::Black)
         {
-            // TODO handle black ball potting
             if (!bBallsRackBroken)
             {
-                AGameMode* GameMode = Cast<AGameMode>(AuthorityGameMode);
-                if (GameMode)
-                    GameMode->RestartGame();
+                APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
+                GM->RestartFrame();
+            }
+            else
+            {
+                uint8 NewFramesWon = 0;
+                uint8 WonPlayerIndex = 0;
+                APoolPlayerState* WonPoolPlayer = nullptr;
+
+                bool bCurrentPlayerWon = DecideWinCondition();
+                if (bCurrentPlayerWon)
+                {
+                    WonPlayerIndex = PlayerIndexTurn;
+                }
+                else
+                {
+                    WonPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
+                }
+
+                WonPoolPlayer = Cast<APoolPlayerState>(PlayerArray[WonPlayerIndex]);
+                WonPoolPlayer->HandleFrameWon();
+                NewFramesWon = WonPoolPlayer->GetFramesWon();
+
+                APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
+                if (NewFramesWon >= GM->RequiredFramesToWin)
+                    GM->EndMatch();
+                else
+                    GM->RestartFrame();
             }
             UE_LOG(LogPool, Warning, TEXT("The black ball was potted"));
+
+            return;
         }
         else if (Ball->GetType() == FBallType::Cue)
         {
@@ -200,7 +243,8 @@ void APoolGameState::HandleTurnEnd_Implementation()
         bTableOpened &&
         !bPlayerFouled)
     {
-        FBallType CurrentAssignedType, OtherAssignedType;
+        FBallType CurrentAssignedType = FBallType::NotInitialized, 
+            OtherAssignedType = FBallType::NotInitialized;
         for (auto& Ball : PocketedBalls)
         {
             if (Ball->GetType() == FBallType::Solid)
@@ -269,6 +313,12 @@ void APoolGameState::RegisterBall_Implementation(ABallAmerican* Ball)
     ActiveBalls.Remove(Ball);
 }
 
+bool APoolGameState::DecideWinCondition()
+{
+    // TODO implement
+    return true;
+}
+
 void APoolGameState::ClearTurnStateVariables()
 {
     bPlayerFouled = false;
@@ -282,16 +332,6 @@ void APoolGameState::ClearTurnStateVariables()
 bool APoolGameState::GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }
 void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState)
 {
-    ABall* CueBall = nullptr;
-    for (auto& Ball : ActiveBalls)
-    {
-        auto AmBall = Cast<ABallAmerican>(Ball);
-        if (!AmBall)
-            continue;
-        if (AmBall->GetType() == FBallType::Cue)
-            CueBall = AmBall;
-    }
-
     if (!ensure(CueBall != nullptr)) return;
     auto BallPrimComp = Cast<UStaticMeshComponent>(CueBall->GetRootComponent());
     BallPrimComp->SetSimulatePhysics(false);

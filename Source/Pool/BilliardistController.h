@@ -30,6 +30,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     void SubscribeToPlayerStateChange(ABilliardist* Billardist);
+
+    void HandleMatchEnd();
 protected:
     virtual void BeginPlay() override;
 
@@ -45,6 +47,9 @@ protected:
 
     UFUNCTION()
     void OnPlayerStateChanged(FBilliardistState newState, FBilliardistState OldState);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnMatchEnd();
 private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SubscribeToStateChange(ABilliardist* Billardist);

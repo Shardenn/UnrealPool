@@ -6,6 +6,10 @@
 #include "GameFramework/GameMode.h"
 #include "PoolGameMode.generated.h"
 
+class ABilliardistController;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFrameRestart);
+
 /**
  * 
  */
@@ -15,6 +19,9 @@ class POOL_API APoolGameMode : public AGameMode
     GENERATED_BODY()
 
 public:
+    UPROPERTY(BlueprintAssignable)
+    FOnFrameRestart OnFrameRestart;
+    
     /**
     * Overrides GameModeBase restartPlayer.
     * Spawns player on table spline so that he looks at the table.
@@ -26,17 +33,19 @@ public:
     virtual void HandleMatchHasStarted() override;
     virtual void HandleMatchHasEnded() override;
 
+    void RestartFrame();
+
     bool InitializeTable();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     uint8 RequiredPlayersReadyNum = 2;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-    uint8 RequiredFramesToWin = 1;
+    uint8 RequiredFramesToWin = 2;
 
 protected:
     class ATable* GameTable = nullptr;
-    TArray<AController*> PlayerControllers;
+    TArray<ABilliardistController*> PlayerControllers;
 
 private:
     // Returns location at pline of the table and 
