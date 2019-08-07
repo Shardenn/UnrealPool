@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
-#include "BallRegistrator.generated.h"
+#include "ActivePlayArea.generated.h"
 
 /**
  * 
  */
 UCLASS(BlueprintType)
-class POOL_API UBallRegistrator : public UBoxComponent
+class POOL_API UActivePlayArea : public UBoxComponent
 {
 	GENERATED_BODY()
 	

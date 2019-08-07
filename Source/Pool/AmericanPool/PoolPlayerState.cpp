@@ -36,8 +36,11 @@ bool APoolPlayerState::PlaceCueBall_Validate(const FVector&) { return true; }
 void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
 {
     if (!CueBallHanded)
+    {
+        UE_LOG(LogPool, Warning, TEXT("PlaceCueBall: CueBallHanded == nullptr"));
         return;
-    
+    }
+
     UWorld* World = GetWorld();
     if (!World) return;
 

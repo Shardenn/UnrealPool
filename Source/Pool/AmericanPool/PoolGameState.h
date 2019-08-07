@@ -44,6 +44,12 @@ public:
             const FHitResult& SweepResult);
 
     UFUNCTION()
+    void OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            int32 OtherBodyIndex);
+
+    UFUNCTION()
     void OnCueBallHit(UPrimitiveComponent* HitComponent,
             AActor* OtherActor,
             UPrimitiveComponent* OtherComp,
@@ -100,10 +106,13 @@ private:
     TArray<class ABallAmerican*> PocketedBalls;
     TArray<class ABallAmerican*> BallsHittedByTheCue;
     TArray<class ABallAmerican*> DroppedBalls;
+    TArray<class ABallAmerican*> BallsPlayedOutOfGame;
 
     APoolPlayerState* PlayerWithCueBall = nullptr;
 
     void OnRep_UpdatePlayerStateTurn();
 
     void ClearTurnStateVariables();
+
+    void HandleBlackBallOutOfPlay();
 };

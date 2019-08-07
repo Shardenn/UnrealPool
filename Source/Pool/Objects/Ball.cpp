@@ -37,5 +37,6 @@ void ABall::BeginPlay()
         SphereMesh->OnComponentSleep.AddDynamic(GameState, &APoolGameState::RemoveMovingBall);
 
         SphereMesh->OnComponentBeginOverlap.AddDynamic(GameState, &APoolGameState::OnBallOverlap);
+        SphereMesh->OnComponentEndOverlap.AddDynamic(GameState, &APoolGameState::OnBallEndOverlap);
     }
 }

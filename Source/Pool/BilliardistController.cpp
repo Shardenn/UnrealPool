@@ -108,7 +108,6 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
     
     if (!HitResult.ImpactNormal.Equals(FVector::UpVector, 0.1))
     {
-        UE_LOG(LogPool, Warning, TEXT("Hit result on table is not up vectored"));
         return false;
     }
     RaycastHit = HitResult.Location;

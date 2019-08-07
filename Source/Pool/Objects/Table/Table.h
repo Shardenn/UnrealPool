@@ -35,7 +35,12 @@ protected:
     UStaticMeshComponent* TableMesh = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    class UBoxComponent* BallRegistrator = nullptr;
+    class UBallRegistrator* BallRegistrator = nullptr;
+
+    // zone of play area. If a ball leaves this area,
+    // it is considered as dropped
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    class UActivePlayArea* ActivePlayArea = nullptr;
 
     // Spline path for player movement along the table
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
