@@ -210,7 +210,11 @@ void UPoolGameInstance::RequestFindSessions()
     SessionSearch = MakeShareable(new FOnlineSessionSearch());
     if (SessionSearch.IsValid())
     {
-        SessionSearch->bIsLanQuery = true;
+        if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+            SessionSearch->bIsLanQuery = true;
+        else
+            SessionSearch->bIsLanQuery = false;
+
         SessionSearch->MaxSearchResults = 10000;
         // for steam presence enabled
         SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
