@@ -11,6 +11,7 @@
 #include "Blueprint/UserWidget.h"
 
 const static FName SESSION_NAME = TEXT("My_session_game");
+const static FName SERVER_NAME_SETTING_KEY = TEXT("ServerName");
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -113,10 +114,19 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
         {
             UE_LOG(LogPool, Warning, TEXT("Found session %s"), *SessionResult.GetSessionIdStr());
             FServerData Data;
-            Data.Name = SessionResult.GetSessionIdStr();
             Data.MaxPlayers = SessionResult.Session.SessionSettings.NumPublicConnections;
             Data.CurrentPlayers = Data.MaxPlayers - SessionResult.Session.NumOpenPublicConnections;
             Data.HostUsername = SessionResult.Session.OwningUserName;
+            FString GotServerName;
+            if (SessionResult.Session.SessionSettings.Get(SERVER_NAME_SETTING_KEY, GotServerName))
+            {
+                Data.Name = GotServerName;
+            }
+            else
+            {
+                Data.Name = "Could not get name";
+            }
+
             ServerNames.Add(Data);
         }
 
@@ -157,13 +167,15 @@ void UPoolGameInstance::CreateSession()
         SessionSettings.NumPublicConnections = 2;
         SessionSettings.bShouldAdvertise = true; // visible via search
         SessionSettings.bUsesPresence = true;
+        SessionSettings.Set(SERVER_NAME_SETTING_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
         SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
     }
 }
 
-void UPoolGameInstance::Host()
+void UPoolGameInstance::Host(FString ServerName)
 {
+    DesiredServerName = ServerName;
     if (SessionInterface.IsValid())
     {
         auto ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);

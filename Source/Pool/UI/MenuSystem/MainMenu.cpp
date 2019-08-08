@@ -8,6 +8,7 @@
 #include "Components/EditableText.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/EditableTextBox.h"
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
 {
@@ -23,7 +24,13 @@ bool UMainMenu::Initialize()
     if (!Success) return false;
 
     if (!ensure(ButtonHost != nullptr)) return false;
-    ButtonHost->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+    ButtonHost->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
+
+    if (!ensure(ButtonHostConfirm != nullptr)) return false;
+    ButtonHostConfirm->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+
+    if (!ensure(ButtonHostCancel != nullptr)) return false;
+    ButtonHostCancel->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
 
     if (!ensure(ButtonJoinConfirm != nullptr)) return false;
     ButtonJoinConfirm->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
@@ -53,7 +60,9 @@ void UMainMenu::HostServer()
 {
     if (MenuInterface != nullptr)
     {
-        MenuInterface->Host();
+        FString ServerName = TextBoxServerHostName->GetText().ToString();
+        if (!ServerName.IsEmpty())
+            MenuInterface->Host(ServerName);
     }
 }
 
@@ -114,6 +123,13 @@ void UMainMenu::OpenMainMenu()
     if (!ensure(MenuSwitcher != nullptr)) return;
     if (!ensure(MainMenu != nullptr)) return;
     MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UMainMenu::OpenHostMenu()
+{
+    if (!ensure(MenuSwitcher != nullptr)) return;
+    if (!ensure(HostMenu != nullptr)) return;
+    MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UMainMenu::OpenJoinMenu()
