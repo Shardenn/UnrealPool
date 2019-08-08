@@ -7,7 +7,6 @@
 #include "Engine/Engine.h"
 #include "UObject/ConstructorHelpers.h"
 #include "OnlineSessionSettings.h"
-#include "OnlineSessionSettings.h"
 
 #include "Blueprint/UserWidget.h"
 
@@ -109,11 +108,16 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
             return;
         }
 
-        TArray<FString> ServerNames;
+        TArray<FServerData> ServerNames;
         for (const auto& SessionResult : SessionSearch->SearchResults)
         {
             UE_LOG(LogPool, Warning, TEXT("Found session %s"), *SessionResult.GetSessionIdStr());
-            ServerNames.Push(SessionResult.GetSessionIdStr());
+            FServerData Data;
+            Data.Name = SessionResult.GetSessionIdStr();
+            Data.CurrentPlayers = SessionResult.Session.NumOpenPublicConnections;
+            Data.MaxPlayers = SessionResult.Session.SessionSettings.NumPublicConnections;
+            Data.HostUsername = SessionResult.Session.OwningUserName;
+            ServerNames.Add(Data);
         }
 
         Menu->SetServerList(ServerNames);
@@ -142,7 +146,14 @@ void UPoolGameInstance::CreateSession()
     if (SessionInterface.IsValid())
     {
         FOnlineSessionSettings SessionSettings;
-        SessionSettings.bIsLANMatch = true;
+        if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+        {
+            SessionSettings.bIsLANMatch = true;
+        }
+        else
+        {
+            SessionSettings.bIsLANMatch = false;
+        }
         SessionSettings.NumPublicConnections = 2;
         SessionSettings.bShouldAdvertise = true; // visible via search
         SessionSettings.bUsesPresence = true;
