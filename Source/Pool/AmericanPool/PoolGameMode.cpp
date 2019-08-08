@@ -1,3 +1,5 @@
+// Copyright 2019 Andrei Vikarchuk.
+
 #include "PoolGameMode.h"
 
 #include "Objects/Table/Table.h"

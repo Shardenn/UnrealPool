@@ -1,3 +1,5 @@
+// Copyright 2019 Andrei Vikarchuk.
+
 #include "PoolGameState.h"
 
 #include "Pool.h"
