@@ -87,7 +87,6 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
     }
 }
 
-
 bool APoolGameState::SwitchTurn_Validate() { return true; }
 void APoolGameState::SwitchTurn_Implementation()
 {
@@ -340,7 +339,40 @@ void APoolGameState::RegisterBall_Implementation(ABallAmerican* Ball)
 
 bool APoolGameState::DecideWinCondition()
 {
-    // TODO implement
+    // when 8 ball is scored and the rack was already broken,
+    // there are two options: current player won or lose.
+    
+    // If balls of his types are all scored AND
+    // on the 8ball pocketing he did not pocket any other ball,
+    // then he won.
+    // Otherwise - other player won.
+
+    APoolGameMode* GM = nullptr;
+    if (HasAuthority())
+        GM = Cast<APoolGameMode>(AuthorityGameMode);
+    // we return true cause in case we have some error
+    // with getting GM and we return false, then the players
+    // are stuck with the situation
+    if (!ensure(GM != nullptr)) return true;
+
+    APoolPlayerState* PoolPlayer = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    if (!ensure(PoolPlayer != nullptr)) return true;
+
+    FBallType PlayersType = PoolPlayer->GetAssignedBallType();
+    int32 BallsOfTypePlayedOut = 0;
+    for (auto& PlayedOutBall : BallsPlayedOutOfGame)
+    {
+        if (PlayedOutBall->GetType() == PlayersType)
+            ++BallsOfTypePlayedOut;
+    }
+
+    // if there are no balls of our type on the table
+    if (BallsOfTypePlayedOut < GM->GetRequiredBallsToPocket())
+        return false;
+    // if we pocketed smth else otherwise than 8ball, we lose
+    if (PocketedBalls.Num() > 1)
+        return false;
+
     return true;
 }
 
@@ -356,9 +388,11 @@ void APoolGameState::ClearTurnStateVariables()
 
 void APoolGameState::HandleBlackBallOutOfPlay()
 {
+    APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
+    if (!ensure(GM != nullptr)) return;
+
     if (!bBallsRackBroken)
     {
-        APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
         GM->RestartFrame();
     }
     else
@@ -381,7 +415,6 @@ void APoolGameState::HandleBlackBallOutOfPlay()
         WonPoolPlayer->HandleFrameWon();
         NewFramesWon = WonPoolPlayer->GetFramesWon();
 
-        APoolGameMode* GM = Cast<APoolGameMode>(AuthorityGameMode);
         if (NewFramesWon >= GM->RequiredFramesToWin)
             GM->EndMatch();
         else

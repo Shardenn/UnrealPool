@@ -20,6 +20,8 @@ ATable::ATable()
     TableMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Table mesh"));
     RootComponent = (USceneComponent*)TableMesh;
 
+    TableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_TableTraceChannel, ECollisionResponse::ECR_Block);
+
     FrontBallLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Front ball location"));
     CueBallLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Cue ball location"));
 

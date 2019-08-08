@@ -1,7 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Billiardist.h"
+// TODO doubtful include. Needs refactoring
 #include "Objects/Ball.h"
+#include "Objects/BallAmerican.h"
+
 #include "Pool.h"
 #include "BilliardistController.h"
 #include "AimingComponent.h"
@@ -267,9 +270,12 @@ void ABilliardist::ActionPressHandle()
 
             if (BillController->TryRaycastBall(FoundBall))
             {
-                UE_LOG(LogPool, Log, TEXT("Found ball %s "), *GetName());
-                SetSelectedBall(FoundBall);
-                SetState(FBilliardistState::AIMING);
+                ABallAmerican* AmericanBall = Cast<ABallAmerican>(FoundBall);
+                if (AmericanBall && AmericanBall->GetType() == FBallType::Cue)
+                {
+                    SetSelectedBall(FoundBall);
+                    SetState(FBilliardistState::AIMING);
+                }
 
                 // 2. switch the pawn to aiming camera
                 // TODO camera handling here

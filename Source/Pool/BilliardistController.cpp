@@ -62,7 +62,7 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
         HitResult,
         StartLocation,
         EndLocation,
-        ECollisionChannel::ECC_GameTraceChannel1
+        ECollisionChannel::ECC_BallTraceChannel
     ))
     {
         return false;
@@ -100,7 +100,7 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
         HitResult,
         StartLocation,
         EndLocation,
-        ECollisionChannel::ECC_GameTraceChannel2
+        ECollisionChannel::ECC_TableTraceChannel
     ))
     {
         return false;

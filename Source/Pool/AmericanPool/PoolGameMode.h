@@ -35,6 +35,8 @@ public:
 
     void RestartFrame();
 
+    uint8 GetRequiredBallsToPocket() { return RequiredBallsToPocket; }
+
     bool InitializeTable();
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -47,6 +49,9 @@ protected:
     class ATable* GameTable = nullptr;
     TArray<ABilliardistController*> PlayerControllers;
 
+    // number of balls we are required to pocket before the 8 ball
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+    uint8 RequiredBallsToPocket = 7;
 private:
     // Returns location at pline of the table and 
     // "look at table" rotation
