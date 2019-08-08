@@ -8,6 +8,7 @@
 #include "Components/EditableText.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/EditableTextBox.h"
 
 UMainMenu::UMainMenu(const FObjectInitializer& ObjectInitializer)
 {
@@ -23,7 +24,13 @@ bool UMainMenu::Initialize()
     if (!Success) return false;
 
     if (!ensure(ButtonHost != nullptr)) return false;
-    ButtonHost->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+    ButtonHost->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
+
+    if (!ensure(ButtonHostConfirm != nullptr)) return false;
+    ButtonHostConfirm->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+
+    if (!ensure(ButtonHostCancel != nullptr)) return false;
+    ButtonHostCancel->OnClicked.AddDynamic(this, &UMainMenu::OpenMainMenu);
 
     if (!ensure(ButtonJoinConfirm != nullptr)) return false;
     ButtonJoinConfirm->OnClicked.AddDynamic(this, &UMainMenu::JoinServer);
@@ -53,21 +60,26 @@ void UMainMenu::HostServer()
 {
     if (MenuInterface != nullptr)
     {
-        MenuInterface->Host();
+        FString ServerName = TextBoxServerHostName->GetText().ToString();
+        if (!ServerName.IsEmpty())
+            MenuInterface->Host(ServerName);
     }
 }
 
-void UMainMenu::SetServerList(TArray<FString> ServerNames)
+void UMainMenu::SetServerList(TArray<FServerData> ServerDatas)
 {
     ServerList->ClearChildren();
 
     uint32 i = 0;
-    for (const FString& ServerName : ServerNames)
+    for (const auto& ServerData : ServerDatas)
     {
         UServerRow* ServerRow = CreateWidget<UServerRow>(this, ServerRowClass);
         if (!ensure(ServerRow != nullptr)) continue;
 
-        ServerRow->ServerName->SetText(FText::FromString(ServerName));
+        ServerRow->TextServerName->SetText(FText::FromString(ServerData.Name));
+        ServerRow->TextHostUsername->SetText(FText::FromString(ServerData.HostUsername));
+        FString FractionText = FString::Printf(TEXT("%d/%d"), ServerData.CurrentPlayers, ServerData.MaxPlayers);
+        ServerRow->TextConnectionFraction->SetText(FText::FromString(FractionText));
         ServerRow->Setup(this, i++);
 
         ServerList->AddChild(ServerRow);
@@ -77,6 +89,20 @@ void UMainMenu::SetServerList(TArray<FString> ServerNames)
 void UMainMenu::SelectIndex(uint32 Index)
 {
     SelectedServerIndex = Index;
+    UpdateChildren();
+}
+
+void UMainMenu::UpdateChildren()
+{
+    for (int32 i = 0; i < ServerList->GetChildrenCount(); i++)
+    {
+        auto Row = Cast<UServerRow>(ServerList->GetChildAt(i));
+        if (Row)
+        {
+            Row->bSelected = (SelectedServerIndex.IsSet() && 
+                SelectedServerIndex.GetValue() == i);
+        }
+    }
 }
 
 void UMainMenu::JoinServer()
@@ -97,6 +123,13 @@ void UMainMenu::OpenMainMenu()
     if (!ensure(MenuSwitcher != nullptr)) return;
     if (!ensure(MainMenu != nullptr)) return;
     MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UMainMenu::OpenHostMenu()
+{
+    if (!ensure(MenuSwitcher != nullptr)) return;
+    if (!ensure(HostMenu != nullptr)) return;
+    MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UMainMenu::OpenJoinMenu()

@@ -7,11 +7,11 @@
 #include "Engine/Engine.h"
 #include "UObject/ConstructorHelpers.h"
 #include "OnlineSessionSettings.h"
-#include "OnlineSessionSettings.h"
 
 #include "Blueprint/UserWidget.h"
 
 const static FName SESSION_NAME = TEXT("My_session_game");
+const static FName SERVER_NAME_SETTING_KEY = TEXT("ServerName");
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -109,11 +109,25 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
             return;
         }
 
-        TArray<FString> ServerNames;
+        TArray<FServerData> ServerNames;
         for (const auto& SessionResult : SessionSearch->SearchResults)
         {
             UE_LOG(LogPool, Warning, TEXT("Found session %s"), *SessionResult.GetSessionIdStr());
-            ServerNames.Push(SessionResult.GetSessionIdStr());
+            FServerData Data;
+            Data.MaxPlayers = SessionResult.Session.SessionSettings.NumPublicConnections;
+            Data.CurrentPlayers = Data.MaxPlayers - SessionResult.Session.NumOpenPublicConnections;
+            Data.HostUsername = SessionResult.Session.OwningUserName;
+            FString GotServerName;
+            if (SessionResult.Session.SessionSettings.Get(SERVER_NAME_SETTING_KEY, GotServerName))
+            {
+                Data.Name = GotServerName;
+            }
+            else
+            {
+                Data.Name = "Could not get name";
+            }
+
+            ServerNames.Add(Data);
         }
 
         Menu->SetServerList(ServerNames);
@@ -142,17 +156,26 @@ void UPoolGameInstance::CreateSession()
     if (SessionInterface.IsValid())
     {
         FOnlineSessionSettings SessionSettings;
-        SessionSettings.bIsLANMatch = true;
+        if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+        {
+            SessionSettings.bIsLANMatch = true;
+        }
+        else
+        {
+            SessionSettings.bIsLANMatch = false;
+        }
         SessionSettings.NumPublicConnections = 2;
         SessionSettings.bShouldAdvertise = true; // visible via search
         SessionSettings.bUsesPresence = true;
+        SessionSettings.Set(SERVER_NAME_SETTING_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
         SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
     }
 }
 
-void UPoolGameInstance::Host()
+void UPoolGameInstance::Host(FString ServerName)
 {
+    DesiredServerName = ServerName;
     if (SessionInterface.IsValid())
     {
         auto ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);
@@ -187,8 +210,12 @@ void UPoolGameInstance::RequestFindSessions()
     SessionSearch = MakeShareable(new FOnlineSessionSearch());
     if (SessionSearch.IsValid())
     {
-        SessionSearch->bIsLanQuery = true;
-        SessionSearch->MaxSearchResults = 100;
+        if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+            SessionSearch->bIsLanQuery = true;
+        else
+            SessionSearch->bIsLanQuery = false;
+
+        SessionSearch->MaxSearchResults = 10000;
         // for steam presence enabled
         SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
         UE_LOG(LogPool, Warning, TEXT("Starting searching for sessions..."));

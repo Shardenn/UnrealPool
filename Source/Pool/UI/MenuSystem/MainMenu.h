@@ -7,6 +7,17 @@
 
 #include "MainMenu.generated.h"
 
+USTRUCT()
+struct FServerData
+{
+    GENERATED_BODY()
+
+    FString Name;
+    uint16 CurrentPlayers;
+    uint16 MaxPlayers;
+    FString HostUsername;
+};
+
 /**
  *
  */
@@ -17,7 +28,7 @@ class POOL_API UMainMenu : public UMenuWidget
 public:
     UMainMenu(const FObjectInitializer& ObjectInitializer);
 
-    void SetServerList(TArray<FString> ServerNames);
+    void SetServerList(TArray<FServerData> ServerNames);
 
     void SelectIndex(uint32 Index);
 protected:
@@ -50,7 +61,15 @@ private:
 
     UPROPERTY(meta = (BindWidget))
     class UWidget* MainMenu;
+    UPROPERTY(meta = (BindWidget))
+    class UEditableTextBox* TextBoxServerHostName;
+    UPROPERTY(meta = (BindWidget))
+    class UButton* ButtonHostConfirm;
+    UPROPERTY(meta = (BindWidget))
+    class UButton* ButtonHostCancel;
 
+    UPROPERTY(meta = (BindWidget))
+    class UWidget* HostMenu;
     UPROPERTY(meta = (BindWidget))
     class UWidget* JoinMenu;
 
@@ -60,6 +79,8 @@ private:
     void JoinServer();
 
     UFUNCTION()
+    void OpenHostMenu();
+    UFUNCTION()
     void OpenJoinMenu();
     UFUNCTION()
     void OpenMainMenu();
@@ -68,4 +89,6 @@ private:
     void QuitPressed();
 
     TOptional<uint32> SelectedServerIndex;
+
+    void UpdateChildren();
 };

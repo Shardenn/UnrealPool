@@ -16,7 +16,16 @@ class POOL_API UServerRow : public UUserWidget
 
 public:
     UPROPERTY(meta = (BindWidget))
-    class UTextBlock* ServerName;
+    class UTextBlock* TextServerName;
+
+    UPROPERTY(meta = (BindWidget))
+    class UTextBlock* TextHostUsername;
+
+    UPROPERTY(meta = (BindWidget))
+    class UTextBlock* TextConnectionFraction;
+
+    UPROPERTY(BlueprintReadOnly)
+    bool bSelected = false;
 
     void Setup(class UMainMenu* Parent, uint32 Index);
 
