@@ -3,20 +3,12 @@
 #include "PoolPlayerState.h"
 #include "../Pool.h"
 #include "AmericanPool/PoolGameState.h"
+#include "AmericanPool/PoolGameMode.h"
 #include "Objects/BallAmerican.h"
 
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
-void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(APoolPlayerState, bIsReady);
-    DOREPLIFETIME(APoolPlayerState, bMyTurn);
-    DOREPLIFETIME(APoolPlayerState, bBallInHand);
-    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
-}
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
 void APoolPlayerState::ToggleReady_Implementation()
@@ -34,8 +26,11 @@ bool APoolPlayerState::PlaceCueBall_Validate(const FVector&) { return true; }
 void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
 {
     if (!CueBallHanded)
+    {
+        UE_LOG(LogPool, Warning, TEXT("PlaceCueBall: CueBallHanded == nullptr"));
         return;
-    
+    }
+
     UWorld* World = GetWorld();
     if (!World) return;
 
@@ -61,6 +56,27 @@ void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 void APoolPlayerState::SetBallInHand/*_Implementation*/(ABall* CueBall)
 {
     CueBallHanded = CueBall;
+}
 
-    FString BallName = CueBall ? *CueBall->GetName() : FString("NULL");
+void APoolPlayerState::AssignBallType(FBallType Type)
+{
+    AssignedBallType = Type;
+}
+
+bool APoolPlayerState::HandleFrameWon_Validate() { return true; }
+void APoolPlayerState::HandleFrameWon_Implementation()
+{
+    FramesWon++;
+}
+
+void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APoolPlayerState, bIsReady);
+    DOREPLIFETIME(APoolPlayerState, bMyTurn);
+    DOREPLIFETIME(APoolPlayerState, bBallInHand);
+    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
+    DOREPLIFETIME(APoolPlayerState, AssignedBallType);
+    DOREPLIFETIME(APoolPlayerState, FramesWon);
 }

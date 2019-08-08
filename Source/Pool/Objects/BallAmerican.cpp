@@ -1,13 +1,21 @@
 // Copyright 2019 Andrei Vikarchuk.
 
-
 #include "BallAmerican.h"
+#include "AmericanPool/PoolGameState.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "UnrealNetwork.h"
 
 ABallAmerican::ABallAmerican() :
     ABall()
 {}
+
+void ABallAmerican::BeginPlay()
+{
+    Super::BeginPlay();
+
+    SphereMesh->SetNotifyRigidBodyCollision(true);
+}
 
 void ABallAmerican::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
@@ -37,7 +45,19 @@ bool ABallAmerican::SetBallType_Validate(FBallType Type) { return true; }
 void ABallAmerican::SetBallType_Implementation(FBallType Type)
 {
     BallType = Type;
+    if (BallType == FBallType::Cue)
+        RegisterOnHit();
+
     SetupStripeness();
+}
+
+bool ABallAmerican::RegisterOnHit_Validate() { return true; }
+void ABallAmerican::RegisterOnHit_Implementation()
+{
+    APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
+    if (!ensure(GameState != nullptr)) return;
+
+    SphereMesh->OnComponentHit.AddDynamic(GameState, &APoolGameState::OnCueBallHit);
 }
 
 void ABallAmerican::OnRep_BallNumber()

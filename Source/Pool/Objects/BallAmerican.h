@@ -4,20 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Objects/Ball.h"
+#include "AmericanPool/EightPoolBallType.h"
 #include "BallAmerican.generated.h"
 
 /**
  *
  */
-UENUM(BlueprintType)
-enum class FBallType : uint8
-{
-    Stripe,
-    Solid,
-    Black,
-    Cue,
-    NotInitialized
-};
+
 
 UCLASS()
 class POOL_API ABallAmerican : public ABall
@@ -46,6 +39,8 @@ public:
     FBallType GetType() { return BallType; }
 
 protected:
+    virtual void BeginPlay() override;
+
     UPROPERTY(ReplicatedUsing=OnRep_BallType, EditAnywhere, BlueprintReadWrite)
     FBallType BallType = FBallType::NotInitialized;
     UFUNCTION()
@@ -55,4 +50,8 @@ protected:
     int32 BallNumber = 0;
     UFUNCTION()
     void OnRep_BallNumber();
+
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void RegisterOnHit();
 };

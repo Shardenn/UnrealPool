@@ -27,8 +27,5 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     int32 RowsNum = 5;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    float BallsSpacing = 0.1f;
-
     TSubclassOf<class ABall> BallClass;
 };

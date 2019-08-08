@@ -1,9 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 
-#include "MenuWidget.h"
+#include "WidgetBase.h"
 
-bool UMenuWidget::Initialize()
+bool UWidgetBase::Initialize()
 {
     bool Success = Super::Initialize();
     if (!Success) return false;
@@ -12,12 +12,7 @@ bool UMenuWidget::Initialize()
     return true;
 }
 
-void UMenuWidget::SetMenuInterface(IMenuInterface* NewInterface)
-{
-    this->MenuInterface = NewInterface;
-}
-
-void UMenuWidget::Setup()
+void UWidgetBase::Setup()
 {
     AddToViewport();
 
@@ -31,7 +26,7 @@ void UMenuWidget::Setup()
     PlayerController->bShowMouseCursor = true;
 }
 
-void UMenuWidget::Teardown()
+void UWidgetBase::Teardown()
 {
     APlayerController* PlayerController = GetOwningPlayer();
     if (!ensure(PlayerController != nullptr)) return;

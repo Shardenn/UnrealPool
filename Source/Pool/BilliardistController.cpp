@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 #include "BilliardistController.h"
 #include "Pool.h"
@@ -62,7 +62,7 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
         HitResult,
         StartLocation,
         EndLocation,
-        ECollisionChannel::ECC_GameTraceChannel1
+        ECollisionChannel::ECC_BallTraceChannel
     ))
     {
         return false;
@@ -100,7 +100,7 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
         HitResult,
         StartLocation,
         EndLocation,
-        ECollisionChannel::ECC_GameTraceChannel2
+        ECollisionChannel::ECC_TableTraceChannel
     ))
     {
         return false;
@@ -108,7 +108,6 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
     
     if (!HitResult.ImpactNormal.Equals(FVector::UpVector, 0.1))
     {
-        UE_LOG(LogPool, Warning, TEXT("Hit result on table is not up vectored"));
         return false;
     }
     RaycastHit = HitResult.Location;
@@ -126,6 +125,14 @@ bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector 
     );
 }
 
+void ABilliardistController::HandleMatchEnd()
+{
+    FInputModeUIOnly InputMode;
+    SetInputMode(InputMode);
+    bShowMouseCursor = true;
+
+    OnMatchEnd();
+}
 
 void ABilliardistController::SetExaminingView()
 {

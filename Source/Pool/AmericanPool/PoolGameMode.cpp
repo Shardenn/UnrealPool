@@ -1,7 +1,10 @@
+// Copyright 2019 Andrei Vikarchuk.
+
 #include "PoolGameMode.h"
 
 #include "Objects/Table/Table.h"
 #include "Billiardist.h"
+#include "BilliardistController.h"
 #include "PoolGameState.h"
 
 #include "EngineUtils.h"
@@ -10,10 +13,10 @@
 
 bool APoolGameMode::ReadyToStartMatch_Implementation()
 {
-    APoolGameState* GameState = GetGameState<APoolGameState>();
-    if (!ensure(GameState != nullptr)) return false;
+    APoolGameState* PoolGameState = GetGameState<APoolGameState>();
+    if (!ensure(PoolGameState != nullptr)) return false;
 
-    if (GameState->PlayersReadyNum == RequiredPlayersReadyNum)
+    if (PoolGameState->PlayersReadyNum == RequiredPlayersReadyNum)
     {
         return true;
     }
@@ -24,7 +27,10 @@ bool APoolGameMode::ReadyToStartMatch_Implementation()
 void APoolGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
-    PlayerControllers.Add(NewPlayer);
+    ABilliardistController* Controller = Cast<ABilliardistController>(NewPlayer);
+    if (!ensure(Controller != nullptr)) return;
+
+    PlayerControllers.Add(Controller);
     RestartPlayer(NewPlayer);
 }
 
@@ -57,12 +63,25 @@ void APoolGameMode::HandleMatchHasStarted()
 {
     Super::HandleMatchHasStarted();
 
-    auto Balls = GameTable->SpawnBalls();
+    RestartFrame();
+}
 
-    auto PoolGameState = GetGameState<APoolGameState>();
-    PoolGameState->ActiveBalls = Balls;
+void APoolGameMode::HandleMatchHasEnded()
+{
+    Super::HandleMatchHasEnded();
 
-    PoolGameState->SwitchTurn();
+    for (auto Controller : PlayerControllers)
+    {
+        Controller->HandleMatchEnd();
+    }
+
+    UE_LOG(LogGameMode, Warning, TEXT("Match has ended"));
+}
+
+void APoolGameMode::RestartFrame()
+{
+    if (OnFrameRestart.IsBound())
+        OnFrameRestart.Broadcast();
 }
 
 bool APoolGameMode::InitializeTable()

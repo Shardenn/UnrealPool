@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "AmericanPool/EightPoolBallType.h"
 #include "PoolPlayerState.generated.h"
 
 /**
@@ -29,6 +30,8 @@ public:
     //UFUNCTION(Server, Reliable, WithValidation)
     void SetBallInHand(class ABall* CueBall);
 
+    void AssignBallType(FBallType Type);
+
     UFUNCTION(BlueprintPure)
     bool GetIsMyTurn() const { return bMyTurn; }
 
@@ -38,6 +41,14 @@ public:
     UFUNCTION(BlueprintPure)
     bool GetIsBallInHand() const { return CueBallHanded != nullptr; }
 
+    UFUNCTION(BlueprintPure)
+    FBallType GetAssignedBallType() { return AssignedBallType; }
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void HandleFrameWon();
+
+    UFUNCTION(BlueprintPure)
+    uint8 GetFramesWon() { return FramesWon; }
 protected:
     UPROPERTY(replicated)
     bool bIsReady = false;
@@ -51,4 +62,10 @@ protected:
     // when ball in hand, it will contain a pointer to the cue ball
     UPROPERTY(replicated)
     class ABall* CueBallHanded = nullptr;
+
+    UPROPERTY(replicated)
+    FBallType AssignedBallType = FBallType::NotInitialized;
+
+    UPROPERTY(replicated)
+    uint8 FramesWon = 0;
 };

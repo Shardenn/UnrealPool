@@ -24,7 +24,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* CueBallLocation = nullptr;
 
-    virtual TArray<class ABall*> SpawnBalls();
+    //virtual TArray<class ABall*> SpawnBalls();
+    UFUNCTION()
+    void SpawnBalls();
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -32,9 +34,13 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* TableMesh = nullptr;
 
-
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    class UBoxComponent* BallRegistrator = nullptr;
+    class UBallRegistrator* BallRegistrator = nullptr;
+
+    // zone of play area. If a ball leaves this area,
+    // it is considered as dropped
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    class UActivePlayArea* ActivePlayArea = nullptr;
 
     // Spline path for player movement along the table
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -42,4 +48,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     class UBallSpawner* BallSpawner = nullptr;
+
+private:
+    // pointers to spawned balls.
+    // Needed to destroy the balls on a frame end
+    TArray<class ABall*> SpawnedBalls;
 };

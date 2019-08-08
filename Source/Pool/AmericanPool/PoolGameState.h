@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 #pragma once
 
@@ -35,8 +35,42 @@ public:
     UFUNCTION()
     void RemoveMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
 
+    UFUNCTION()
+    void OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            int32 OtherBodyIndex,
+            bool bFromSweep,
+            const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            int32 OtherBodyIndex);
+
+    UFUNCTION()
+    void OnCueBallHit(UPrimitiveComponent* HitComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            FVector NormalImpulse,
+            const FHitResult& Hit);
+
+    UFUNCTION()
+    void OnFrameRestarted();
+
     UFUNCTION(Server, Reliable, WithValidation)
     void SwitchTurn();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void HandleTurnEnd();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void AssignFoul();
+
+    // Removes the ball from the active ones
+    UFUNCTION(Server, Reliable, WithValidation)
+    void RegisterBall(class ABallAmerican* Ball);
 
     UFUNCTION(Server, Reliable, WithValidation)
     void GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
@@ -53,11 +87,32 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    // returns true if the conditions for the win
+    // are satisfied. (Like every ball is pocketed
+    // BEFORE pocketed 8 ball).
+    virtual bool DecideWinCondition();
+
+    class ABallAmerican* CueBall = nullptr;
+
 private:
     bool bWatchBallsMovement = false;
+    bool bTableOpened = true;
+    bool bBallsRackBroken = false;
+    bool bPlayerFouled = false;
+    bool bShouldSwitchTurn = true;
+
+    // handle classes and their hiererchy
     TArray<class ABall*> MovingBalls;
-    
+    TArray<class ABallAmerican*> PocketedBalls;
+    TArray<class ABallAmerican*> BallsHittedByTheCue;
+    TArray<class ABallAmerican*> DroppedBalls;
+    TArray<class ABallAmerican*> BallsPlayedOutOfGame;
+
     APoolPlayerState* PlayerWithCueBall = nullptr;
 
     void OnRep_UpdatePlayerStateTurn();
+
+    void ClearTurnStateVariables();
+
+    void HandleBlackBallOutOfPlay();
 };

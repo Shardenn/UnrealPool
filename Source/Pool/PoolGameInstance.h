@@ -7,7 +7,7 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSessionInterface.h"
 
-#include "MenuSystem/MenuInterface.h"
+#include "UI/MenuSystem/MenuInterface.h"
 #include "PoolGameInstance.generated.h"
 
 /**
