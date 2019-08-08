@@ -211,7 +211,7 @@ void UPoolGameInstance::RequestFindSessions()
     if (SessionSearch.IsValid())
     {
         SessionSearch->bIsLanQuery = true;
-        SessionSearch->MaxSearchResults = 100;
+        SessionSearch->MaxSearchResults = 10000;
         // for steam presence enabled
         SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
         UE_LOG(LogPool, Warning, TEXT("Starting searching for sessions..."));
