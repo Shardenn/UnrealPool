@@ -114,8 +114,8 @@ void UPoolGameInstance::OnSessionsSearchComplete(bool bFound)
             UE_LOG(LogPool, Warning, TEXT("Found session %s"), *SessionResult.GetSessionIdStr());
             FServerData Data;
             Data.Name = SessionResult.GetSessionIdStr();
-            Data.CurrentPlayers = SessionResult.Session.NumOpenPublicConnections;
             Data.MaxPlayers = SessionResult.Session.SessionSettings.NumPublicConnections;
+            Data.CurrentPlayers = Data.MaxPlayers - SessionResult.Session.NumOpenPublicConnections;
             Data.HostUsername = SessionResult.Session.OwningUserName;
             ServerNames.Add(Data);
         }
