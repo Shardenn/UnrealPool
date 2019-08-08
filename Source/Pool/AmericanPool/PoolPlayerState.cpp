@@ -3,22 +3,12 @@
 #include "PoolPlayerState.h"
 #include "../Pool.h"
 #include "AmericanPool/PoolGameState.h"
+#include "AmericanPool/PoolGameMode.h"
 #include "Objects/BallAmerican.h"
 
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
-void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(APoolPlayerState, bIsReady);
-    DOREPLIFETIME(APoolPlayerState, bMyTurn);
-    DOREPLIFETIME(APoolPlayerState, bBallInHand);
-    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
-    DOREPLIFETIME(APoolPlayerState, AssignedBallType);
-    DOREPLIFETIME(APoolPlayerState, FramesWon);
-}
 
 bool APoolPlayerState::ToggleReady_Validate() { return true; }
 void APoolPlayerState::ToggleReady_Implementation()
@@ -77,4 +67,16 @@ bool APoolPlayerState::HandleFrameWon_Validate() { return true; }
 void APoolPlayerState::HandleFrameWon_Implementation()
 {
     FramesWon++;
+}
+
+void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APoolPlayerState, bIsReady);
+    DOREPLIFETIME(APoolPlayerState, bMyTurn);
+    DOREPLIFETIME(APoolPlayerState, bBallInHand);
+    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
+    DOREPLIFETIME(APoolPlayerState, AssignedBallType);
+    DOREPLIFETIME(APoolPlayerState, FramesWon);
 }

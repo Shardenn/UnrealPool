@@ -185,6 +185,13 @@ void APoolGameState::OnFrameRestarted()
     BallsPlayedOutOfGame.Empty();
 
     SwitchTurn();
+
+    for (auto& Player : PlayerArray)
+    {
+        APoolPlayerState* PoolPlayer = Cast<APoolPlayerState>(Player);
+        if (PoolPlayer)
+            PoolPlayer->AssignBallType(FBallType::NotInitialized);
+    }
 }
 
 bool APoolGameState::HandleTurnEnd_Validate() { return true; }
