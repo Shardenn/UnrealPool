@@ -10,8 +10,11 @@
 
 #include "Blueprint/UserWidget.h"
 
-const static FName SESSION_NAME = TEXT("My_session_game");
+const static FName SESSION_NAME = TEXT("BilliardSessionGame");
 const static FName SERVER_NAME_SETTING_KEY = TEXT("ServerName");
+
+const static FName SERVER_SEARCH_FILTER_KEY = TEXT("SkipperBilliard");
+const static FString SERVER_SEARCH_FILTER_VALUE = TEXT("UnrealPool");
 
 UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -168,6 +171,8 @@ void UPoolGameInstance::CreateSession()
         SessionSettings.bShouldAdvertise = true; // visible via search
         SessionSettings.bUsesPresence = true;
         SessionSettings.Set(SERVER_NAME_SETTING_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+        // for debugging while sharing AppID
+        SessionSettings.Set(SERVER_SEARCH_FILTER_KEY, SERVER_SEARCH_FILTER_VALUE, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
         SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);
     }
@@ -215,9 +220,12 @@ void UPoolGameInstance::RequestFindSessions()
         else
             SessionSearch->bIsLanQuery = false;
 
-        SessionSearch->MaxSearchResults = 10000;
+        SessionSearch->MaxSearchResults = 1'000'000;
         // for steam presence enabled
         SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+        // debug filter key
+        SessionSearch->QuerySettings.Set(SERVER_SEARCH_FILTER_KEY, SERVER_SEARCH_FILTER_VALUE, EOnlineComparisonOp::Equals);
         UE_LOG(LogPool, Warning, TEXT("Starting searching for sessions..."));
         SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
     }
