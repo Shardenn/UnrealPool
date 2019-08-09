@@ -10,7 +10,7 @@
 
 #include "Blueprint/UserWidget.h"
 
-const static FName SESSION_NAME = TEXT("BilliardSessionGame");
+const static FName SESSION_NAME = NAME_GameSession;//TEXT("BilliardSessionGame");
 const static FName SERVER_NAME_SETTING_KEY = TEXT("ServerName");
 
 const static FName SERVER_SEARCH_FILTER_KEY = TEXT("SkipperBilliard");
