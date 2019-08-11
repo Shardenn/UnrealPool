@@ -6,6 +6,7 @@
 #include "Objects/BallAmerican.h"
 
 #include "UObject/ConstructorHelpers.h"
+#include "Algo/Reverse.h"
 
 UEightBallSpawner::UEightBallSpawner()
 {
@@ -43,30 +44,56 @@ TArray<class ABall*> UEightBallSpawner::Spawn()
     {
         BallsNum[i] = i + 1;
     }
+    // remove 8ball, we have special plans for it
+    BallsNum.RemoveAt(7);
 
     ABallAmerican* Ball = World->SpawnActor<ABallAmerican>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
-
-    uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
-    Ball->SetBallNumber(BallsNum[NumberIndex]);
+    uint8 BallNum = GetRandomBallNum(BallsNum, true);
+    Ball->SetBallNumber(BallNum);
     Balls.Add(Ball);
-
-    BallsNum.RemoveAt(NumberIndex);
 
     BallDiameter = Ball->GetRootComponent()->Bounds.SphereRadius * 2;
 
     auto Locations = GetTriangleSpawnPoints(HeadBallLocation, RowsIncreaseDirection,
         ColumnsIncreaseDirection, BallDiameter);
+    // for the rule "Different ball types in the corners"
+    // it is easier to reverse the array
+    Algo::Reverse(Locations);
 
+    FBallType CornerBallType = FBallType::NotInitialized;
+    uint8 CornerBallNum = 0;
     for (uint8 i = 0; i < Locations.Num(); i++)
     {
         auto Location = Locations[i];
         Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
         
-        uint8 NumberIndex = FMath::RandHelper(BallsNum.Num());
-        Ball->SetBallNumber(BallsNum[NumberIndex]);
+        // 8ball position
+        if (i == 10)
+        {
+            BallNum = 8;
+            Ball->SetBallNumber(BallNum);
+            Balls.Add(Ball);
+            continue;
+        }
+
+        uint8 BallNum = GetRandomBallNum(BallsNum);
+
+        // regenerate 2nd corner ball num until it is different
+        // type from the 1st corner ball
+        if (i == 4) // the second corner ball check
+            while ((8 - BallNum) * (8 - CornerBallNum) > 0)
+                BallNum = GetRandomBallNum(BallsNum);
+
+        Ball->SetBallNumber(BallNum);
+        BallsNum.Remove(BallNum);
         Balls.Add(Ball);
 
-        BallsNum.RemoveAt(NumberIndex);
+        if (CornerBallType == FBallType::NotInitialized)
+        {
+            CornerBallType = Ball->GetType();
+            CornerBallNum = BallNum;
+        }
+
     }
 
     // Spawn cue ball
@@ -77,4 +104,14 @@ TArray<class ABall*> UEightBallSpawner::Spawn()
     Balls.Add(Ball);
 
     return Balls;
+}
+
+uint8 UEightBallSpawner::GetRandomBallNum(TArray<uint8>& AvailableNumbers, bool bRemoveNumber)
+{
+    uint8 NumberIndex = FMath::RandHelper(AvailableNumbers.Num());
+    uint8 BallNum = AvailableNumbers[NumberIndex];
+    if (bRemoveNumber)
+        AvailableNumbers.RemoveAt(NumberIndex);
+    
+    return BallNum;
 }
