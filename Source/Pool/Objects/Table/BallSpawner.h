@@ -27,5 +27,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     int32 RowsNum = 5;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     TSubclassOf<class ABall> BallClass;
 };

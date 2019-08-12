@@ -10,10 +10,10 @@
 
 UBallSpawner::UBallSpawner()
 {
-    ConstructorHelpers::FObjectFinder<UBlueprint> BallBPObject(TEXT("/Game/Blueprints/Gameplay/BP_Ball"));
-    if (!ensure(BallBPObject.Object != nullptr)) return;
+    //ConstructorHelpers::FObjectFinder<UBlueprint> BallBPObject(TEXT("Blueprint'/Game/Blueprints/Gameplay/BP_Ball.BP_Ball'"));
+    //if (!ensure(BallBPObject.Object != nullptr)) return;
 
-    BallClass = (UClass*)BallBPObject.Object->GeneratedClass;
+    //BallClass = (UClass*)BallBPObject.Object->GeneratedClass;
 }
 
 void UBallSpawner::BeginPlay()
@@ -24,6 +24,12 @@ void UBallSpawner::BeginPlay()
 TArray<class ABall*> UBallSpawner::Spawn()
 {
     TArray<ABall*> Balls;
+
+    if (!BallClass || !BallClass.Get())
+    {
+        UE_LOG(LogPool, Warning, TEXT("No ball class assigned for BallSpawner %s"), *GetName());
+        return Balls;
+    }
 
     ATable* Table = Cast<ATable>(GetOwner());
     if (!ensure(Table != nullptr)) return Balls;

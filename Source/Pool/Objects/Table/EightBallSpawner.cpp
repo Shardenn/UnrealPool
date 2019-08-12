@@ -10,16 +10,22 @@
 
 UEightBallSpawner::UEightBallSpawner()
 {
-    ConstructorHelpers::FObjectFinder<UBlueprint> BallBPObject(TEXT("/Game/Blueprints/Gameplay/BP_BallAmerican"));
+    /*ConstructorHelpers::FObjectFinder<UBlueprint> BallBPObject(TEXT("/Game/Blueprints/Gameplay/BP_BallAmerican.BP_BallAmerican_C"));
     if (!ensure(BallBPObject.Object != nullptr)) return;
 
-    BallClass = (UClass*)BallBPObject.Object->GeneratedClass;
+    BallClass = (UClass*)BallBPObject.Object->GeneratedClass;*/
 }
 
 TArray<class ABall*> UEightBallSpawner::Spawn()
 {
     TArray<ABall*> Balls;
     
+    if (!BallClass || !BallClass.Get())
+    {
+        UE_LOG(LogPool, Warning, TEXT("No ball class assigned for BallSpawner %s"), *GetName());
+        return Balls;
+    }
+
     ATable* Table = Cast<ATable>(GetOwner());
     if (!ensure(Table != nullptr)) return Balls;
 

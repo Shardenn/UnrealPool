@@ -15,7 +15,7 @@ ABall::ABall()
     SphereMesh->SetSimulatePhysics(true);
     SphereMesh->SetEnableGravity(true);
     SphereMesh->BodyInstance.bGenerateWakeEvents = true;
-    SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
+    //SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
     SphereMesh->SetAngularDamping(0.6);
     SphereMesh->SetLinearDamping(0.2);
 
