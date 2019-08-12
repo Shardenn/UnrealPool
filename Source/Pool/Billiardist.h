@@ -153,6 +153,8 @@ private:
     // launches ball on server with multicasting
     UFUNCTION(reliable, server, WithValidation)
     void Server_LaunchBall(ABall* Ball, FVector Velocity);
+    UFUNCTION(reliable, NetMulticast, WithValidation)
+    void Multicast_LaunchBall(ABall* Ball, FVector Velocity);
 
     UFUNCTION()
     void MoveForward(float Value);

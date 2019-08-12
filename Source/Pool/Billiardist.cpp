@@ -428,11 +428,20 @@ void ABilliardist::LaunchBall(ABall* Ball, FVector Velocity)
 bool ABilliardist::Server_LaunchBall_Validate(ABall*, FVector) { return true; }
 void ABilliardist::Server_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
 {
-    UWorld* World = GetWorld();
-    APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
-    if (!ensure(State != nullptr)) return;
+    Multicast_LaunchBall(Ball, Velocity);
+}
 
-    State->StartWatchingBallsMovement();
+bool ABilliardist::Multicast_LaunchBall_Validate(ABall* Ball, FVector Velocity) { return true; }
+void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velocity)
+{
+    if (HasAuthority())
+    {
+        UWorld* World = GetWorld();
+        APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
+        if (!ensure(State != nullptr)) return;
+
+        State->StartWatchingBallsMovement();
+    }
 
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
 }
