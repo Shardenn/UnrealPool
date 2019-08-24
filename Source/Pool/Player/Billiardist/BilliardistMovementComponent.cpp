@@ -1,13 +1,17 @@
 // Copyright 2019 Andrei Vikarchuk.
 
 #include "BilliardistMovementComponent.h"
+#include "Pool.h"
+
+#include "AmericanPool/PoolGameMode.h"
 
 #include "Components/SplineComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UBilliardistMovementComponent::UBilliardistMovementComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-
+    SetIsReplicated(true);
 }
 
 void UBilliardistMovementComponent::BeginPlay()
@@ -19,14 +23,19 @@ void UBilliardistMovementComponent::TickComponent(float DeltaTime, ELevelTick Ti
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (!Spline) return;
+    if (!Spline)
+    {
+        if (GetOwnerRole() == ROLE_AutonomousProxy ||
+            GetOwner()->GetRemoteRole() == ROLE_SimulatedProxy)
+            Server_GetSpline();
+        return;
+    }
 
     if (WalkIntent != FVector::ZeroVector)
     {
         CalculateNewSplinePoint(DeltaTime);
         LastPlayerLocation = Spline->GetLocationAtDistanceAlongSpline(SplineDistance,
             ESplineCoordinateSpace::World);
-        UE_LOG(LogTemp, Log, TEXT("SplineDist: %f, Location: %s"), SplineDistance, *LastPlayerLocation.ToString());
         GetOwner()->SetActorLocation(LastPlayerLocation);
 
         WalkIntent = FVector::ZeroVector;
@@ -46,6 +55,16 @@ void UBilliardistMovementComponent::CalculateNewSplinePoint(float DeltaTime)
         SplineDistance += Spline->GetSplineLength();
 }
 
+bool UBilliardistMovementComponent::Server_GetSpline_Validate() { return true; }
+void UBilliardistMovementComponent::Server_GetSpline_Implementation()
+{
+    auto GM = Cast<APoolGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+    if (!GM) return;
+
+    auto SplineComp = GM->GetSpline();
+    SetSpline(SplineComp);
+}
+
 void UBilliardistMovementComponent::SetForwardIntent(float InForwardIntent)
 {
     FVector ForwardIntentVec = GetOwner()->GetActorForwardVector() * InForwardIntent;
@@ -58,3 +77,9 @@ void UBilliardistMovementComponent::SetRightIntent(float InRightIntent)
     WalkIntent += RightIntentVec;
 }
 
+void UBilliardistMovementComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UBilliardistMovementComponent, Spline);
+}

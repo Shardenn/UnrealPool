@@ -4,6 +4,7 @@
 #include "BilliardistPawn.h"
 
 #include "BilliardistMovementComponent.h"
+#include "BilliardistReplicationComponent.h"
 
 #include "Components/InputComponent.h"
 
@@ -11,15 +12,22 @@ ABilliardistPawn::ABilliardistPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    bReplicateMovement = true;
+    bReplicateMovement = false;
 
     MovementComponent = CreateDefaultSubobject<UBilliardistMovementComponent>(TEXT("Movement component"));
+    ReplicationComponent = CreateDefaultSubobject<UBilliardistReplicationComponent>(TEXT("Replication component"));
 }
 
 void ABilliardistPawn::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (ReplicationComponent)
+    {
+        auto PlayerState = GetPlayerState();
+        ReplicationComponent->SetPlayerState(PlayerState);
+    }
+    
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
@@ -34,13 +42,13 @@ void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
     PlayerInputComponent->BindAxis("MoveRight", this, &ABilliardistPawn::MoveRight);
     PlayerInputComponent->BindAxis("MoveForward", this, &ABilliardistPawn::MoveForward);
-    //PlayerInputComponent->BindAxis("Turn", this, &ABilliardist::Turn);
-    //PlayerInputComponent->BindAxis("LookUp", this, &ABilliardist::LookUp);
+    PlayerInputComponent->BindAxis("Turn", this, &ABilliardistPawn::Turn);
+    PlayerInputComponent->BindAxis("LookUp", this, &ABilliardistPawn::LookUp);
 
     PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardistPawn::ReturnPressHandle);
     PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardistPawn::ActionPressHandle);
     //PlayerInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardistPawn::ExaminingPressHandle);
-    PlayerInputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardistPawn::ReadyPressHandle);
+    PlayerInputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardistPawn::ReadyStateToggle);
 }
 
 void ABilliardistPawn::SetSpline(USplineComponent* Spline)
@@ -61,6 +69,16 @@ void ABilliardistPawn::MoveRight(float Value)
     MovementComponent->SetRightIntent(Value);
 }
 
+void ABilliardistPawn::Turn(float Value)
+{
+    AddControllerYawInput(Value);
+}
+
+void ABilliardistPawn::LookUp(float Value)
+{
+    AddControllerPitchInput(Value);
+}
+
 void ABilliardistPawn::ActionPressHandle()
 {
 }
@@ -69,6 +87,8 @@ void ABilliardistPawn::ReturnPressHandle()
 {
 }
 
-void ABilliardistPawn::ReadyPressHandle()
+void ABilliardistPawn::ReadyStateToggle()
 {
+    if (!ReplicationComponent) return;
+    ReplicationComponent->ReadyStateToggle();
 }

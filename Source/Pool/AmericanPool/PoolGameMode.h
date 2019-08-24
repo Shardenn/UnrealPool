@@ -39,6 +39,8 @@ public:
 
     bool InitializeTable();
 
+    class USplineComponent* GetSpline();
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
     uint8 RequiredPlayersReadyNum = 2;
 

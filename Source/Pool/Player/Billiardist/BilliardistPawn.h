@@ -24,17 +24,21 @@ protected:
     virtual void BeginPlay() override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    class UBilliardistMovementComponent* MovementComponent;
+    class UBilliardistMovementComponent* MovementComponent = nullptr;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class UBilliardistReplicationComponent* ReplicationComponent = nullptr;
+
+    //class APoolPlayerState* PlayerState = nullptr;
 private:
     UFUNCTION()
     void MoveForward(float Value);
     UFUNCTION()
     void MoveRight(float Value);
-    /*UFUNCTION()
+    UFUNCTION()
     void Turn(float Value);
     UFUNCTION()
-    void LookUp(float Value);*/
+    void LookUp(float Value);
     UFUNCTION()
     void ActionPressHandle();
     UFUNCTION()
@@ -42,5 +46,5 @@ private:
     //UFUNCTION()
     //void ExaminingPressHandle();
     UFUNCTION()
-    void ReadyPressHandle();
+    void ReadyStateToggle();
 };

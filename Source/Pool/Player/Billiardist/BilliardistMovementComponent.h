@@ -20,11 +20,17 @@ public:
     void SetRightIntent(float InRightIntent);
 
     void SetSpline(class USplineComponent* InSpline) { Spline = InSpline; }
+
+    FVector GetLastPlayerLocation() { return LastPlayerLocation; }
+
 protected:
     virtual void BeginPlay() override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float WalkSpeed{ 200.f };
+
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite)
+    class USplineComponent* Spline = nullptr;
 private:
     float ForwardIntent = 0;
     float RightIntent = 0;
@@ -33,7 +39,9 @@ private:
     // calculates new spline point based on WalkIntent
     void CalculateNewSplinePoint(float DeltaTime);
 
-    class USplineComponent* Spline = nullptr;
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_GetSpline();
+
     float SplineDistance = 0;
     FVector LastPlayerLocation = FVector::ZeroVector;
 };
