@@ -400,7 +400,7 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 
 void ABilliardist::OnRep_StateReplicated()
 {
-    OnStateChange.Broadcast(BilliardistState, PreviousState);
+    //OnStateChange.Broadcast(BilliardistState, PreviousState);
 }
 
 void ABilliardist::SetSelectedBall(ABall* NewBall)

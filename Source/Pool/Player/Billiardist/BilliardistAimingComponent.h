@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "BilliardistAimingComponent.generated.h"
 
+class USpringArmComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class POOL_API UBilliardistAimingComponent : public UActorComponent
@@ -16,11 +17,17 @@ public:
     UBilliardistAimingComponent();
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+    UFUNCTION(BlueprintCallable, Category = "Setup")
+    void Initialize(USpringArmComponent* InSpringArm);
+
+    void HandleStartedAiming(const FVector& AimedAt);
+    void HandleFinishedAiming();
 protected:
     virtual void BeginPlay() override;
     
-    // TODO add initialize function for initting SpringArm
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    class USpringArmComponent* SpringArm = nullptr;
+    USpringArmComponent* SpringArm = nullptr;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector DefaultSpringArmLocation = FVector::ZeroVector;
 };

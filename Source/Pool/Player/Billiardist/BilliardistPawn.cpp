@@ -3,9 +3,12 @@
 
 #include "BilliardistPawn.h"
 
+#include "Pool.h"
 #include "BilliardistMovementComponent.h"
 #include "BilliardistAimingComponent.h"
 #include "BilliardistReplicationComponent.h"
+#include "BilliardistController.h"
+#include "Objects/Ball.h"
 
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -43,13 +46,11 @@ void ABilliardistPawn::BeginPlay()
         auto PlayerState = GetPlayerState();
         ReplicationComponent->SetPlayerState(PlayerState);
     }
-    
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
 }
 
 void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -76,13 +77,19 @@ void ABilliardistPawn::SetSpline(USplineComponent* Spline)
 void ABilliardistPawn::MoveForward(float Value)
 {
     if (!MovementComponent) return;
-    MovementComponent->SetForwardIntent(Value);
+
+    if (State == FBilliardistState::WALKING ||
+        State == FBilliardistState::PICKING)
+        MovementComponent->SetForwardIntent(Value);
 }
 
 void ABilliardistPawn::MoveRight(float Value)
 {
     if (!MovementComponent) return;
-    MovementComponent->SetRightIntent(Value);
+
+    if (State == FBilliardistState::WALKING ||
+        State == FBilliardistState::PICKING)
+        MovementComponent->SetRightIntent(Value);
 }
 
 void ABilliardistPawn::Turn(float Value)
@@ -97,14 +104,75 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::ActionPressHandle()
 {
+    switch (State)
+    {
+        // for less typing
+        using FState = FBilliardistState;
+
+        case FState::WALKING:
+        {
+            SetState(FState::PICKING);
+            break;
+        }
+        case FState::PICKING:
+        {
+            auto BillController = Cast<ABilliardistController>(Controller);
+            if (!BillController) { return; }
+
+            ABall* Ball = nullptr;
+            BillController->TryRaycastBall(Ball);
+            if (Ball)
+                HandleBallSelected(Ball);
+            break;
+        }
+        case FState::AIMING:
+        {
+            break;
+        }
+    }
+}
+
+void ABilliardistPawn::HandleBallSelected(ABall* Ball)
+{
+    AimingComponent->HandleStartedAiming(Ball->GetActorLocation());
+    SetState(FBilliardistState::AIMING);
 }
 
 void ABilliardistPawn::ReturnPressHandle()
 {
+    switch (State)
+    {
+        // for less typing
+        using FState = FBilliardistState;
+
+        case FState::PICKING:
+        {
+            SetState(FState::WALKING);
+            break;
+        }
+        case FState::AIMING:
+        {
+            HandleFinishedAiming();
+            break;
+        }
+    }
+}
+
+void ABilliardistPawn::HandleFinishedAiming()
+{
+    AimingComponent->HandleFinishedAiming();
+    SetState(FBilliardistState::PICKING);
 }
 
 void ABilliardistPawn::ReadyStateToggle()
 {
     if (!ReplicationComponent) return;
     ReplicationComponent->ReadyStateToggle();
+}
+
+
+void ABilliardistPawn::SetState(const FBilliardistState& NewState)
+{
+    State = NewState;
+    OnStateChange.Broadcast(State);
 }

@@ -27,7 +27,7 @@ void ABilliardistController::SubscribeToPlayerStateChange(ABilliardist* Billiard
 bool ABilliardistController::Server_SubscribeToStateChange_Validate(ABilliardist* Billiardist) { return true; }
 void ABilliardistController::Server_SubscribeToStateChange_Implementation(ABilliardist* Billiardist)
 {
-    Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
+    //Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
 }
 
 void ABilliardistController::Tick(float DeltaTime)

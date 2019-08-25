@@ -2,19 +2,39 @@
 
 #include "BilliardistAimingComponent.h"
 
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Math/InterpCurve.h"
 
 UBilliardistAimingComponent::UBilliardistAimingComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-
-    //SpringArm = GetOwner()->FindComponentByClass<USpringArmComponent>();
 }
 
 void UBilliardistAimingComponent::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+void UBilliardistAimingComponent::Initialize(USpringArmComponent* InSpringArm)
+{
+    SpringArm = InSpringArm;
+    if (SpringArm)
+        DefaultSpringArmLocation = SpringArm->GetRelativeTransform().GetLocation();
+}
+
+void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
+{
+    if (!SpringArm) { return; }
+    // TODO make interpolation
+    SpringArm->SetWorldLocation(AimedAt);
+}
+
+void UBilliardistAimingComponent::HandleFinishedAiming()
+{
+    if (!SpringArm) { return; }
+    // TODO make interpolation
+    SpringArm->SetRelativeLocation(DefaultSpringArmLocation);
 }
 
 void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

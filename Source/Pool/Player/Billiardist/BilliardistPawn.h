@@ -4,7 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+
+#include "BilliardistStates.h"
+
 #include "BilliardistPawn.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChange, FBilliardistState, NewState);
 
 UCLASS()
 class POOL_API ABilliardistPawn : public APawn
@@ -20,8 +25,20 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void SetSpline(class USplineComponent* Spline);
+    
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerStateChange OnStateChange;
+
+    UFUNCTION(BlueprintCallable)
+    void SetState(const FBilliardistState& NewState);
+
+    UFUNCTION(BlueprintPure)
+    FBilliardistState GetState() { return State; }
 protected:
     virtual void BeginPlay() override;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FBilliardistState State = FBilliardistState::WALKING;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistMovementComponent* MovementComponent = nullptr;
@@ -40,7 +57,10 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UStaticMeshComponent* Mesh = nullptr;
-    //class APoolPlayerState* PlayerState = nullptr;
+    
+    // override this for the event when a player picks a ball
+    virtual void HandleBallSelected(class ABall* Ball);
+    virtual void HandleFinishedAiming();
 private:
     UFUNCTION()
     void MoveForward(float Value);
