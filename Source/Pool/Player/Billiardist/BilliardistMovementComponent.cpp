@@ -67,13 +67,22 @@ void UBilliardistMovementComponent::Server_GetSpline_Implementation()
 
 void UBilliardistMovementComponent::SetForwardIntent(float InForwardIntent)
 {
-    FVector ForwardIntentVec = GetOwner()->GetActorForwardVector() * InForwardIntent;
+    auto OwnerPawn = Cast<APawn>(GetOwner());
+    if (!OwnerPawn) return;
+
+    auto Rot = OwnerPawn->GetController()->GetControlRotation();
+    FVector ForwardIntentVec = Rot.Vector() * InForwardIntent;
     WalkIntent += ForwardIntentVec;
 }
 
 void UBilliardistMovementComponent::SetRightIntent(float InRightIntent)
 {
-    FVector RightIntentVec = GetOwner()->GetActorRightVector() * InRightIntent;
+    auto OwnerPawn = Cast<APawn>(GetOwner());
+    if (!OwnerPawn) return;
+
+    auto Rot = OwnerPawn->GetController()->GetControlRotation();
+    FVector RightVector = FVector::CrossProduct(Rot.Vector(), FVector(0, 0, -1));
+    FVector RightIntentVec = RightVector * InRightIntent;
     WalkIntent += RightIntentVec;
 }
 

@@ -12,7 +12,7 @@ ABilliardistPawn::ABilliardistPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    bReplicateMovement = false;
+    bReplicateMovement = true;
 
     MovementComponent = CreateDefaultSubobject<UBilliardistMovementComponent>(TEXT("Movement component"));
     ReplicationComponent = CreateDefaultSubobject<UBilliardistReplicationComponent>(TEXT("Replication component"));
