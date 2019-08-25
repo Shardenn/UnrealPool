@@ -29,6 +29,14 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistReplicationComponent* ReplicationComponent = nullptr;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class USpringArmComponent* SpringArm = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class UCameraComponent* Camera = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class UStaticMeshComponent* Mesh = nullptr;
     //class APoolPlayerState* PlayerState = nullptr;
 private:
     UFUNCTION()

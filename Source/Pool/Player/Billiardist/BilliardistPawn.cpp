@@ -7,12 +7,26 @@
 #include "BilliardistReplicationComponent.h"
 
 #include "Components/InputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 ABilliardistPawn::ABilliardistPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
     bReplicateMovement = true;
+
+    Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+    SetRootComponent(Mesh);
+
+    SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring arm"));
+    SpringArm->bUsePawnControlRotation = true;
+    SpringArm->TargetArmLength = 60.f; // sensible default
+    SpringArm->SetupAttachment(RootComponent);
+
+    Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+    Camera->SetupAttachment(SpringArm);
 
     MovementComponent = CreateDefaultSubobject<UBilliardistMovementComponent>(TEXT("Movement component"));
     ReplicationComponent = CreateDefaultSubobject<UBilliardistReplicationComponent>(TEXT("Replication component"));
