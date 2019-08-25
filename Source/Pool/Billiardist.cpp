@@ -7,7 +7,6 @@
 
 #include "Pool.h"
 #include "BilliardistController.h"
-#include "AimingComponent.h"
 #include "AmericanPool/PoolPlayerState.h"
 #include "AmericanPool/PoolGameMode.h"
 #include "AmericanPool/PoolGameState.h"
@@ -298,18 +297,18 @@ void ABilliardist::ActionPressHandle()
             // on server after all balls stop moving
 
             // get the current hit strength and look vector
-            auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
-            if (!ensure(AimingComponent)) { return; }
-            auto BallHitDirection = Cast<USceneComponent>(AimingComponent)->GetComponentToWorld().Rotator().Vector();
+            //auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
+            //if (!ensure(AimingComponent)) { return; }
+            //auto BallHitDirection = Cast<USceneComponent>(AimingComponent)->GetComponentToWorld().Rotator().Vector();
 
-            BallHitDirection.Z = 0.f;
-            auto hitVector = BallHitDirection * CurrentHitStrength;
+            //BallHitDirection.Z = 0.f;
+            //auto hitVector = BallHitDirection * CurrentHitStrength;
 
             // nil hit strength related stuff
             HitStrengthAlpha = 0.f;
             CurrentHitStrength = HitStrengthMin;
 
-            LaunchBall(SelectedBall, hitVector);
+            //LaunchBall(SelectedBall, hitVector);
             SetSelectedBall(nullptr);
 
             break;

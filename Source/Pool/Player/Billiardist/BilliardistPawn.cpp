@@ -4,6 +4,7 @@
 #include "BilliardistPawn.h"
 
 #include "BilliardistMovementComponent.h"
+#include "BilliardistAimingComponent.h"
 #include "BilliardistReplicationComponent.h"
 
 #include "Components/InputComponent.h"
@@ -29,6 +30,7 @@ ABilliardistPawn::ABilliardistPawn()
     Camera->SetupAttachment(SpringArm);
 
     MovementComponent = CreateDefaultSubobject<UBilliardistMovementComponent>(TEXT("Movement component"));
+    AimingComponent = CreateDefaultSubobject<UBilliardistAimingComponent>(TEXT("Aiming component"));
     ReplicationComponent = CreateDefaultSubobject<UBilliardistReplicationComponent>(TEXT("Replication component"));
 }
 

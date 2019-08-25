@@ -27,6 +27,9 @@ protected:
     class UBilliardistMovementComponent* MovementComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class UBilliardistAimingComponent* AimingComponent = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistReplicationComponent* ReplicationComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
