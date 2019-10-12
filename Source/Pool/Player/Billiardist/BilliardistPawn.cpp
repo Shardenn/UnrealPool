@@ -122,11 +122,22 @@ void ABilliardistPawn::ActionPressHandle()
             ABall* Ball = nullptr;
             BillController->TryRaycastBall(Ball);
             if (Ball)
+            {
+                SelectedBall = Ball;
                 HandleBallSelected(Ball);
+            }
             break;
         }
         case FState::AIMING:
         {
+            FVector LookDirection = GetControlRotation().Vector();
+            LookDirection.Z = 0; // TODO handle jump/curve later
+            auto BallRoot = Cast<UPrimitiveComponent>(SelectedBall->GetRootComponent());
+            if (BallRoot) 
+                BallRoot->AddImpulse(LookDirection * AimingComponent->GetHitStrength());
+            SetState(FState::OBSERVING);
+            SelectedBall = nullptr;
+            HandleFinishedAiming();
             break;
         }
     }

@@ -23,6 +23,11 @@ void UBilliardistAimingComponent::Initialize(USpringArmComponent* InSpringArm)
         DefaultSpringArmLocation = SpringArm->GetRelativeTransform().GetLocation();
 }
 
+void UBilliardistAimingComponent::UpdateHitStrength(float Delta)
+{
+    HitStrength = FMath::Clamp(HitStrength + Delta, 0.f, MaxAcceptableHitStrength);
+}
+
 void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
 {
     if (!SpringArm) { return; }

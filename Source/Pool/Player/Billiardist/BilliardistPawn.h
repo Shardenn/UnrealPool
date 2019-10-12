@@ -41,6 +41,9 @@ protected:
     FBilliardistState State = FBilliardistState::WALKING;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class ABall* SelectedBall = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistMovementComponent* MovementComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
