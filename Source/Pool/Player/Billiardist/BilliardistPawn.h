@@ -50,6 +50,9 @@ protected:
     class UBilliardistAimingComponent* AimingComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    bool bAdjustingHitStrength = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistReplicationComponent* ReplicationComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -75,6 +78,8 @@ private:
     void LookUp(float Value);
     UFUNCTION()
     void ActionPressHandle();
+    UFUNCTION()
+    void ActionReleaseHandle();
     UFUNCTION()
     void ReturnPressHandle();
     //UFUNCTION()

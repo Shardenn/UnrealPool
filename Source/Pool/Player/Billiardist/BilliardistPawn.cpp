@@ -64,6 +64,7 @@ void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
     PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardistPawn::ReturnPressHandle);
     PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardistPawn::ActionPressHandle);
+    PlayerInputComponent->BindAction("Action", IE_Released, this, &ABilliardistPawn::ActionReleaseHandle);
     //PlayerInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardistPawn::ExaminingPressHandle);
     PlayerInputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardistPawn::ReadyStateToggle);
 }
@@ -94,12 +95,16 @@ void ABilliardistPawn::MoveRight(float Value)
 
 void ABilliardistPawn::Turn(float Value)
 {
-    AddControllerYawInput(Value);
+    if (!bAdjustingHitStrength)
+        AddControllerYawInput(Value);
 }
 
 void ABilliardistPawn::LookUp(float Value)
 {
-    AddControllerPitchInput(Value);
+    if (bAdjustingHitStrength)
+        AimingComponent->UpdateHitStrengthRatio(Value);
+    else
+        AddControllerPitchInput(Value);
 }
 
 void ABilliardistPawn::ActionPressHandle()
@@ -114,6 +119,27 @@ void ABilliardistPawn::ActionPressHandle()
             SetState(FState::PICKING);
             break;
         }
+        case FState::AIMING:
+        {
+            bAdjustingHitStrength = true;
+            break;
+        }
+    }
+}
+
+void ABilliardistPawn::HandleBallSelected(ABall* Ball)
+{
+    AimingComponent->HandleStartedAiming(Ball->GetActorLocation());
+    SetState(FBilliardistState::AIMING);
+}
+
+void ABilliardistPawn::ActionReleaseHandle()
+{
+    switch (State)
+    {
+        // for less typing
+        using FState = FBilliardistState;
+
         case FState::PICKING:
         {
             auto BillController = Cast<ABilliardistController>(Controller);
@@ -130,23 +156,26 @@ void ABilliardistPawn::ActionPressHandle()
         }
         case FState::AIMING:
         {
+            float HitStrength = AimingComponent->GetHitStrength();
+            if (HitStrength < 0)
+                break;
+
             FVector LookDirection = GetControlRotation().Vector();
             LookDirection.Z = 0; // TODO handle jump/curve later
             auto BallRoot = Cast<UPrimitiveComponent>(SelectedBall->GetRootComponent());
-            if (BallRoot) 
-                BallRoot->AddImpulse(LookDirection * AimingComponent->GetHitStrength());
+            if (BallRoot)
+            {
+                BallRoot->AddImpulse(LookDirection * HitStrength);
+                UE_LOG(LogPool, Warning, TEXT("Performed hit with the strength %f"), HitStrength);
+            }
+
             SetState(FState::OBSERVING);
             SelectedBall = nullptr;
+            bAdjustingHitStrength = false;
             HandleFinishedAiming();
             break;
         }
     }
-}
-
-void ABilliardistPawn::HandleBallSelected(ABall* Ball)
-{
-    AimingComponent->HandleStartedAiming(Ball->GetActorLocation());
-    SetState(FBilliardistState::AIMING);
 }
 
 void ABilliardistPawn::ReturnPressHandle()

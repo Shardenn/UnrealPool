@@ -21,7 +21,7 @@ public:
     void Initialize(USpringArmComponent* InSpringArm);
 
     float GetHitStrength() { return HitStrength; }
-    void UpdateHitStrength(float Delta);
+    void UpdateHitStrengthRatio(float Delta);
 
     void HandleStartedAiming(const FVector& AimedAt);
     void HandleFinishedAiming();
@@ -34,9 +34,15 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FVector DefaultSpringArmLocation = FVector::ZeroVector;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hit strength")
     float HitStrength = 100.f;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
+    float HitStrengthadjustmentSpeed = 0.05f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
+    float HitStrengthRatio = 0.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;
 };
