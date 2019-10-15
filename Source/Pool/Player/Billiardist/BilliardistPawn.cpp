@@ -79,8 +79,8 @@ void ABilliardistPawn::MoveForward(float Value)
 {
     if (!MovementComponent) return;
 
-    if (State == FBilliardistState::WALKING ||
-        State == FBilliardistState::PICKING)
+    if (State != FBilliardistState::EXAMINING &&
+        State != FBilliardistState::AIMING)
         MovementComponent->SetForwardIntent(Value);
 }
 
@@ -88,8 +88,8 @@ void ABilliardistPawn::MoveRight(float Value)
 {
     if (!MovementComponent) return;
 
-    if (State == FBilliardistState::WALKING ||
-        State == FBilliardistState::PICKING)
+    if (State != FBilliardistState::EXAMINING &&
+        State != FBilliardistState::AIMING)
         MovementComponent->SetRightIntent(Value);
 }
 
@@ -157,7 +157,8 @@ void ABilliardistPawn::ActionReleaseHandle()
         case FState::AIMING:
         {
             float HitStrength = AimingComponent->GetHitStrength();
-            if (HitStrength < 0)
+            // not accepting too weak hits, assuming it is not intentional
+            if (HitStrength <= AimingComponent->GetMaxHitStrength() * 0.01)
                 break;
 
             FVector LookDirection = GetControlRotation().Vector();
@@ -169,10 +170,10 @@ void ABilliardistPawn::ActionReleaseHandle()
                 UE_LOG(LogPool, Warning, TEXT("Performed hit with the strength %f"), HitStrength);
             }
 
-            SetState(FState::OBSERVING);
             SelectedBall = nullptr;
             bAdjustingHitStrength = false;
             HandleFinishedAiming();
+            SetState(FState::OBSERVING);
             break;
         }
     }

@@ -21,6 +21,8 @@ public:
     void Initialize(USpringArmComponent* InSpringArm);
 
     float GetHitStrength() { return HitStrength; }
+    float GetMaxHitStrength() { return MaxAcceptableHitStrength; }
+
     void UpdateHitStrengthRatio(float Delta);
 
     void HandleStartedAiming(const FVector& AimedAt);
@@ -37,12 +39,12 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hit strength")
     float HitStrength = 100.f;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float HitStrengthadjustmentSpeed = 0.05f;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float HitStrengthRatio = 0.f;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;
 };
