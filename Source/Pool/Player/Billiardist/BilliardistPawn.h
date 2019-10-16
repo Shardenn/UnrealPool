@@ -67,6 +67,8 @@ protected:
     // override this for the event when a player picks a ball
     virtual void HandleBallSelected(class ABall* Ball);
     virtual void HandleFinishedAiming();
+
+    void LaunchBall(ABall* Ball, const FVector& Velocity);
 private:
     UFUNCTION()
     void MoveForward(float Value);
@@ -86,4 +88,7 @@ private:
     //void ExaminingPressHandle();
     UFUNCTION()
     void ReadyStateToggle();
+
+    UFUNCTION()
+    void OnTurnStateUpdate(bool IsMyTurn);
 };

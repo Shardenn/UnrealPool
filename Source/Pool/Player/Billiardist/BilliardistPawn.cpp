@@ -8,12 +8,15 @@
 #include "BilliardistAimingComponent.h"
 #include "BilliardistReplicationComponent.h"
 #include "BilliardistController.h"
+#include "AmericanPool/PoolPlayerState.h"
+#include "AmericanPool/PoolGameState.h"
 #include "Objects/Ball.h"
 
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ABilliardistPawn::ABilliardistPawn()
 {
@@ -46,6 +49,10 @@ void ABilliardistPawn::BeginPlay()
         auto PlayerState = GetPlayerState();
         ReplicationComponent->SetPlayerState(PlayerState);
     }
+
+    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (PlayerState)
+        PlayerState->OnPlayerTurnChange.AddDynamic(this, &ABilliardistPawn::OnTurnStateUpdate);
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
@@ -163,12 +170,7 @@ void ABilliardistPawn::ActionReleaseHandle()
 
             FVector LookDirection = GetControlRotation().Vector();
             LookDirection.Z = 0; // TODO handle jump/curve later
-            auto BallRoot = Cast<UPrimitiveComponent>(SelectedBall->GetRootComponent());
-            if (BallRoot)
-            {
-                BallRoot->AddImpulse(LookDirection * HitStrength);
-                UE_LOG(LogPool, Warning, TEXT("Performed hit with the strength %f"), HitStrength);
-            }
+            LaunchBall(SelectedBall, LookDirection * HitStrength);
 
             SelectedBall = nullptr;
             bAdjustingHitStrength = false;
@@ -205,10 +207,28 @@ void ABilliardistPawn::HandleFinishedAiming()
     SetState(FBilliardistState::PICKING);
 }
 
+void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity)
+{
+    UWorld* World = GetWorld();
+    APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
+    if (!ensure(State != nullptr)) return;
+
+    State->StartWatchingBallsMovement();
+
+    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
+}
+
 void ABilliardistPawn::ReadyStateToggle()
 {
     if (!ReplicationComponent) return;
     ReplicationComponent->ReadyStateToggle();
+}
+
+void ABilliardistPawn::OnTurnStateUpdate(bool IsMyTurn)
+{
+    UE_LOG(LogPool, Warning, TEXT("%s : now my new turn state is %d"), *GetName(), IsMyTurn);
+    if (IsMyTurn)
+        SetState(FBilliardistState::WALKING);
 }
 
 

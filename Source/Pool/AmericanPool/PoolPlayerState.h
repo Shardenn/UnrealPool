@@ -7,6 +7,8 @@
 #include "AmericanPool/EightPoolBallType.h"
 #include "PoolPlayerState.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerTurnChange, bool, NewTurnState);
+
 /**
  *
  */
@@ -21,6 +23,9 @@ public:
 
     UFUNCTION(Server, Reliable, WithValidation)
     void PlaceCueBall(const FVector& TablePoint);
+
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerTurnChange OnPlayerTurnChange;
 
     //UFUNCTION(Server, Reliable, WithValidation)
     void SetIsMyTurn(bool bInMyTurn);

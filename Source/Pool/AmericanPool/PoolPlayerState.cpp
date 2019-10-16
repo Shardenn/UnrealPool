@@ -50,6 +50,7 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
 void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 {
     bMyTurn = bInIsMyTurn;
+    OnPlayerTurnChange.Broadcast(bMyTurn);
 }
 
 //bool APoolPlayerState::SetBallInHand_Validate(ABall* CueBall) { return true; }
