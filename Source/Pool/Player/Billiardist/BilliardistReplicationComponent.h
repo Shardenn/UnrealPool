@@ -17,6 +17,7 @@ public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     void SetPlayerState(class APlayerState* State);
+    const class APoolPlayerState* GetPlayerState() const { return PlayerState; }
 
     void ReadyStateToggle();
 protected:

@@ -22,7 +22,7 @@ public:
     void ToggleReady();
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void PlaceCueBall(const FVector& TablePoint);
+    void PlaceCueBall(const FVector& TablePoint) const;
 
     UPROPERTY(BlueprintAssignable)
     FOnPlayerTurnChange OnPlayerTurnChange;

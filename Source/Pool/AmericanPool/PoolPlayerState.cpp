@@ -23,7 +23,7 @@ void APoolPlayerState::ToggleReady_Implementation()
 }
 
 bool APoolPlayerState::PlaceCueBall_Validate(const FVector&) { return true; }
-void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
+void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) const
 {
     if (!CueBallHanded)
     {

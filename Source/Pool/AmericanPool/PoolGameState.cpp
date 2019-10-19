@@ -63,6 +63,8 @@ void APoolGameState::AddMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 
     MovingBalls.AddUnique(NewBall);
 
+    // TODO we only need to do it when the first ball starts moving.
+    // Not on any ball added
     if (MovingBalls.Num() > 0)
     {
         APoolPlayerState* PlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);

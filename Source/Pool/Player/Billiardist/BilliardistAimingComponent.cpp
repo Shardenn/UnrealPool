@@ -40,6 +40,7 @@ void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
 
 void UBilliardistAimingComponent::HandleFinishedAiming()
 {
+    UpdateHitStrengthRatio(-HitStrengthRatio);
     if (!SpringArm) { return; }
     // TODO make interpolation
     SpringArm->SetRelativeLocation(DefaultSpringArmLocation);

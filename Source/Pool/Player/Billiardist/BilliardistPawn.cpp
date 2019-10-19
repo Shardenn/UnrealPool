@@ -46,13 +46,13 @@ void ABilliardistPawn::BeginPlay()
 
     if (ReplicationComponent)
     {
-        auto PlayerState = GetPlayerState();
-        ReplicationComponent->SetPlayerState(PlayerState);
+        auto PlState = GetPlayerState();
+        ReplicationComponent->SetPlayerState(PlState);
     }
 
-    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    if (PlayerState)
-        PlayerState->OnPlayerTurnChange.AddDynamic(this, &ABilliardistPawn::OnTurnStateUpdate);
+    APoolPlayerState* MyPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (MyPlayerState)
+        MyPlayerState->OnPlayerTurnChange.AddDynamic(this, &ABilliardistPawn::OnTurnStateUpdate);
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
@@ -116,6 +116,23 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::ActionPressHandle()
 {
+    auto PlayerState = ReplicationComponent->GetPlayerState();
+    // If not our turn - terminate
+    if (!PlayerState->GetIsMyTurn())
+        return;
+
+    // If we have a ball in hand - try place it
+    if (PlayerState->GetIsBallInHand())
+    {
+        auto Controller = Cast<ABilliardistController>(GetController());
+
+        FVector TableHitResult;
+        if (Controller->TryRaycastTable(TableHitResult))
+        {
+            PlayerState->PlaceCueBall(TableHitResult);
+        }
+    }
+
     switch (State)
     {
         // for less typing
@@ -163,6 +180,8 @@ void ABilliardistPawn::ActionReleaseHandle()
         }
         case FState::AIMING:
         {
+            bAdjustingHitStrength = false;
+
             float HitStrength = AimingComponent->GetHitStrength();
             // not accepting too weak hits, assuming it is not intentional
             if (HitStrength <= AimingComponent->GetMaxHitStrength() * 0.01)
@@ -171,9 +190,7 @@ void ABilliardistPawn::ActionReleaseHandle()
             FVector LookDirection = GetControlRotation().Vector();
             LookDirection.Z = 0; // TODO handle jump/curve later
             LaunchBall(SelectedBall, LookDirection * HitStrength);
-
             SelectedBall = nullptr;
-            bAdjustingHitStrength = false;
             HandleFinishedAiming();
             SetState(FState::OBSERVING);
             break;
