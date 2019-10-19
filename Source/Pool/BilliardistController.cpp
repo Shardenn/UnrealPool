@@ -2,7 +2,7 @@
 
 #include "BilliardistController.h"
 #include "Pool.h"
-#include "Billiardist.h"
+#include "Player/Billiardist/BilliardistPawn.h"
 #include "Objects/Ball.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -19,15 +19,15 @@ void ABilliardistController::BeginPlay()
     Super::BeginPlay();
 }
 
-void ABilliardistController::SubscribeToPlayerStateChange(ABilliardist* Billiardist)
+void ABilliardistController::SubscribeToPlayerStateChange(ABilliardistPawn* Billiardist)
 {
     Server_SubscribeToStateChange(Billiardist);
 }
 
-bool ABilliardistController::Server_SubscribeToStateChange_Validate(ABilliardist* Billiardist) { return true; }
-void ABilliardistController::Server_SubscribeToStateChange_Implementation(ABilliardist* Billiardist)
+bool ABilliardistController::Server_SubscribeToStateChange_Validate(ABilliardistPawn* Billiardist) { return true; }
+void ABilliardistController::Server_SubscribeToStateChange_Implementation(ABilliardistPawn* Billiardist)
 {
-    //Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
+    Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
 }
 
 void ABilliardistController::Tick(float DeltaTime)
@@ -35,9 +35,9 @@ void ABilliardistController::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 }
 
-void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState, FBilliardistState OldState)
+void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState)
 {
-    OnPlayerStateChangedEvent(newState, OldState);
+    OnPlayerStateChangedEvent(newState);
 }
 
 bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)

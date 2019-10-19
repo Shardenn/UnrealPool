@@ -53,6 +53,11 @@ void ABilliardistPawn::BeginPlay()
     APoolPlayerState* MyPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     if (MyPlayerState)
         MyPlayerState->OnPlayerTurnChange.AddDynamic(this, &ABilliardistPawn::OnTurnStateUpdate);
+
+    ABilliardistController* BillController = Cast<ABilliardistController>(GetController());
+    check(BillController != nullptr);
+
+    BillController->SubscribeToPlayerStateChange(this);
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
@@ -253,4 +258,15 @@ void ABilliardistPawn::SetState(const FBilliardistState& NewState)
 {
     State = NewState;
     OnStateChange.Broadcast(State);
+}
+
+
+float ABilliardistPawn::GetMaxHitStrength()
+{
+    return AimingComponent->GetMaxHitStrength();
+}
+
+float ABilliardistPawn::GetCurrentHitStrength()
+{
+    return AimingComponent->GetHitStrength();
 }

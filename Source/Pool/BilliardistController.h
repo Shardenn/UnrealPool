@@ -6,7 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BilliardistController.generated.h"
 
-class ABilliardist;
+class ABilliardistPawn;
 
 /**
  * 
@@ -29,14 +29,14 @@ public:
     bool TryRaycastTable(FVector& RaycastHit);
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
-    void SubscribeToPlayerStateChange(ABilliardist* Billardist);
+    void SubscribeToPlayerStateChange(ABilliardistPawn* Billardist);
 
     void HandleMatchEnd();
 protected:
     virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Billiardist controller", Meta = (DisplayName = "On Player State Changed"))
-    void OnPlayerStateChangedEvent(FBilliardistState NewState, FBilliardistState OldState);
+    void OnPlayerStateChangedEvent(FBilliardistState NewState);
 
     UPROPERTY(EditAnywhere, Category = "Billiardist controller | RayCasting to a ball", meta = (DisplayName = "Crosshair X location"))
     float CrosshairXLocation{ 0.5f };
@@ -46,13 +46,13 @@ protected:
     float RaycastLength{ 200.f };
 
     UFUNCTION()
-    void OnPlayerStateChanged(FBilliardistState newState, FBilliardistState OldState);
+    void OnPlayerStateChanged(FBilliardistState newState);
 
     UFUNCTION(BlueprintImplementableEvent)
     void OnMatchEnd();
 private:
     UFUNCTION(reliable, server, WithValidation)
-    void Server_SubscribeToStateChange(ABilliardist* Billardist);
+    void Server_SubscribeToStateChange(ABilliardistPawn* Billardist);
 
     bool GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const;
 

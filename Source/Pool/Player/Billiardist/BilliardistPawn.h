@@ -34,6 +34,12 @@ public:
 
     UFUNCTION(BlueprintPure)
     FBilliardistState GetState() { return State; }
+
+    UFUNCTION(BlueprintPure)
+    float GetMaxHitStrength();
+    UFUNCTION(BlueprintPure)
+    float GetCurrentHitStrength();
+
 protected:
     virtual void BeginPlay() override;
 
