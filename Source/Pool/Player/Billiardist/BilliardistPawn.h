@@ -77,6 +77,12 @@ protected:
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
 private:
+    void TryPlaceCueBall(class APoolPlayerState* InPlayerState);
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_SetState(const FBilliardistState& NewState);
+
+#pragma region InputBindedFunctions
     UFUNCTION()
     void MoveForward(float Value);
     UFUNCTION()
@@ -95,7 +101,5 @@ private:
     //void ExaminingPressHandle();
     UFUNCTION()
     void ReadyStateToggle();
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Server_SetState(const FBilliardistState& NewState);
+#pragma endregion
 };

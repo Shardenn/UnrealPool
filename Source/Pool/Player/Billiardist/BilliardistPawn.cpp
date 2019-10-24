@@ -112,23 +112,18 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::ActionPressHandle()
 {
-    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    APoolPlayerState* BillPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     // If not our turn - terminate
-    if (!ensure(PlayerState != nullptr)) return;
+    if (!ensure(BillPlayerState != nullptr)) return;
 
-    if (!PlayerState->GetIsMyTurn())
+    if (!BillPlayerState->GetIsMyTurn())
         return;
 
     // If we have a ball in hand - try place it
-    if (PlayerState->GetIsBallInHand())
+    if (BillPlayerState->GetIsBallInHand())
     {
-        auto Controller = Cast<ABilliardistController>(GetController());
-
-        FVector TableHitResult;
-        if (Controller->TryRaycastTable(TableHitResult))
-        {
-            PlayerState->PlaceCueBall(TableHitResult);
-        }
+        TryPlaceCueBall(BillPlayerState);
+        return;
     }
 
     switch (State)
@@ -146,6 +141,18 @@ void ABilliardistPawn::ActionPressHandle()
             bAdjustingHitStrength = true;
             break;
         }
+    }
+}
+
+void ABilliardistPawn::TryPlaceCueBall(APoolPlayerState* InPlayerState)
+{
+    auto BillController = Cast<ABilliardistController>(GetController());
+    if (!ensure(BillController != nullptr)) return;
+
+    FVector TableHitResult;
+    if (BillController->TryRaycastTable(TableHitResult))
+    {
+        InPlayerState->PlaceCueBall(TableHitResult);
     }
 }
 
@@ -229,8 +236,8 @@ void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity)
 
 void ABilliardistPawn::ReadyStateToggle()
 {
-    APoolPlayerState* State = Cast<APoolPlayerState>(GetPlayerState());
-    if (State) State->Server_ToggleReady();
+    APoolPlayerState* BillPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (BillPlayerState) BillPlayerState->Server_ToggleReady();
 }
 
 void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
