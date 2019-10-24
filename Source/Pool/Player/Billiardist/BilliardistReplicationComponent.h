@@ -17,16 +17,23 @@ public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     void SetPlayerState(class APlayerState* State);
-    const class APoolPlayerState* GetPlayerState() const { return PlayerState; }
+    class APoolPlayerState* GetPlayerState() const { return PlayerStateBill; }
 
     void ReadyStateToggle();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_PerformBallHit(ABall* Ball, const FVector& Velocity);
 protected:
     virtual void BeginPlay() override;
 
-    class APoolPlayerState* PlayerState = nullptr;
+    UPROPERTY(Replicated)
+    class APoolPlayerState* PlayerStateBill = nullptr;
 
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_UpdatePlayerLocation(const FVector& NewLocation);
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_SetPlayerState(class APlayerState* State);
 private:
     class UBilliardistMovementComponent* MovementComponent = nullptr;
 };

@@ -40,10 +40,11 @@ public:
     UFUNCTION(BlueprintPure)
     float GetCurrentHitStrength();
 
+    virtual void NotifyTurnUpdate(bool NewTurn);
 protected:
     virtual void BeginPlay() override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     FBilliardistState State = FBilliardistState::WALKING;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -95,6 +96,6 @@ private:
     UFUNCTION()
     void ReadyStateToggle();
 
-    UFUNCTION()
-    void OnTurnStateUpdate(bool IsMyTurn);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_SetState(const FBilliardistState& NewState);
 };

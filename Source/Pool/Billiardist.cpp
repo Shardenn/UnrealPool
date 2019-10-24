@@ -222,7 +222,7 @@ void ABilliardist::ReadyPressHandle()
 {
     APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     if (!ensure(PoolPlayerState != nullptr)) return;
-    PoolPlayerState->ToggleReady();
+    PoolPlayerState->Server_ToggleReady();
 }
 
 void ABilliardist::ActionPressHandle()
@@ -439,7 +439,7 @@ void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velo
         APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
         if (!ensure(State != nullptr)) return;
 
-        State->StartWatchingBallsMovement();
+        State->Server_StartWatchingBallsMovement();
     }
 
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);

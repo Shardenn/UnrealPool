@@ -470,3 +470,9 @@ bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)
 
     return false;
 }
+
+bool APoolGameState::Server_StartWatchingBallsMovement_Validate() { return true; }
+void APoolGameState::Server_StartWatchingBallsMovement_Implementation()
+{
+    bWatchBallsMovement = true;
+}

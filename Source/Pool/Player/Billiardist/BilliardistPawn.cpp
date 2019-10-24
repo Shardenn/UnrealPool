@@ -18,6 +18,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "UnrealNetwork.h" // still needed for State replication, though we have RepComp
+
 ABilliardistPawn::ABilliardistPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -44,20 +46,9 @@ void ABilliardistPawn::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (ReplicationComponent)
-    {
-        auto PlState = GetPlayerState();
-        ReplicationComponent->SetPlayerState(PlState);
-    }
-
-    APoolPlayerState* MyPlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    if (MyPlayerState)
-        MyPlayerState->OnPlayerTurnChange.AddDynamic(this, &ABilliardistPawn::OnTurnStateUpdate);
-
     ABilliardistController* BillController = Cast<ABilliardistController>(GetController());
-    check(BillController != nullptr);
-
-    BillController->SubscribeToPlayerStateChange(this);
+    if (BillController)
+        BillController->SubscribeToPlayerStateChange(this);
 }
 
 void ABilliardistPawn::Tick(float DeltaTime)
@@ -121,8 +112,10 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::ActionPressHandle()
 {
-    auto PlayerState = ReplicationComponent->GetPlayerState();
+    APoolPlayerState* PlayerState = Cast<APoolPlayerState>(GetPlayerState());
     // If not our turn - terminate
+    if (!ensure(PlayerState != nullptr)) return;
+
     if (!PlayerState->GetIsMyTurn())
         return;
 
@@ -231,35 +224,34 @@ void ABilliardistPawn::HandleFinishedAiming()
 
 void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity)
 {
-    UWorld* World = GetWorld();
-    APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
-    if (!ensure(State != nullptr)) return;
-
-    State->StartWatchingBallsMovement();
-
-    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
+    ReplicationComponent->Server_PerformBallHit(Ball, Velocity);
 }
 
 void ABilliardistPawn::ReadyStateToggle()
 {
-    if (!ReplicationComponent) return;
-    ReplicationComponent->ReadyStateToggle();
+    APoolPlayerState* State = Cast<APoolPlayerState>(GetPlayerState());
+    if (State) State->Server_ToggleReady();
 }
 
-void ABilliardistPawn::OnTurnStateUpdate(bool IsMyTurn)
+void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
 {
-    UE_LOG(LogPool, Warning, TEXT("%s : now my new turn state is %d"), *GetName(), IsMyTurn);
-    if (IsMyTurn)
+    UE_LOG(LogPool, Warning, TEXT("%s : now my new turn state is %d"), *GetName(), NewTurn);
+    if (NewTurn)
         SetState(FBilliardistState::WALKING);
 }
-
 
 void ABilliardistPawn::SetState(const FBilliardistState& NewState)
 {
     State = NewState;
     OnStateChange.Broadcast(State);
+    Server_SetState(NewState);
 }
 
+bool ABilliardistPawn::Server_SetState_Validate(const FBilliardistState& NewState) { return true; }
+void ABilliardistPawn::Server_SetState_Implementation(const FBilliardistState& NewState)
+{
+    State = NewState;
+}
 
 float ABilliardistPawn::GetMaxHitStrength()
 {
@@ -269,4 +261,11 @@ float ABilliardistPawn::GetMaxHitStrength()
 float ABilliardistPawn::GetCurrentHitStrength()
 {
     return AimingComponent->GetHitStrength();
+}
+
+void ABilliardistPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ABilliardistPawn, State);
 }

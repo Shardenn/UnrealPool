@@ -21,7 +21,8 @@ void ABilliardistController::BeginPlay()
 
 void ABilliardistController::SubscribeToPlayerStateChange(ABilliardistPawn* Billiardist)
 {
-    Server_SubscribeToStateChange(Billiardist);
+    //Server_SubscribeToStateChange(Billiardist);
+    Billiardist->OnStateChange.AddDynamic(this, &ABilliardistController::OnPlayerStateChanged);
 }
 
 bool ABilliardistController::Server_SubscribeToStateChange_Validate(ABilliardistPawn* Billiardist) { return true; }

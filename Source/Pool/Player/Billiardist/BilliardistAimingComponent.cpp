@@ -28,7 +28,6 @@ void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta)
 {
     HitStrengthRatio = FMath::Clamp(HitStrengthRatio + Delta * HitStrengthadjustmentSpeed, 0.f, 1.f);
     HitStrength = MaxAcceptableHitStrength * HitStrengthRatio;
-    UE_LOG(LogPool, Warning, TEXT("New hit strength ratio and value: %f, %f"), HitStrengthRatio, HitStrength);
 }
 
 void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
