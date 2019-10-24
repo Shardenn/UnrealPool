@@ -5,6 +5,8 @@
 #include "Engine/Engine.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Player/Billiardist/BilliardistStates.h"
+
 #include "Billiardist.generated.h"
 
 /* for fast copy-paste in future
@@ -33,18 +35,9 @@ switch (m_eState)
     }
 */
 
-UENUM(BlueprintType)
-enum class FBilliardistState : uint8
-{
-    WALKING     UMETA(DisplayName = "Walking"),     // just walking around the table, examining
-    PICKING     UMETA(DisplayName = "Picking"),     // if we are playing RU billiard, we can pick any ball for the shot
-    AIMING      UMETA(DisplayName = "Aiming"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
-    OBSERVING   UMETA(DisplayName = "Observing"),  // observing the balls after a shot
-    EXAMINING   UMETA(DisplayName = "Examinging"),  // watching from the top of the table
-    POSSIBLE_STATES_NUMBER = 5 UMETA(DisplayName = "Possible values number")
-};
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerStateChange, FBilliardistState, NewState, FBilliardistState, OldState);
+
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerStateChange, FBilliardistState, NewState, FBilliardistState, OldState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedBallUpdated, ABall*, NewBall);
 
 class USplineComponent;
@@ -60,8 +53,8 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
-    UPROPERTY(BlueprintAssignable)
-    FOnPlayerStateChange OnStateChange;
+    //UPROPERTY(BlueprintAssignable)
+    //FOnPlayerStateChange OnStateChange;
     UPROPERTY(BlueprintAssignable)
     FOnSelectedBallUpdated OnSelectedBallUpdate;
 

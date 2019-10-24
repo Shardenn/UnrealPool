@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28315.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{77C1E30E-C938-4272-99CC-331920B3BDDE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Engine", "Engine", "{941C659B-9B41-4D48-BAC2-0CE78A224790}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{4901710A-C7C9-42D6-8180-C61738BF2CD4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{7F02206A-1573-4F19-9707-1934B9C6C7AD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pool", "Intermediate\ProjectFiles\Pool.vcxproj", "{91C43486-D893-4517-B435-E7250F71F278}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UE4", "Intermediate\ProjectFiles\UE4.vcxproj", "{44320DD9-5E70-4ECE-B986-9D23F2E9C974}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Visualizers", "Visualizers", "{6F9B9AD5-68F7-41E2-A0BE-DD44A6E281C7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Visualizers", "Visualizers", "{58623872-C6FA-47F2-A74F-39B7A442C470}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\Software\UE_4.22\Engine\Extras\VisualStudioDebugging\UE4.natvis = ..\..\..\Software\UE_4.22\Engine\Extras\VisualStudioDebugging\UE4.natvis
+		..\..\..\Software\UE_4.23\Engine\Extras\VisualStudioDebugging\UE4.natvis = ..\..\..\Software\UE_4.23\Engine\Extras\VisualStudioDebugging\UE4.natvis
 	EndProjectSection
 EndProject
 Global
@@ -99,7 +99,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{44320DD9-5E70-4ECE-B986-9D23F2E9C974} = {77C1E30E-C938-4272-99CC-331920B3BDDE}
-		{91C43486-D893-4517-B435-E7250F71F278} = {4901710A-C7C9-42D6-8180-C61738BF2CD4}
+		{44320DD9-5E70-4ECE-B986-9D23F2E9C974} = {941C659B-9B41-4D48-BAC2-0CE78A224790}
+		{91C43486-D893-4517-B435-E7250F71F278} = {7F02206A-1573-4F19-9707-1934B9C6C7AD}
 	EndGlobalSection
 EndGlobal

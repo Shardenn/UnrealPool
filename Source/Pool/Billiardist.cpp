@@ -7,7 +7,6 @@
 
 #include "Pool.h"
 #include "BilliardistController.h"
-#include "AimingComponent.h"
 #include "AmericanPool/PoolPlayerState.h"
 #include "AmericanPool/PoolGameMode.h"
 #include "AmericanPool/PoolGameState.h"
@@ -223,7 +222,7 @@ void ABilliardist::ReadyPressHandle()
 {
     APoolPlayerState* PoolPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     if (!ensure(PoolPlayerState != nullptr)) return;
-    PoolPlayerState->ToggleReady();
+    PoolPlayerState->Server_ToggleReady();
 }
 
 void ABilliardist::ActionPressHandle()
@@ -298,18 +297,18 @@ void ABilliardist::ActionPressHandle()
             // on server after all balls stop moving
 
             // get the current hit strength and look vector
-            auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
-            if (!ensure(AimingComponent)) { return; }
-            auto BallHitDirection = Cast<USceneComponent>(AimingComponent)->GetComponentToWorld().Rotator().Vector();
+            //auto AimingComponent = GetComponentByClass(TSubclassOf<UAimingComponent>());
+            //if (!ensure(AimingComponent)) { return; }
+            //auto BallHitDirection = Cast<USceneComponent>(AimingComponent)->GetComponentToWorld().Rotator().Vector();
 
-            BallHitDirection.Z = 0.f;
-            auto hitVector = BallHitDirection * CurrentHitStrength;
+            //BallHitDirection.Z = 0.f;
+            //auto hitVector = BallHitDirection * CurrentHitStrength;
 
             // nil hit strength related stuff
             HitStrengthAlpha = 0.f;
             CurrentHitStrength = HitStrengthMin;
 
-            LaunchBall(SelectedBall, hitVector);
+            //LaunchBall(SelectedBall, hitVector);
             SetSelectedBall(nullptr);
 
             break;
@@ -401,7 +400,7 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
 
 void ABilliardist::OnRep_StateReplicated()
 {
-    OnStateChange.Broadcast(BilliardistState, PreviousState);
+    //OnStateChange.Broadcast(BilliardistState, PreviousState);
 }
 
 void ABilliardist::SetSelectedBall(ABall* NewBall)
@@ -440,7 +439,7 @@ void ABilliardist::Multicast_LaunchBall_Implementation(ABall* Ball, FVector Velo
         APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
         if (!ensure(State != nullptr)) return;
 
-        State->StartWatchingBallsMovement();
+        State->Server_StartWatchingBallsMovement();
     }
 
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);

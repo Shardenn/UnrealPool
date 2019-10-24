@@ -23,7 +23,8 @@ public:
 
     // not Server. It is only called from LaunchBall, that is 
     // already on Server. Maybe make it server later
-    void StartWatchingBallsMovement() { bWatchBallsMovement = true; }
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_StartWatchingBallsMovement();
 
     // they are attached to awake and sleep events in ABall class.
     // NOTE And they are attached only on the server.

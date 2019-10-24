@@ -17,10 +17,10 @@ class POOL_API APoolPlayerState : public APlayerState
 
 public:
     UFUNCTION(Server, Reliable, WithValidation)
-    void ToggleReady();
+    void Server_ToggleReady();
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void PlaceCueBall(const FVector& TablePoint);
+    void PlaceCueBall(const FVector& TablePoint) const;
 
     //UFUNCTION(Server, Reliable, WithValidation)
     void SetIsMyTurn(bool bInMyTurn);

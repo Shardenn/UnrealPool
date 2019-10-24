@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Andrei Vikarchuk.
 
 #include "PoolPlayerState.h"
 #include "../Pool.h"
@@ -6,12 +6,13 @@
 #include "AmericanPool/PoolGameMode.h"
 #include "Objects/BallAmerican.h"
 
+#include "Player/Billiardist/BilliardistPawn.h" // TODO dependency invertion is violated
+
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
-
-bool APoolPlayerState::ToggleReady_Validate() { return true; }
-void APoolPlayerState::ToggleReady_Implementation()
+bool APoolPlayerState::Server_ToggleReady_Validate() { return true; }
+void APoolPlayerState::Server_ToggleReady_Implementation()
 {
     bIsReady = !bIsReady;
 
@@ -23,7 +24,7 @@ void APoolPlayerState::ToggleReady_Implementation()
 }
 
 bool APoolPlayerState::PlaceCueBall_Validate(const FVector&) { return true; }
-void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
+void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) const
 {
     if (!CueBallHanded)
     {
@@ -50,6 +51,7 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint)
 void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 {
     bMyTurn = bInIsMyTurn;
+    Cast<ABilliardistPawn>(GetPawn())->NotifyTurnUpdate(bMyTurn);
 }
 
 //bool APoolPlayerState::SetBallInHand_Validate(ABall* CueBall) { return true; }

@@ -63,7 +63,8 @@ void APoolGameState::AddMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 
     MovingBalls.AddUnique(NewBall);
 
-    if (MovingBalls.Num() > 0)
+    // Not on any ball added
+    if (MovingBalls.Num() == 1)
     {
         APoolPlayerState* PlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
         PlayerTurn->SetIsMyTurn(false);
@@ -467,4 +468,10 @@ bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)
         return true;
 
     return false;
+}
+
+bool APoolGameState::Server_StartWatchingBallsMovement_Validate() { return true; }
+void APoolGameState::Server_StartWatchingBallsMovement_Implementation()
+{
+    bWatchBallsMovement = true;
 }
