@@ -42,8 +42,3 @@ void ABall::BeginPlay()
         SphereMesh->OnComponentEndOverlap.AddDynamic(GameState, &APoolGameState::OnBallEndOverlap);
     }
 }
-
-void ABall::SetSpecialBallState(FSpecialBallState SpecialState)
-{
-    SetupSpecialState(SpecialState);
-}

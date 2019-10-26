@@ -44,7 +44,6 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) co
     APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
     if (!ensure(State != nullptr)) return;
 
-    CueBallHanded->SetSpecialBallState(FSpecialBallState::None);
     State->TakeBallFromHand();
 }
 
@@ -59,8 +58,6 @@ void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
 void APoolPlayerState::SetBallInHand/*_Implementation*/(ABall* CueBall)
 {
     CueBallHanded = CueBall;
-    if (CueBallHanded)
-        CueBallHanded->SetSpecialBallState(FSpecialBallState::BallInHand);
 
     Cast<ABilliardistPawn>(GetPawn())->Client_NotifyBallInHand(CueBall != nullptr);
 }
