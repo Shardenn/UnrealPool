@@ -35,12 +35,16 @@ public:
     UFUNCTION(BlueprintPure)
     FBilliardistState GetState() { return State; }
 
+    void TryInitializePlayerState();
+
     UFUNCTION(BlueprintPure)
     float GetMaxHitStrength();
     UFUNCTION(BlueprintPure)
     float GetCurrentHitStrength();
 
     virtual void NotifyTurnUpdate(bool NewTurn);
+    UFUNCTION(Client, Reliable)
+    virtual void Client_NotifyBallInHand(bool IsInHand);
 protected:
     virtual void BeginPlay() override;
 
@@ -48,7 +52,16 @@ protected:
     FBilliardistState State = FBilliardistState::WALKING;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class APoolPlayerState* BillPlayerState = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class ABall* SelectedBall = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<class ABall> GhostBallClass;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class ABall* GhostHandedBall = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistMovementComponent* MovementComponent = nullptr;
@@ -77,6 +90,9 @@ protected:
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
 private:
+    // Checks current GhostHandedBall for overlaps with static mesh components.
+    // If there is no GhostHandedBall - returns false!!!
+    bool IsCueBallPlacementValid() const;
     void TryPlaceCueBall(class APoolPlayerState* InPlayerState);
 
     UFUNCTION(Server, Reliable, WithValidation)

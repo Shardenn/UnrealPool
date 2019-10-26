@@ -82,7 +82,7 @@ TArray<class ABall*> UEightBallSpawner::Spawn()
             continue;
         }
 
-        uint8 BallNum = GetRandomBallNum(BallsNum);
+        BallNum = GetRandomBallNum(BallsNum);
 
         // regenerate 2nd corner ball num until it is different
         // type from the 1st corner ball

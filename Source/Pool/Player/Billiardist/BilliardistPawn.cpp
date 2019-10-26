@@ -54,6 +54,23 @@ void ABilliardistPawn::BeginPlay()
 void ABilliardistPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (!BillPlayerState)
+        TryInitializePlayerState();
+    if (!BillPlayerState) return;
+
+    if (BillPlayerState->GetIsBallInHand())
+    {
+        auto BillController = Cast<ABilliardistController>(GetController());
+        if (!ensure(BillController != nullptr)) return;
+
+        FVector TableHitResult;
+        if (GhostHandedBall && BillController->TryRaycastTable(TableHitResult))
+        {
+            float BallRadius = GhostHandedBall->GetRootComponent()->Bounds.SphereRadius;
+            GhostHandedBall->SetActorLocation(TableHitResult + FVector(0, 0, BallRadius + 1));
+        }
+    }
 }
 
 void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -112,11 +129,11 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::ActionPressHandle()
 {
-    APoolPlayerState* BillPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     // If not our turn - terminate
-    if (!ensure(BillPlayerState != nullptr)) return;
+    if (!BillPlayerState)
+        TryInitializePlayerState();
 
-    if (!BillPlayerState->GetIsMyTurn())
+    if (!BillPlayerState || !BillPlayerState->GetIsMyTurn())
         return;
 
     // If we have a ball in hand - try place it
@@ -150,10 +167,30 @@ void ABilliardistPawn::TryPlaceCueBall(APoolPlayerState* InPlayerState)
     if (!ensure(BillController != nullptr)) return;
 
     FVector TableHitResult;
-    if (BillController->TryRaycastTable(TableHitResult))
+    if (IsCueBallPlacementValid() && BillController->TryRaycastTable(TableHitResult))
     {
         InPlayerState->PlaceCueBall(TableHitResult);
     }
+}
+
+bool ABilliardistPawn::IsCueBallPlacementValid() const
+{
+    if (!GhostHandedBall) return false;
+
+    TArray<UPrimitiveComponent*> OverlappingComponents;
+    const auto PrimComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
+    PrimComp->GetOverlappingComponents(OverlappingComponents);
+
+    for (const auto& Component : OverlappingComponents)
+    {
+        if (Cast<UStaticMeshComponent>(Component))
+        {
+            UE_LOG(LogPool, Warning, TEXT("Overlapping with %s, cannot place cue ball"), *Component->GetName());
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void ABilliardistPawn::HandleBallSelected(ABall* Ball)
@@ -247,6 +284,31 @@ void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
         SetState(FBilliardistState::WALKING);
 }
 
+void ABilliardistPawn::Client_NotifyBallInHand_Implementation(bool IsInHand)
+{
+    if (IsInHand)
+    {
+        UE_LOG(LogPool, Warning, TEXT("spawning ghost ball"));
+        if (!IsValid(GhostBallClass))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Ghost ball class is not set"));
+            return;
+        }
+        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(0, 0, 2000), FRotator::ZeroRotator);
+        auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
+        BallRootComp->SetSimulatePhysics(false);
+        BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
+    }
+    else
+    {
+        if (GhostHandedBall)
+        {
+            GhostHandedBall->Destroy();
+            GhostHandedBall = nullptr;
+        }
+    }
+}
+
 void ABilliardistPawn::SetState(const FBilliardistState& NewState)
 {
     State = NewState;
@@ -258,6 +320,14 @@ bool ABilliardistPawn::Server_SetState_Validate(const FBilliardistState& NewStat
 void ABilliardistPawn::Server_SetState_Implementation(const FBilliardistState& NewState)
 {
     State = NewState;
+}
+
+void ABilliardistPawn::TryInitializePlayerState()
+{
+    auto GotPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    BillPlayerState = GotPlayerState;
+    if (!BillPlayerState)
+        UE_LOG(LogPool, Warning, TEXT("BilliardistPawn initialized its PlayerState with NULL"));
 }
 
 float ABilliardistPawn::GetMaxHitStrength()
