@@ -30,6 +30,12 @@ void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta)
     HitStrength = MaxAcceptableHitStrength * HitStrengthRatio;
 }
 
+void UBilliardistAimingComponent::AdjustZoom(float Delta)
+{
+    SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + Delta * ZoomAdjustementSpeed,
+        ZoomSpringArmLengthMin, ZoomSpringArmLengthMax);
+}
+
 void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
 {
     if (!SpringArm) { return; }

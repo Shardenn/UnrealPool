@@ -82,6 +82,8 @@ void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("Turn", this, &ABilliardistPawn::Turn);
     PlayerInputComponent->BindAxis("LookUp", this, &ABilliardistPawn::LookUp);
 
+    PlayerInputComponent->BindAction("ZoomAdjust", IE_Pressed, this, &ABilliardistPawn::StartedZoomAdjustement);
+    PlayerInputComponent->BindAction("ZoomAdjust", IE_Released, this, &ABilliardistPawn::FinishedZoomAdjustement);
     PlayerInputComponent->BindAction("Return", IE_Pressed, this, &ABilliardistPawn::ReturnPressHandle);
     PlayerInputComponent->BindAction("Action", IE_Pressed, this, &ABilliardistPawn::ActionPressHandle);
     PlayerInputComponent->BindAction("Action", IE_Released, this, &ABilliardistPawn::ActionReleaseHandle);
@@ -115,7 +117,7 @@ void ABilliardistPawn::MoveRight(float Value)
 
 void ABilliardistPawn::Turn(float Value)
 {
-    if (!bAdjustingHitStrength)
+    if (!(bAdjustingHitStrength || bAdjustingZoom))
         AddControllerYawInput(Value);
 }
 
@@ -123,8 +125,20 @@ void ABilliardistPawn::LookUp(float Value)
 {
     if (bAdjustingHitStrength)
         AimingComponent->UpdateHitStrengthRatio(Value);
-    else
+    else if (!bAdjustingZoom)
         AddControllerPitchInput(Value);
+    else
+        AimingComponent->AdjustZoom(Value);
+}
+
+void ABilliardistPawn::StartedZoomAdjustement()
+{
+    bAdjustingZoom = true;
+}
+
+void ABilliardistPawn::FinishedZoomAdjustement()
+{
+    bAdjustingZoom = false;
 }
 
 void ABilliardistPawn::ActionPressHandle()

@@ -25,6 +25,8 @@ public:
 
     void UpdateHitStrengthRatio(float Delta);
 
+    void AdjustZoom(float Delta);
+
     void HandleStartedAiming(const FVector& AimedAt);
     void HandleFinishedAiming();
 protected:
@@ -47,4 +49,11 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    float ZoomAdjustementSpeed = 1.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    float ZoomSpringArmLengthMax = 200.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    float ZoomSpringArmLengthMin = 15.f;
 };
