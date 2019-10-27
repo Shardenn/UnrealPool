@@ -55,10 +55,10 @@ void ABilliardistPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (!BillPlayerState)
-        TryInitializePlayerState();
-    if (!BillPlayerState) return;
+    if (!BillPlayerState && !TryInitializePlayerState())
+        return;
 
+    // Draw cue ball possible location when putting it from hand
     if (BillPlayerState->GetIsBallInHand())
     {
         auto BillController = Cast<ABilliardistController>(GetController());
@@ -143,30 +143,11 @@ void ABilliardistPawn::FinishedZoomAdjustement()
 
 void ABilliardistPawn::ActionPressHandle()
 {
-    // If not our turn - terminate
-    if (!BillPlayerState)
-        TryInitializePlayerState();
-
-    if (!BillPlayerState || !BillPlayerState->GetIsMyTurn())
-        return;
-
-    // If we have a ball in hand - try place it
-    if (BillPlayerState->GetIsBallInHand())
-    {
-        TryPlaceCueBall(BillPlayerState);
-        return;
-    }
-
     switch (State)
     {
         // for less typing
         using FState = FBilliardistState;
 
-        case FState::WALKING:
-        {
-            SetState(FState::PICKING);
-            break;
-        }
         case FState::AIMING:
         {
             bAdjustingHitStrength = true;
@@ -215,23 +196,33 @@ void ABilliardistPawn::HandleBallSelected(ABall* Ball)
 
 void ABilliardistPawn::ActionReleaseHandle()
 {
+    // If not our turn - terminate
+    if (!BillPlayerState && !TryInitializePlayerState())
+        return;
+    if (!BillPlayerState->GetIsMyTurn())
+        return;
+
+    // If we have a ball in hand - try place it
+    if (BillPlayerState->GetIsBallInHand())
+    {
+        TryPlaceCueBall(BillPlayerState);
+        return;
+    }
+
     switch (State)
     {
         // for less typing
         using FState = FBilliardistState;
 
-        case FState::PICKING:
+        case FState::WALKING:
         {
-            auto BillController = Cast<ABilliardistController>(Controller);
-            if (!BillController) { return; }
-
-            ABall* Ball = nullptr;
-            BillController->TryRaycastBall(Ball);
-            if (Ball)
+            //SetState(FState::PICKING);
+            if (!SelectedBall)
             {
-                SelectedBall = Ball;
-                HandleBallSelected(Ball);
+                const auto PoolGameState = Cast<APoolGameState>(GetWorld()->GetGameState());
+                SelectedBall = PoolGameState->GetCueBall();
             }
+            HandleBallSelected(SelectedBall);
             break;
         }
         case FState::AIMING:
@@ -261,11 +252,6 @@ void ABilliardistPawn::ReturnPressHandle()
         // for less typing
         using FState = FBilliardistState;
 
-        case FState::PICKING:
-        {
-            SetState(FState::WALKING);
-            break;
-        }
         case FState::AIMING:
         {
             HandleFinishedAiming();
@@ -277,7 +263,7 @@ void ABilliardistPawn::ReturnPressHandle()
 void ABilliardistPawn::HandleFinishedAiming()
 {
     AimingComponent->HandleFinishedAiming();
-    SetState(FBilliardistState::PICKING);
+    SetState(FBilliardistState::WALKING);
 }
 
 void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity)
@@ -336,12 +322,16 @@ void ABilliardistPawn::Server_SetState_Implementation(const FBilliardistState& N
     State = NewState;
 }
 
-void ABilliardistPawn::TryInitializePlayerState()
+bool ABilliardistPawn::TryInitializePlayerState()
 {
     auto GotPlayerState = Cast<APoolPlayerState>(GetPlayerState());
     BillPlayerState = GotPlayerState;
     if (!BillPlayerState)
+    {
         UE_LOG(LogPool, Warning, TEXT("BilliardistPawn initialized its PlayerState with NULL"));
+        return false;
+    }
+    return true;
 }
 
 float ABilliardistPawn::GetMaxHitStrength()

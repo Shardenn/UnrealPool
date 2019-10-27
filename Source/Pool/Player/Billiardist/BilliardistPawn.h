@@ -35,7 +35,7 @@ public:
     UFUNCTION(BlueprintPure)
     FBilliardistState GetState() { return State; }
 
-    void TryInitializePlayerState();
+    bool TryInitializePlayerState();
 
     UFUNCTION(BlueprintPure)
     float GetMaxHitStrength();

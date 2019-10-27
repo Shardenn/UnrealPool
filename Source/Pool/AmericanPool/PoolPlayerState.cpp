@@ -44,7 +44,7 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) co
     APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
     if (!ensure(State != nullptr)) return;
 
-    State->TakeBallFromHand();
+    State->Server_TakeBallFromHand();
 }
 
 //bool APoolPlayerState::SetIsMyTurn_Validate(bool bInIsMyTurn) { return true; }

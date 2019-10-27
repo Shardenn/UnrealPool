@@ -74,10 +74,10 @@ public:
     void RegisterBall(class ABallAmerican* Ball);
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
+    void Server_GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void TakeBallFromHand();
+    void Server_TakeBallFromHand();
 
     bool RequestIsPlayerTurn(APlayerState* PlayerState);
 
@@ -85,6 +85,8 @@ public:
     TArray<class ABall*> ActiveBalls;
     UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
     uint32 PlayerIndexTurn;
+
+    class ABall* const GetCueBall();
 protected:
     virtual void BeginPlay() override;
 
@@ -93,6 +95,7 @@ protected:
     // BEFORE pocketed 8 ball).
     virtual bool DecideWinCondition();
 
+    UPROPERTY(Replicated)
     class ABallAmerican* CueBall = nullptr;
 
 private:
@@ -116,4 +119,6 @@ private:
     void ClearTurnStateVariables();
 
     void HandleBlackBallOutOfPlay();
+
+    bool FindAndInitializeCueBall();
 };

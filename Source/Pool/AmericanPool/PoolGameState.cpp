@@ -15,14 +15,7 @@
 #include "PoolGameMode.h"
 
 #include "UnrealNetwork.h"
-
-void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(APoolGameState, PlayersReadyNum);
-    DOREPLIFETIME(APoolGameState, PlayerIndexTurn); 
-}
+#include "EngineUtils.h" // TObjectIterator
 
 void APoolGameState::BeginPlay()
 {
@@ -317,12 +310,14 @@ void APoolGameState::HandleTurnEnd_Implementation()
 
     if (bPlayerFouled)
     {
-        if (!CueBall)
+        if (!CueBall && !FindAndInitializeCueBall())
         {
             UE_LOG(LogPool, Warning, TEXT("Tried to give ball in hand, but CueBall is NULL"));
         }
         else
-            GiveBallInHand();
+        {
+            Server_GiveBallInHand();
+        }
     }
 
     ClearTurnStateVariables();
@@ -425,18 +420,33 @@ void APoolGameState::HandleBlackBallOutOfPlay()
     }
 }
 
-bool APoolGameState::GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }
-void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState)
+bool APoolGameState::FindAndInitializeCueBall()
 {
-    if (CueBall == nullptr)
-        UE_LOG(LogPool, Warning, TEXT("GiveBallInHand: CueBall==nullptr"));
+    for (TActorIterator<ABallAmerican> It(GetWorld()); It; ++It)
+    {
+        if (It->GetType() == FBallType::Cue)
+        {
+            CueBall = *It;
+            return true;
+        }
+    }
+    return false;
+}
 
-    if (!ensure(CueBall != nullptr)) return;
+bool APoolGameState::Server_GiveBallInHand_Validate(APoolPlayerState* PlayerState) { return true; }
+void APoolGameState::Server_GiveBallInHand_Implementation(APoolPlayerState* PlayerState)
+{
+    if (!CueBall && !FindAndInitializeCueBall())
+    {
+        UE_LOG(LogPool, Warning, TEXT("GiveBallInHand: CueBall==nullptr. failed to find cue ball as well"));
+        return;
+    }
+
     auto BallPrimComp = Cast<UStaticMeshComponent>(CueBall->GetRootComponent());
     BallPrimComp->SetSimulatePhysics(false);
     CueBall->SetActorLocation(FVector(0, 0, 2000));
 
-    TakeBallFromHand();
+    Server_TakeBallFromHand();
     
     // TODO it is debug feature, when we can pass nullptr to the func. Remove later?
     // if nullptr is given as parameter, we will automatically give a ball to the current player
@@ -449,8 +459,8 @@ void APoolGameState::GiveBallInHand_Implementation(APoolPlayerState* PlayerState
     UE_LOG(LogPool, Warning, TEXT("gave ball to the player with index %d"), PlayerIndexTurn);
 }
 
-bool APoolGameState::TakeBallFromHand_Validate() { return true; }
-void APoolGameState::TakeBallFromHand_Implementation()
+bool APoolGameState::Server_TakeBallFromHand_Validate() { return true; }
+void APoolGameState::Server_TakeBallFromHand_Implementation()
 {
     if (PlayerWithCueBall)
     {
@@ -470,8 +480,24 @@ bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)
     return false;
 }
 
+ABall* const APoolGameState::GetCueBall()
+{
+    if (!CueBall && !FindAndInitializeCueBall())
+        return nullptr;
+    return CueBall;
+}
+
 bool APoolGameState::Server_StartWatchingBallsMovement_Validate() { return true; }
 void APoolGameState::Server_StartWatchingBallsMovement_Implementation()
 {
     bWatchBallsMovement = true;
+}
+
+void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APoolGameState, PlayersReadyNum);
+    DOREPLIFETIME(APoolGameState, PlayerIndexTurn);
+    DOREPLIFETIME(APoolGameState, CueBall);
 }
