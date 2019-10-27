@@ -148,7 +148,8 @@ void APoolGameState::OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
     if (!DroppedBall)
         return;
 
-    DroppedBalls.Add(DroppedBall);
+    if (!PocketedBalls.Contains(DroppedBall))
+        DroppedBalls.Add(DroppedBall);
     //OverlappedComponent->BodyInstance.bGenerateWakeEvents = false;
     RemoveMovingBall(OverlappedComponent, NAME_None);
 }
@@ -332,7 +333,7 @@ void APoolGameState::AssignFoul_Implementation()
 bool APoolGameState::RegisterBall_Validate(ABallAmerican*) { return true; }
 void APoolGameState::RegisterBall_Implementation(ABallAmerican* Ball)
 {
-    BallsPlayedOutOfGame.Add(Ball);
+    BallsPlayedOutOfGame.AddUnique(Ball);
 }
 
 bool APoolGameState::DecideWinCondition()

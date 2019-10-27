@@ -82,11 +82,20 @@ public:
     bool RequestIsPlayerTurn(APlayerState* PlayerState);
 
     // TODO maybe not public?
-    TArray<class ABall*> ActiveBalls;
+    
     UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
     uint32 PlayerIndexTurn;
 
     class ABall* const GetCueBall();
+
+    UFUNCTION(BlueprintPure)
+    const TArray<class ABall*>&         GetActiveBalls() { return ActiveBalls; }
+    UFUNCTION(BlueprintPure)
+    const TArray<class ABallAmerican*>& GetPocketedBalls() { return PocketedBalls; }
+    UFUNCTION(BlueprintPure)
+    const TArray<class ABallAmerican*>& GetDroppedBalls() { return DroppedBalls; }
+    UFUNCTION(BlueprintPure)
+    const TArray<class ABallAmerican*>& GetBallsPlayedOut() { return BallsPlayedOutOfGame; }
 protected:
     virtual void BeginPlay() override;
 
@@ -107,6 +116,7 @@ private:
 
     // handle classes and their hiererchy
     TArray<class ABall*> MovingBalls;
+    TArray<class ABall*> ActiveBalls;
     TArray<class ABallAmerican*> PocketedBalls;
     TArray<class ABallAmerican*> BallsHittedByTheCue;
     TArray<class ABallAmerican*> DroppedBalls;
