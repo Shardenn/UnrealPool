@@ -89,7 +89,7 @@ protected:
     
     // override this for the event when a player picks a ball
     virtual void HandleBallSelected(class ABall* Ball);
-    virtual void HandleFinishedAiming();
+    virtual void HandleFinishedAiming(AActor* const ActorToLookAt);
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
 private:

@@ -8,6 +8,19 @@
 
 class USpringArmComponent;
 
+enum class EBlendingState : uint8
+{
+    None,
+    BlendingIn,
+    BlendingOut
+};
+
+struct InterpolationData
+{
+    FVector Location;
+    FRotator Rotation;
+};
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class POOL_API UBilliardistAimingComponent : public UActorComponent
 {
@@ -28,7 +41,7 @@ public:
     void AdjustZoom(float Delta);
 
     void HandleStartedAiming(const FVector& AimedAt);
-    void HandleFinishedAiming();
+    void HandleFinishedAiming(class AActor* const ActorToLookAt);
 protected:
     virtual void BeginPlay() override;
 
@@ -50,10 +63,23 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
     float ZoomAdjustementSpeed = 1.f;
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
     float ZoomSpringArmLengthMax = 200.f;
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
     float ZoomSpringArmLengthMin = 15.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    float BlendingStartingSpeed = 3.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
+    float BlendingSpeedChange = 9.f;
+
+    float CurrentBlendingSpeed = BlendingStartingSpeed;
+    EBlendingState BlendingState = EBlendingState::None;
+    float BlendAlpha = 0.0;
+    InterpolationData StartingTransform, FinalTransform;
+    class AActor* ActorToLookAtWhileBlending = nullptr;
+private:
+    FVector GetDefaultCameraSpringWorldLocation() const { return DefaultSpringArmLocation + GetOwner()->GetActorLocation(); }
 };

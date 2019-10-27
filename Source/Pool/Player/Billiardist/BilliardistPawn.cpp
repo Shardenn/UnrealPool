@@ -237,8 +237,8 @@ void ABilliardistPawn::ActionReleaseHandle()
             FVector LookDirection = GetControlRotation().Vector();
             LookDirection.Z = 0; // TODO handle jump/curve later
             LaunchBall(SelectedBall, LookDirection * HitStrength);
+            HandleFinishedAiming(SelectedBall);
             SelectedBall = nullptr;
-            HandleFinishedAiming();
             SetState(FState::OBSERVING);
             break;
         }
@@ -254,15 +254,15 @@ void ABilliardistPawn::ReturnPressHandle()
 
         case FState::AIMING:
         {
-            HandleFinishedAiming();
+            HandleFinishedAiming(SelectedBall);
             break;
         }
     }
 }
 
-void ABilliardistPawn::HandleFinishedAiming()
+void ABilliardistPawn::HandleFinishedAiming(AActor* const ActorToLookAt)
 {
-    AimingComponent->HandleFinishedAiming();
+    AimingComponent->HandleFinishedAiming(ActorToLookAt);
     SetState(FBilliardistState::WALKING);
 }
 

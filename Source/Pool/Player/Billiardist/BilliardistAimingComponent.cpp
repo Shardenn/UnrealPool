@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Math/InterpCurve.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UBilliardistAimingComponent::UBilliardistAimingComponent()
 {
@@ -43,16 +44,55 @@ void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
     SpringArm->SetWorldLocation(AimedAt);
 }
 
-void UBilliardistAimingComponent::HandleFinishedAiming()
+void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLookAt)
 {
     UpdateHitStrengthRatio(-HitStrengthRatio);
     if (!SpringArm) { return; }
-    // TODO make interpolation
-    SpringArm->SetRelativeLocation(DefaultSpringArmLocation);
+    
+    ActorToLookAtWhileBlending = ActorToLookAt;
+
+    StartingTransform.Location = ActorToLookAtWhileBlending->GetActorLocation();
+    StartingTransform.Rotation = Cast<APawn>(GetOwner())->GetController()->GetControlRotation();
+
+    FinalTransform.Location = GetDefaultCameraSpringWorldLocation();
+    
+    CurrentBlendingSpeed = BlendingStartingSpeed;
+
+    BlendingState = EBlendingState::BlendingOut;
+    //SpringArm->SetRelativeLocation(DefaultSpringArmLocation);
 }
 
 void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    switch (BlendingState)
+    {
+        case EBlendingState::BlendingIn:
+            break;
+        case EBlendingState::BlendingOut:
+            // A player can move while blending, so update final location all the time.
+            FinalTransform.Location = GetDefaultCameraSpringWorldLocation();
+            // keep final rotation updated, as we would like to watch at the launched ball
+            FinalTransform.Rotation = (ActorToLookAtWhileBlending->GetActorLocation() - GetDefaultCameraSpringWorldLocation()).Rotation();
+
+            InterpolationData CurrentTransform;
+            CurrentTransform.Location = FMath::Lerp(StartingTransform.Location, FinalTransform.Location, BlendAlpha);
+            CurrentTransform.Rotation = FMath::Lerp(StartingTransform.Rotation, FinalTransform.Rotation, BlendAlpha);
+
+            Cast<APawn>(GetOwner())->GetController()->SetControlRotation(CurrentTransform.Rotation);
+            SpringArm->SetWorldLocation(CurrentTransform.Location);
+
+            CurrentBlendingSpeed = FMath::Clamp(CurrentBlendingSpeed - DeltaTime * BlendAlpha * BlendingSpeedChange,
+                0.4f * BlendingStartingSpeed, BlendingStartingSpeed);
+            BlendAlpha += DeltaTime * CurrentBlendingSpeed;
+
+            if (BlendAlpha >= 1.f)
+            {
+                BlendingState = EBlendingState::None;
+                BlendAlpha = 0.f;
+            }
+            break;
+    }
 }
 
