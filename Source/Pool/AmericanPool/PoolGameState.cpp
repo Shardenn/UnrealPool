@@ -488,6 +488,17 @@ ABall* const APoolGameState::GetCueBall()
     return CueBall;
 }
 
+APoolPlayerState* APoolGameState::GetOtherPlayerState(const APoolPlayerState* Mine)
+{
+    for (auto Player : PlayerArray)
+    {
+        auto PoolPlayer = Cast<APoolPlayerState>(Player);
+        if (PoolPlayer && PoolPlayer != Mine)
+            return PoolPlayer;
+    }
+    return nullptr;
+}
+
 bool APoolGameState::Server_StartWatchingBallsMovement_Validate() { return true; }
 void APoolGameState::Server_StartWatchingBallsMovement_Implementation()
 {

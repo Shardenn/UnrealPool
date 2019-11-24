@@ -89,13 +89,15 @@ public:
     class ABall* const GetCueBall();
 
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>&         GetActiveBalls() { return ActiveBalls; }
+    const TArray<class ABall*>&          GetActiveBalls() const { return ActiveBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>& GetPocketedBalls() { return PocketedBalls; }
+    const TArray<class ABallAmerican*>&  GetPocketedBalls() const { return PocketedBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>& GetDroppedBalls() { return DroppedBalls; }
+    const TArray<class ABallAmerican*>&  GetDroppedBalls() const { return DroppedBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>& GetBallsPlayedOut() { return BallsPlayedOutOfGame; }
+    const TArray<class ABallAmerican*>&  GetBallsPlayedOut() const { return BallsPlayedOutOfGame; }
+    UFUNCTION(BlueprintPure)
+    APoolPlayerState* GetOtherPlayerState(const APoolPlayerState* Mine);
 protected:
     virtual void BeginPlay() override;
 
