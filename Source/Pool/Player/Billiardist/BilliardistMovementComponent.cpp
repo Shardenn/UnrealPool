@@ -11,7 +11,7 @@
 UBilliardistMovementComponent::UBilliardistMovementComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 void UBilliardistMovementComponent::BeginPlay()

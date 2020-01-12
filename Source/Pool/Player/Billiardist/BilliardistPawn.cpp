@@ -24,7 +24,7 @@ ABilliardistPawn::ABilliardistPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    bReplicateMovement = true;
+    SetReplicatingMovement(true);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     SetRootComponent(Mesh);

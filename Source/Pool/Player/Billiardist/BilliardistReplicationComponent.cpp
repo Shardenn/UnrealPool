@@ -13,7 +13,7 @@
 UBilliardistReplicationComponent::UBilliardistReplicationComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-    SetIsReplicated(true);
+    SetIsReplicatedByDefault(true);
 }
 
 void UBilliardistReplicationComponent::BeginPlay()
