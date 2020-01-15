@@ -75,11 +75,17 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
     float BlendingSpeedChange = 9.f;
 
+#pragma region Interpolation
     float CurrentBlendingSpeed = BlendingStartingSpeed;
     EBlendingState BlendingState = EBlendingState::None;
     float BlendAlpha = 0.0;
+    InterpolationData CurrentTransform;
     InterpolationData StartingTransform, FinalTransform;
+
+    // Follow an actor while blending by watching on it constantly
     class AActor* ActorToLookAtWhileBlending = nullptr;
+#pragma endregion
+
 private:
     FVector GetDefaultCameraSpringWorldLocation() const { return DefaultSpringArmLocation + GetOwner()->GetActorLocation(); }
 };
