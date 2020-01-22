@@ -6,6 +6,24 @@
 #include "GameFramework/GameState.h"
 #include "PoolGameState.generated.h"
 
+UENUM(BlueprintType)
+enum class FBallPlayOutReason : uint8
+{
+    Pocketed      UMETA(DisplayName = "Pocketed"),
+    Dropped       UMETA(DisplayName = "Dropped")
+};
+
+UENUM(BlueprintType)
+enum class FPlayerFoulReason : uint8
+{
+    CueBallOut          UMETA(DisplayName = "Cue ball out of table"),
+    EightBallPocketed   UMETA(DisplayName = "Eight ball pocketed")
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBallPlayedOut, ABall*, Ball);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerFouled, FPlayerFoulReason, Reason);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTurnEnd);
+
 /**
  *
  */
@@ -20,6 +38,13 @@ public:
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnTurnEnd OnTurnEnd;
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerFouled OnPlayerFouled;
+    UPROPERTY(BlueprintAssignable)
+    FOnBallPlayedOut OnBallPlayedOut;
 
     // not Server. It is only called from LaunchBall, that is 
     // already on Server. Maybe make it server later

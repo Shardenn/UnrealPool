@@ -86,6 +86,8 @@ void APoolGameState::RemoveMovingBall(UPrimitiveComponent* Comp, FName BoneName)
 bool APoolGameState::SwitchTurn_Validate() { return true; }
 void APoolGameState::SwitchTurn_Implementation()
 {
+    OnTurnEnd.Broadcast();
+
     APoolPlayerState* FormerPlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
     FormerPlayerTurn->SetIsMyTurn(false);
 
@@ -110,7 +112,10 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
 
     ABallAmerican* PocketedBall = Cast<ABallAmerican>(OverlappedComponent->GetOwner());
     if (PocketedBall)
+    {
         PocketedBalls.Add(PocketedBall);
+        OnBallPlayedOut.Broadcast(PocketedBall);
+    }
 
     auto Comp = Cast<UStaticMeshComponent>(PocketedBall->GetRootComponent());
     RemoveMovingBall(Comp, NAME_None);
@@ -149,7 +154,10 @@ void APoolGameState::OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
         return;
 
     if (!PocketedBalls.Contains(DroppedBall))
+    {
         DroppedBalls.Add(DroppedBall);
+        OnBallPlayedOut.Broadcast(DroppedBall);
+    }
     //OverlappedComponent->BodyInstance.bGenerateWakeEvents = false;
     RemoveMovingBall(OverlappedComponent, NAME_None);
 }
