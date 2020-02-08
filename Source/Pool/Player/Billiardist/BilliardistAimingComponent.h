@@ -18,7 +18,7 @@ enum class EBlendingState : uint8
 struct InterpolationData
 {
     FVector Location;
-    FRotator Rotation;
+    FQuat Rotation;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -71,21 +71,20 @@ protected:
     float ZoomSpringArmLengthMin = 15.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
-    float BlendingStartingSpeed = 3.f;
+    float BlendingSpeed = 2.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera controls")
-    float BlendingSpeedChange = 9.f;
+    float EaseExponent = 0.5f;
 
 #pragma region Interpolation
-    float CurrentBlendingSpeed = BlendingStartingSpeed;
     EBlendingState BlendingState = EBlendingState::None;
     float BlendAlpha = 0.0;
     InterpolationData CurrentTransform;
     InterpolationData StartingTransform, FinalTransform;
-
     // Follow an actor while blending by watching on it constantly
     class AActor* ActorToLookAtWhileBlending = nullptr;
 #pragma endregion
 
 private:
     FVector GetDefaultCameraSpringWorldLocation() const { return DefaultSpringArmLocation + GetOwner()->GetActorLocation(); }
+    float LastSpringArmLength = ZoomSpringArmLengthMax * 0.2f;
 };

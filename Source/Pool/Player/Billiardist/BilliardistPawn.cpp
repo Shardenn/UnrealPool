@@ -133,7 +133,8 @@ void ABilliardistPawn::LookUp(float Value)
 
 void ABilliardistPawn::StartedZoomAdjustement()
 {
-    bAdjustingZoom = true;
+    if (State == FBilliardistState::AIMING)
+        bAdjustingZoom = true;
 }
 
 void ABilliardistPawn::FinishedZoomAdjustement()
