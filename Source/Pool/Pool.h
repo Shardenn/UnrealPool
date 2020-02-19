@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Core.h"
 #include "UnrealNetwork.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogPool, Log, All);

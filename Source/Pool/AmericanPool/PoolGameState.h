@@ -20,7 +20,6 @@ enum class FPlayerFoulReason : uint8
     EightBallPocketed   UMETA(DisplayName = "Eight ball pocketed")
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBallPlayedOut, ABall*, Ball);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerFouled, FPlayerFoulReason, Reason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTurnEnd);
 
@@ -33,6 +32,9 @@ class POOL_API APoolGameState : public AGameState
     GENERATED_BODY()
 
 public:
+    virtual void PostInitializeComponents() override;
+    virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
+
     UFUNCTION(Server, Reliable, WithValidation)
     void SetPlayersReadyNum(uint32 PlayersReady);
 
@@ -43,9 +45,9 @@ public:
     FOnTurnEnd OnTurnEnd;
     UPROPERTY(BlueprintAssignable)
     FOnPlayerFouled OnPlayerFouled;
-    UPROPERTY(BlueprintAssignable)
-    FOnBallPlayedOut OnBallPlayedOut;
 
+    UFUNCTION(BlueprintPure)
+    class UBallsManager* const GetBallsManager();
     // not Server. It is only called from LaunchBall, that is 
     // already on Server. Maybe make it server later
     UFUNCTION(Server, Reliable, WithValidation)
@@ -57,9 +59,9 @@ public:
     // Only works if balls are correctly processed on server
     // (like LaunchBall is called as server function)
     UFUNCTION()
-    void AddMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
+    void OnBallStartMoving(class UPrimitiveComponent* Comp, FName BoneName);
     UFUNCTION()
-    void RemoveMovingBall(class UPrimitiveComponent* Comp, FName BoneName);
+    void OnBallStopMoving(class UPrimitiveComponent* Comp, FName BoneName);
 
     UFUNCTION()
     void OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -94,10 +96,6 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void AssignFoul();
 
-    // Removes the ball from the active ones
-    UFUNCTION(Server, Reliable, WithValidation)
-    void RegisterBall(class ABallAmerican* Ball);
-
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
 
@@ -114,14 +112,6 @@ public:
     class ABall* const GetCueBall();
 
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>&          GetActiveBalls() const { return ActiveBalls; }
-    UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>&  GetPocketedBalls() const { return PocketedBalls; }
-    UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>&  GetDroppedBalls() const { return DroppedBalls; }
-    UFUNCTION(BlueprintPure)
-    const TArray<class ABallAmerican*>&  GetBallsPlayedOut() const { return BallsPlayedOutOfGame; }
-    UFUNCTION(BlueprintPure)
     APoolPlayerState* GetOtherPlayerState(const APoolPlayerState* Mine);
 protected:
     virtual void BeginPlay() override;
@@ -134,20 +124,14 @@ protected:
     UPROPERTY(Replicated)
     class ABallAmerican* CueBall = nullptr;
 
+    UPROPERTY(Replicated)
+    class UBallsManager* BallsManager{ nullptr };
 private:
     bool bWatchBallsMovement = false;
     bool bTableOpened = true;
     bool bBallsRackBroken = false;
     bool bPlayerFouled = false;
     bool bShouldSwitchTurn = true;
-
-    // handle classes and their hiererchy
-    TArray<class ABall*> MovingBalls;
-    TArray<class ABall*> ActiveBalls;
-    TArray<class ABallAmerican*> PocketedBalls;
-    TArray<class ABallAmerican*> BallsHittedByTheCue;
-    TArray<class ABallAmerican*> DroppedBalls;
-    TArray<class ABallAmerican*> BallsPlayedOutOfGame;
 
     APoolPlayerState* PlayerWithCueBall = nullptr;
 
