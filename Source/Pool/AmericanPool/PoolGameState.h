@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameState.h"
+#include "GameplayLogic/TurnBasedGameState.h"
+#include "GameplayLogic/TurnBasedGameHandler.h"
 #include "PoolGameState.generated.h"
 
 UENUM(BlueprintType)
@@ -21,17 +22,18 @@ enum class FPlayerFoulReason : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerFouled, FPlayerFoulReason, Reason);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTurnEnd);
 
 /**
  *
  */
 UCLASS()
-class POOL_API APoolGameState : public AGameState
+class POOL_API APoolGameState : public ATurnBasedGameState
 {
     GENERATED_BODY()
 
 public:
+    APoolGameState();
+
     virtual void PostInitializeComponents() override;
     virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 
@@ -87,6 +89,8 @@ public:
     UFUNCTION()
     void OnFrameRestarted();
 
+    virtual void EndCurrentTurn() override {};
+
     UFUNCTION(Server, Reliable, WithValidation)
     void SwitchTurn();
 
@@ -102,12 +106,7 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_TakeBallFromHand();
 
-    bool RequestIsPlayerTurn(APlayerState* PlayerState);
-
-    // TODO maybe not public?
-    
-    UPROPERTY(Replicated/*Using=OnRep_UpdatePlayerStateTurn*/)
-    uint32 PlayerIndexTurn;
+    virtual bool IsMyTurn(const ITurnBasedPlayer* Player) override;
 
     class ABall* const GetCueBall();
 

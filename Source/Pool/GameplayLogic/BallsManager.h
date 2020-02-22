@@ -9,24 +9,23 @@
 
 class ABall;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBallPlayedOut, ABall*, Ball);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBallPocketed, const ABall*, Ball);
 /**
  *
  */
 
-UCLASS()
+UCLASS(Blueprintable)
 class POOL_API UBallsManager : public UObject
 {
     GENERATED_BODY()
 
 public:
     UPROPERTY(BlueprintAssignable)
-    FOnBallPlayedOut OnBallPlayedOut;
+    FOnBallPocketed OnBallPocketed;
 
-    virtual bool IsSupportedForNetworking() const override
-    {
-        return true;
-    }
+    virtual bool IsSupportedForNetworking() const override { return true; }
+    virtual bool CallRemoteFunction(UFunction* Function, void* Parms, struct FOutParmRec* OutParms, FFrame* Stack) override;
+    virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
 
     // Clears all arrays
     void Reset();
@@ -36,12 +35,12 @@ public:
     // So the function is only called on server.
     // Only works if balls are correctly processed on server
     // (like LaunchBall is called as server function)
-    void AddMovingBall(class ABall* Ball);
-    void RemoveMovingBall(class ABall* Ball);
+    void AddMovingBall(ABall* Ball);
+    void RemoveMovingBall(ABall* Ball);
 
-    void AddPocketedBall(class ABall* Ball);
+    void AddPocketedBall(ABall* Ball);
 
-    void AddDroppedBall(class ABall* Ball);
+    void AddDroppedBall(ABall* Ball);
     /*
     void OnCueBallHit(UPrimitiveComponent* HitComponent,
             AActor* OtherActor,
@@ -51,27 +50,30 @@ public:
             */
 
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>& GetMovingBalls() const { return MovingBalls; }
+    const TArray<ABall*>& GetMovingBalls() const { return MovingBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>& GetActiveBalls() const { return ActiveBalls; }
+    const TArray<ABall*>& GetActiveBalls() const { return ActiveBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>& GetPocketedBalls() const { return PocketedBalls; }
+    const TArray<ABall*>& GetPocketedBalls() const { return PocketedBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>& GetDroppedBalls() const { return DroppedBalls; }
+    const TArray<ABall*>& GetDroppedBalls() const { return DroppedBalls; }
     UFUNCTION(BlueprintPure)
-    const TArray<class ABall*>& GetBallsPlayedOut() const { return BallsPlayedOutOfGame; }
+    const TArray<ABall*>& GetBallsPlayedOut() const { return BallsPlayedOutOfGame; }
 
 protected:
     UPROPERTY(Replicated)
-    TArray<class ABall*> MovingBalls;
+    TArray<ABall*> MovingBalls;
     UPROPERTY(Replicated)
-    TArray<class ABall*> ActiveBalls;
+    TArray<ABall*> ActiveBalls;
     UPROPERTY(Replicated)
-    TArray<class ABall*> PocketedBalls;
+    TArray<ABall*> PocketedBalls;
     UPROPERTY(Replicated)
-    TArray<class ABall*> BallsHittedByTheCue;
+    TArray<ABall*> BallsHittedByTheCue;
     UPROPERTY(Replicated)
-    TArray<class ABall*> DroppedBalls;
+    TArray<ABall*> DroppedBalls;
     UPROPERTY(Replicated)
-    TArray<class ABall*> BallsPlayedOutOfGame;
+    TArray<ABall*> BallsPlayedOutOfGame;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_OnBallPocketed(const ABall* Ball);
 };

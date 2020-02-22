@@ -2,6 +2,61 @@
 
 #include "BallsManager.h"
 
+#include "GameFramework/Actor.h"
+
+#include "Engine/Engine.h"
+#include "Engine/NetDriver.h"
+
+void UBallsManager::Reset()
+{
+    MovingBalls.Empty();
+    ActiveBalls.Empty();
+    PocketedBalls.Empty();
+    BallsHittedByTheCue.Empty();
+    DroppedBalls.Empty();
+    BallsPlayedOutOfGame.Empty();
+}
+
+void UBallsManager::AddMovingBall(ABall* Ball)
+{
+    if (!Ball)
+        return;
+
+    MovingBalls.AddUnique(Ball);
+}
+
+void UBallsManager::RemoveMovingBall(ABall* Ball)
+{
+    if (MovingBalls.Contains(Ball))
+        MovingBalls.Remove(Ball);
+}
+
+void UBallsManager::AddPocketedBall(ABall* Ball)
+{
+    if (!Ball)
+        return;
+
+    PocketedBalls.AddUnique(Ball);
+    BallsPlayedOutOfGame.AddUnique(Ball);
+
+    Multicast_OnBallPocketed(Ball);
+}
+
+void UBallsManager::AddDroppedBall(ABall* Ball)
+{
+    if (!Ball)
+        return;
+
+    DroppedBalls.AddUnique(Ball);
+    BallsPlayedOutOfGame.AddUnique(Ball);
+    Multicast_OnBallPocketed(Ball);
+}
+
+void UBallsManager::Multicast_OnBallPocketed_Implementation(const ABall* Ball)
+{
+    OnBallPocketed.Broadcast(Ball);
+}
+
 void UBallsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -14,46 +69,30 @@ void UBallsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutL
     DOREPLIFETIME(UBallsManager, BallsPlayedOutOfGame);
 }
 
-void UBallsManager::Reset()
+bool UBallsManager::CallRemoteFunction(UFunction* Function, void* Params, FOutParmRec* OutParms, FFrame* Stack)
 {
-    MovingBalls.Empty();
-    ActiveBalls.Empty();
-    PocketedBalls.Empty();
-    BallsHittedByTheCue.Empty();
-    DroppedBalls.Empty();
-    BallsPlayedOutOfGame.Empty();
+    bool bProcessed = false;
+
+    if (const auto MyOwner = Cast<AActor>(GetOuter()))
+    {
+        FWorldContext* const Context = GEngine->GetWorldContextFromWorld(GetWorld());
+        if (Context != nullptr)
+        {
+            for (FNamedNetDriver& Driver : Context->ActiveNetDrivers)
+            {
+                if (Driver.NetDriver != nullptr && Driver.NetDriver->ShouldReplicateFunction(MyOwner, Function))
+                {
+                    Driver.NetDriver->ProcessRemoteFunction(MyOwner, Function, Params, OutParms, Stack, this);
+                    bProcessed = true;
+                }
+            }
+        }
+    }
+
+    return bProcessed;
 }
 
-void UBallsManager::AddMovingBall(class ABall* Ball)
+int32 UBallsManager::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
 {
-    if (!Ball)
-        return;
-
-    MovingBalls.AddUnique(Ball);
-}
-
-void UBallsManager::RemoveMovingBall(class ABall* Ball)
-{
-    if (MovingBalls.Contains(Ball))
-        MovingBalls.Remove(Ball);
-}
-
-void UBallsManager::AddPocketedBall(class ABall* Ball)
-{
-    if (!Ball)
-        return;
-
-    PocketedBalls.AddUnique(Ball);
-    BallsPlayedOutOfGame.AddUnique(Ball);
-    OnBallPlayedOut.Broadcast(Ball);
-}
-
-void UBallsManager::AddDroppedBall(class ABall* Ball)
-{
-    if (!Ball)
-        return;
-
-    DroppedBalls.AddUnique(Ball);
-    BallsPlayedOutOfGame.AddUnique(Ball);
-    OnBallPlayedOut.Broadcast(Ball);
+    return (GetOuter() ? GetOuter()->GetFunctionCallspace(Function, Stack) : FunctionCallspace::Local);
 }

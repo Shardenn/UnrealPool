@@ -21,20 +21,6 @@
 #include "UObject/UObjectIterator.h"
 #include "DrawDebugHelpers.h"
 
-
-#ifndef STATE_MACHINE
-#define STATE_MACHINE
-// observing is the state that takes place after a hit - when we are waiting for the balls to stop
-int BillStateMachine[5][5] = { // state machine of transferring from one state to another
-    // W, P, A, O, E
-    { 1, 1, 1, 0, 1 }, // Walking
-    { 1, 1, 1, 0, 1 }, // Picking
-    { 0, 1, 1, 1, 1 }, // Aiming - cant return directly to moving
-    { 0, 0, 0, 1, 1 }, // Observing - cant return to any state
-    { 1, 1, 1, 1, 1 }  // Examining
-};
-#endif
-
 // Sets default values
 ABilliardist::ABilliardist()
 {
@@ -386,16 +372,10 @@ void ABilliardist::Server_SetState_Implementation(FBilliardistState NewState)
     if (BilliardistState == NewState)
         return;
 
-    // TODO remove "true ||" here. Added for debugging OBSERVING state
-    if (true || BillStateMachine[(int)BilliardistState][(int)NewState] == 1) // only if state machine allows us the queried state transfer
-                                                  // then we update the state. It is replicated automatically
-                                                  // by UPROPERTY
-    {
-        PreviousState = BilliardistState;
-        BilliardistState = NewState;
+    PreviousState = BilliardistState;
+    BilliardistState = NewState;
 
-        OnPlayerStateChanged(BilliardistState, PreviousState);
-    }
+    OnPlayerStateChanged(BilliardistState, PreviousState);
 }
 
 void ABilliardist::OnRep_StateReplicated()

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayLogic/TurnBasedPlayer.h"
 #include "AmericanPool/EightPoolBallType.h"
 #include "PoolPlayerState.generated.h"
 
@@ -11,7 +12,7 @@
  *
  */
 UCLASS()
-class POOL_API APoolPlayerState : public APlayerState
+class POOL_API APoolPlayerState : public APlayerState, public ITurnBasedPlayer
 {
     GENERATED_BODY()
 
@@ -23,7 +24,7 @@ public:
     void PlaceCueBall(const FVector& TablePoint) const;
 
     //UFUNCTION(Server, Reliable, WithValidation)
-    void SetIsMyTurn(bool bInMyTurn);
+    virtual void SetIsMyTurn(const bool bInMyTurn) noexcept override;
 
     // if cue ball is valid - ball in hand
     // if nullptr is given -> ball is not in hand
@@ -33,7 +34,7 @@ public:
     void AssignBallType(FBallType Type);
 
     UFUNCTION(BlueprintPure)
-    bool GetIsMyTurn() const { return bMyTurn; }
+    virtual bool GetIsMyTurn() const noexcept override { return bMyTurn; }
 
     UFUNCTION(BlueprintPure)
     bool GetIsReady() const { return bIsReady; }
@@ -49,6 +50,9 @@ public:
 
     UFUNCTION(BlueprintPure)
     uint8 GetFramesWon() { return FramesWon; }
+
+    virtual void OnTurnStarted() override {};
+    virtual void OnTurnEnded() override {};
 protected:
     UPROPERTY(replicated)
     bool bIsReady = false;

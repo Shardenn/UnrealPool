@@ -20,6 +20,11 @@
 #include "EngineUtils.h" // TObjectIterator
 #include "Engine/ActorChannel.h"
 
+APoolGameState::APoolGameState()
+{
+    bReplicates = true;
+}
+
 void APoolGameState::BeginPlay()
 {
     Super::BeginPlay();
@@ -30,15 +35,7 @@ void APoolGameState::BeginPlay()
         if (!ensure(GM != nullptr)) return;
 
         GM->OnFrameRestart.AddDynamic(this, &APoolGameState::OnFrameRestarted);
-    }
-}
 
-void APoolGameState::PostInitializeComponents()
-{
-    Super::PostInitializeComponents();
-
-    if (HasAuthority())
-    {
         // Objects only replicate from server to client. If we didn't guard this
         // the client would create the object just fine but it would get replaced
         // by the server version (more accurately the property would be replaced to
@@ -48,11 +45,21 @@ void APoolGameState::PostInitializeComponents()
     }
 }
 
+void APoolGameState::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    if (HasAuthority())
+    {
+
+    }
+}
+
 bool APoolGameState::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
     bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-    if (BallsManager != nullptr)
+    if (BallsManager)
     {
         WroteSomething |= Channel->ReplicateSubobject(BallsManager, *Bunch, *RepFlags);
     }
@@ -501,12 +508,14 @@ void APoolGameState::Server_TakeBallFromHand_Implementation()
     }
 }
 
-bool APoolGameState::RequestIsPlayerTurn(APlayerState* PlayerState)
+bool APoolGameState::IsMyTurn(const ITurnBasedPlayer* Player)
 {
     if (BallsManager->GetMovingBalls().Num() > 0)
         return false;
 
-    if (PlayerArray[PlayerIndexTurn] == PlayerState)
+    const auto CurrentPlayer = Cast<ITurnBasedPlayer>(PlayerArray[PlayerIndexTurn]);
+
+    if (CurrentPlayer && CurrentPlayer == Player)
         return true;
 
     return false;

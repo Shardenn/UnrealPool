@@ -48,7 +48,7 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) co
 }
 
 //bool APoolPlayerState::SetIsMyTurn_Validate(bool bInIsMyTurn) { return true; }
-void APoolPlayerState::SetIsMyTurn(bool bInIsMyTurn)
+void APoolPlayerState::SetIsMyTurn(const bool bInIsMyTurn) noexcept
 {
     bMyTurn = bInIsMyTurn;
     Cast<ABilliardistPawn>(GetPawn())->NotifyTurnUpdate(bMyTurn);
