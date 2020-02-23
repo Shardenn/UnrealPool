@@ -8,7 +8,7 @@
 #include "BallRegistrator.h"
 // TODO doubtful include
 #include "Objects/Ball.h"
-#include "AmericanPool/PoolGameMode.h"
+#include "GameplayLogic/PoolGameMode.h"
 
 #include "Components/SplineComponent.h"
 

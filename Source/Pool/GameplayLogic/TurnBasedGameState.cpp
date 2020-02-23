@@ -2,13 +2,44 @@
 
 
 #include "TurnBasedGameState.h"
+
 #include "GameFramework/PlayerState.h"
 #include "GameplayLogic/TurnBasedPlayer.h"
+
+#include "Pool.h"
 
 bool ATurnBasedGameState::IsMyTurn(const ITurnBasedPlayer* Player)
 {
     const auto CurrentPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
     return CurrentPlayerTurn == Player;
+}
+
+void ATurnBasedGameState::EndCurrentTurn()
+{
+    Server_EndCurrentTurn();
+}
+
+void ATurnBasedGameState::EndCurrentTurnInternal()
+{
+    OnTurnEnd.Broadcast();
+
+    const auto FormerPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
+    FormerPlayerTurn->SetIsMyTurn(false);
+
+    PlayerIndexTurn = (PlayerIndexTurn + 1) % TurnBasedPlayers.Num();
+    UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
+    const auto NewPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
+    NewPlayerTurn->SetIsMyTurn(true);
+}
+
+void ATurnBasedGameState::Server_EndCurrentTurn_Implementation()
+{
+    EndCurrentTurnInternal();
+}
+
+bool ATurnBasedGameState::Server_EndCurrentTurn_Validate()
+{
+    return true;
 }
 
 void ATurnBasedGameState::AddPlayerState(APlayerState* PlayerState)

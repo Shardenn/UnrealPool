@@ -1,7 +1,7 @@
 // Copyright 2019 Andrei Vikarchuk.
 
 #include "BallAmerican.h"
-#include "AmericanPool/PoolGameState.h"
+#include "GameplayLogic/PoolGameState.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "UnrealNetwork.h"

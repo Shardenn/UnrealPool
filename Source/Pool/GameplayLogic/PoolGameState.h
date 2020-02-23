@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameplayLogic/TurnBasedGameState.h"
-#include "GameplayLogic/TurnBasedGameHandler.h"
+#include "GameplayLogic/RulesHandler.h"
+
 #include "PoolGameState.generated.h"
 
 UENUM(BlueprintType)
@@ -21,13 +23,11 @@ enum class FPlayerFoulReason : uint8
     EightBallPocketed   UMETA(DisplayName = "Eight ball pocketed")
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerFouled, FPlayerFoulReason, Reason);
-
 /**
  *
  */
 UCLASS()
-class POOL_API APoolGameState : public ATurnBasedGameState
+class POOL_API APoolGameState : public ATurnBasedGameState, public IRulesHandler
 {
     GENERATED_BODY()
 
@@ -43,8 +43,6 @@ public:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
 
-    UPROPERTY(BlueprintAssignable)
-    FOnTurnEnd OnTurnEnd;
     UPROPERTY(BlueprintAssignable)
     FOnPlayerFouled OnPlayerFouled;
 
@@ -87,45 +85,27 @@ public:
             const FHitResult& Hit);
 
     UFUNCTION()
-    void OnFrameRestarted();
+    virtual void OnFrameRestarted();
 
-    virtual void EndCurrentTurn() override {};
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void SwitchTurn();
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void HandleTurnEnd();
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void AssignFoul();
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Server_GiveBallInHand(APoolPlayerState* PlayerState = nullptr);
-
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Server_TakeBallFromHand();
+    virtual void HandleTurnEnd() override;
+    virtual void AssignFoul() override;
 
     virtual bool IsMyTurn(const ITurnBasedPlayer* Player) override;
-
-    class ABall* const GetCueBall();
 
     UFUNCTION(BlueprintPure)
     APoolPlayerState* GetOtherPlayerState(const APoolPlayerState* Mine);
 protected:
     virtual void BeginPlay() override;
 
-    // returns true if the conditions for the win
-    // are satisfied. (Like every ball is pocketed
-    // BEFORE pocketed 8 ball).
+    // Override THIS for defining rules
+    virtual void HandleTurnEnd_Internal() override;
+    virtual void AssignFoul_Internal() override;
     virtual bool DecideWinCondition();
-
-    UPROPERTY(Replicated)
-    class ABallAmerican* CueBall = nullptr;
+    virtual void HandlePocketedBall(class ABall* Ball);
 
     UPROPERTY(Replicated)
     class UBallsManager* BallsManager{ nullptr };
-private:
+
     bool bWatchBallsMovement = false;
     bool bTableOpened = true;
     bool bBallsRackBroken = false;
@@ -138,7 +118,9 @@ private:
 
     void ClearTurnStateVariables();
 
-    void HandleBlackBallOutOfPlay();
-
-    bool FindAndInitializeCueBall();
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_HandleTurnEnd();
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_AssignFoul();
 };

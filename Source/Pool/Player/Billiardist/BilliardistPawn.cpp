@@ -8,9 +8,10 @@
 #include "BilliardistAimingComponent.h"
 #include "BilliardistReplicationComponent.h"
 #include "BilliardistController.h"
-#include "AmericanPool/PoolPlayerState.h"
-#include "AmericanPool/PoolGameState.h"
-#include "Objects/Ball.h"
+#include "GameplayLogic/PoolPlayerState.h"
+//#include "AmericanPool/PoolGameState.h"
+#include "AmericanPool/EightBallGameState.h"
+#include "Objects/BallAmerican.h"
 
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -220,8 +221,10 @@ void ABilliardistPawn::ActionReleaseHandle()
             //SetState(FState::PICKING);
             if (!SelectedBall)
             {
-                const auto PoolGameState = Cast<APoolGameState>(GetWorld()->GetGameState());
-                SelectedBall = PoolGameState->GetCueBall();
+                const auto PoolGameState = Cast<AEightBallGameState>(GetWorld()->GetGameState());
+                check(PoolGameState);
+                const auto Ball = Cast<ABall>(PoolGameState->GetCueBall());
+                SelectedBall = Ball;
             }
             HandleBallSelected(SelectedBall);
             break;

@@ -7,9 +7,9 @@
 
 #include "Pool.h"
 #include "BilliardistController.h"
-#include "AmericanPool/PoolPlayerState.h"
-#include "AmericanPool/PoolGameMode.h"
-#include "AmericanPool/PoolGameState.h"
+#include "GameplayLogic/PoolPlayerState.h"
+#include "GameplayLogic/PoolGameMode.h"
+#include "GameplayLogic/PoolGameState.h"
 
 #include "Components/InputComponent.h"
 #include "Components/ActorComponent.h"

@@ -2,7 +2,7 @@
 
 #include "Ball.h"
 #include "Pool.h"
-#include "AmericanPool/PoolGameState.h"
+#include "GameplayLogic/PoolGameState.h"
 
 #include "Kismet/GameplayStatics.h"
 

@@ -28,4 +28,8 @@ class POOL_API ITurnBasedGameHandler
 public:
     virtual void EndCurrentTurn() = 0;
     virtual bool IsMyTurn(const ITurnBasedPlayer* Player) = 0;
+
+protected:
+    // For actual implementation. To put into _Implementation for example.
+    virtual void EndCurrentTurnInternal() = 0;
 };

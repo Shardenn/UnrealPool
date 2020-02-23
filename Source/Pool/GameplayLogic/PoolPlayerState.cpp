@@ -2,8 +2,8 @@
 
 #include "PoolPlayerState.h"
 #include "../Pool.h"
-#include "AmericanPool/PoolGameState.h"
-#include "AmericanPool/PoolGameMode.h"
+#include "AmericanPool/EightBallGameState.h"
+#include "GameplayLogic/PoolGameMode.h"
 #include "Objects/BallAmerican.h"
 
 #include "Player/Billiardist/BilliardistPawn.h" // TODO dependency invertion is violated
@@ -41,7 +41,7 @@ void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) co
     Cast<UPrimitiveComponent>(CueBallHanded->GetRootComponent())->SetSimulatePhysics(true);
     CueBallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
 
-    APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
+    AEightBallGameState* State = Cast<AEightBallGameState>(UGameplayStatics::GetGameState(World));
     if (!ensure(State != nullptr)) return;
 
     State->Server_TakeBallFromHand();

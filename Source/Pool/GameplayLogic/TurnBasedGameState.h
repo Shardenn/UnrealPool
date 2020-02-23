@@ -19,8 +19,11 @@ class POOL_API ATurnBasedGameState : public AGameState, public ITurnBasedGameHan
 
 public:
     virtual bool IsMyTurn(const ITurnBasedPlayer* Player) override;
-    virtual void EndCurrentTurn() override {};
 
+    virtual void EndCurrentTurn() override;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnTurnEnd OnTurnEnd;
 protected:
     TArray<ITurnBasedPlayer*> TurnBasedPlayers;
 
@@ -29,4 +32,11 @@ protected:
 
     UPROPERTY(Replicated)
     uint8 PlayerIndexTurn;
+
+    // Override THIS in order to define turn end behavior
+    virtual void EndCurrentTurnInternal() override;
+
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_EndCurrentTurn();
 };

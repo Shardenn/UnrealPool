@@ -2,8 +2,8 @@
 #include "BilliardistReplicationComponent.h"
 
 #include "Pool.h"
-#include "AmericanPool/PoolGameState.h"
-#include "AmericanPool/PoolPlayerState.h"
+#include "GameplayLogic/PoolGameState.h"
+#include "GameplayLogic/PoolPlayerState.h"
 #include "Objects/Ball.h" // TODO not needed much, but no better workaround
 #include "BilliardistMovementComponent.h"
 
