@@ -1,14 +1,11 @@
 // Copyright 2019 Andrei Vikarchuk.
 
 #include "PoolPlayerState.h"
-#include "../Pool.h"
-#include "AmericanPool/EightBallGameState.h"
-#include "GameplayLogic/PoolGameMode.h"
-#include "Objects/BallAmerican.h"
+#include "Pool.h"
 
+#include "GameplayLogic/PoolGameState.h"
 #include "Player/Billiardist/BilliardistPawn.h" // TODO dependency invertion is violated
 
-#include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
 bool APoolPlayerState::Server_ToggleReady_Validate() { return true; }
@@ -23,52 +20,15 @@ void APoolPlayerState::Server_ToggleReady_Implementation()
     GameState->SetPlayersReadyNum(GameState->PlayersReadyNum + Offset);
 }
 
-bool APoolPlayerState::PlaceCueBall_Validate(const FVector&) { return true; }
-void APoolPlayerState::PlaceCueBall_Implementation(const FVector& TablePoint) const
-{
-    if (!CueBallHanded)
-    {
-        UE_LOG(LogPool, Warning, TEXT("PlaceCueBall: CueBallHanded == nullptr"));
-        return;
-    }
-
-    UWorld* World = GetWorld();
-    if (!World) return;
-
-    float BallRadius = CueBallHanded->GetRootComponent()->Bounds.SphereRadius;
-    
-    // If we first SetLocation and then SimulatePhys(true), then SetLocation not working
-    Cast<UPrimitiveComponent>(CueBallHanded->GetRootComponent())->SetSimulatePhysics(true);
-    CueBallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
-
-    AEightBallGameState* State = Cast<AEightBallGameState>(UGameplayStatics::GetGameState(World));
-    if (!ensure(State != nullptr)) return;
-
-    State->Server_TakeBallFromHand();
-}
-
 //bool APoolPlayerState::SetIsMyTurn_Validate(bool bInIsMyTurn) { return true; }
 void APoolPlayerState::SetIsMyTurn(const bool bInIsMyTurn) noexcept
 {
     bMyTurn = bInIsMyTurn;
     Cast<ABilliardistPawn>(GetPawn())->NotifyTurnUpdate(bMyTurn);
-}
+} 
 
-//bool APoolPlayerState::SetBallInHand_Validate(ABall* CueBall) { return true; }
-void APoolPlayerState::SetBallInHand/*_Implementation*/(ABall* CueBall)
-{
-    CueBallHanded = CueBall;
-
-    Cast<ABilliardistPawn>(GetPawn())->Client_NotifyBallInHand(CueBall != nullptr);
-}
-
-void APoolPlayerState::AssignBallType(FBallType Type)
-{
-    AssignedBallType = Type;
-}
-
-bool APoolPlayerState::HandleFrameWon_Validate() { return true; }
-void APoolPlayerState::HandleFrameWon_Implementation()
+bool APoolPlayerState::Server_HandleFrameWon_Validate() { return true; }
+void APoolPlayerState::Server_HandleFrameWon_Implementation()
 {
     FramesWon++;
 }
@@ -79,8 +39,5 @@ void APoolPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
     DOREPLIFETIME(APoolPlayerState, bIsReady);
     DOREPLIFETIME(APoolPlayerState, bMyTurn);
-    DOREPLIFETIME(APoolPlayerState, bBallInHand);
-    DOREPLIFETIME(APoolPlayerState, CueBallHanded);
-    DOREPLIFETIME(APoolPlayerState, AssignedBallType);
     DOREPLIFETIME(APoolPlayerState, FramesWon);
 }

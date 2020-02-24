@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
-#include "GameplayLogic/TurnBasedGameHandler.h"
+#include "GameplayLogic/Interfaces/TurnBasedGameHandler.h"
 #include "TurnBasedGameState.generated.h"
 
 class ITurnBasedPlayer;
@@ -34,7 +34,7 @@ protected:
     uint8 PlayerIndexTurn;
 
     // Override THIS in order to define turn end behavior
-    virtual void EndCurrentTurnInternal() override;
+    virtual void EndCurrentTurn_Internal() override;
 
 private:
     UFUNCTION(Server, Reliable, WithValidation)

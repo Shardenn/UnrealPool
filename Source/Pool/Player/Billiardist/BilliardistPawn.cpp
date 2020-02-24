@@ -9,7 +9,7 @@
 #include "BilliardistReplicationComponent.h"
 #include "BilliardistController.h"
 #include "GameplayLogic/PoolPlayerState.h"
-//#include "AmericanPool/PoolGameState.h"
+#include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
 #include "AmericanPool/EightBallGameState.h"
 #include "Objects/BallAmerican.h"
 
@@ -60,7 +60,8 @@ void ABilliardistPawn::Tick(float DeltaTime)
         return;
 
     // Draw cue ball possible location when putting it from hand
-    if (BillPlayerState->GetIsBallInHand())
+    const auto HandablePlayerState = Cast<IPlayerWithHandableBall>(BillPlayerState);
+    if (HandablePlayerState && HandablePlayerState->GetIsBallInHand())
     {
         auto BillController = Cast<ABilliardistController>(GetController());
         if (!ensure(BillController != nullptr)) return;
@@ -166,7 +167,7 @@ void ABilliardistPawn::TryPlaceCueBall(APoolPlayerState* InPlayerState)
     FVector TableHitResult;
     if (IsCueBallPlacementValid() && BillController->TryRaycastTable(TableHitResult))
     {
-        InPlayerState->PlaceCueBall(TableHitResult);
+        //InPlayerState->PlaceCueBall(TableHitResult);
     }
 }
 
@@ -205,7 +206,8 @@ void ABilliardistPawn::ActionReleaseHandle()
         return;
 
     // If we have a ball in hand - try place it
-    if (BillPlayerState->GetIsBallInHand())
+    const auto HandablePlayerState = Cast<IPlayerWithHandableBall>(BillPlayerState);
+    if (HandablePlayerState && HandablePlayerState->GetIsBallInHand())
     {
         TryPlaceCueBall(BillPlayerState);
         return;

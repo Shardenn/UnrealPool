@@ -8,7 +8,6 @@
 #include "BilliardistMovementComponent.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "UnrealNetwork.h" // for DOREPLIFETIME
 
 UBilliardistReplicationComponent::UBilliardistReplicationComponent()
 {

@@ -152,13 +152,6 @@ void APoolGameState::OnFrameRestarted()
     BallsManager->Reset();
 
     EndCurrentTurn();
-
-    for (auto& Player : PlayerArray)
-    {
-        APoolPlayerState* PoolPlayer = Cast<APoolPlayerState>(Player);
-        if (PoolPlayer)
-            PoolPlayer->AssignBallType(FBallType::NotInitialized);
-    }
 }
 
 void APoolGameState::HandleTurnEnd()

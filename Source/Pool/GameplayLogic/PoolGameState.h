@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "GameplayLogic/TurnBasedGameState.h"
-#include "GameplayLogic/RulesHandler.h"
+#include "GameplayLogic/Interfaces/RulesHandler.h"
 
 #include "PoolGameState.generated.h"
 

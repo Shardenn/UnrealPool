@@ -4,7 +4,7 @@
 #include "TurnBasedGameState.h"
 
 #include "GameFramework/PlayerState.h"
-#include "GameplayLogic/TurnBasedPlayer.h"
+#include "GameplayLogic/Interfaces/TurnBasedPlayer.h"
 
 #include "Pool.h"
 
@@ -19,7 +19,7 @@ void ATurnBasedGameState::EndCurrentTurn()
     Server_EndCurrentTurn();
 }
 
-void ATurnBasedGameState::EndCurrentTurnInternal()
+void ATurnBasedGameState::EndCurrentTurn_Internal()
 {
     OnTurnEnd.Broadcast();
 
@@ -34,7 +34,7 @@ void ATurnBasedGameState::EndCurrentTurnInternal()
 
 void ATurnBasedGameState::Server_EndCurrentTurn_Implementation()
 {
-    EndCurrentTurnInternal();
+    EndCurrentTurn_Internal();
 }
 
 bool ATurnBasedGameState::Server_EndCurrentTurn_Validate()

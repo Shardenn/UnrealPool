@@ -6,14 +6,28 @@
 #include "GameplayLogic/BallsManager.h"
 
 #include "GameplayLogic/PoolGameMode.h"
+#include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
+#include "AmericanPool/EightBallPlayerState.h"
 #include "Objects/BallAmerican.h"
-
-// TODO Refactor
-#include "GameplayLogic/PoolPlayerState.h"
 
 #include "EngineUtils.h" // TObjectIterator
 
-void AEightBallGameState::Server_GiveBallInHand_Implementation(APoolPlayerState* PlayerState /*= nullptr*/)
+void AEightBallGameState::GiveBallInHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
+{
+    Server_GiveBallInHand(Player, Ball);
+}
+
+void AEightBallGameState::Server_GiveBallInHand_Implementation(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)
+{
+    GiveBallInHand_Internal(Player, Ball);
+}
+
+bool AEightBallGameState::Server_GiveBallInHand_Validate(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)
+{
+    return true;
+}
+
+void AEightBallGameState::GiveBallInHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
 {
     if (!CueBall && !FindAndInitializeCueBall())
     {
@@ -25,36 +39,37 @@ void AEightBallGameState::Server_GiveBallInHand_Implementation(APoolPlayerState*
     BallPrimComp->SetSimulatePhysics(false);
     CueBall->SetActorLocation(FVector(0, 0, 2000));
 
-    Server_TakeBallFromHand();
-    
-    // TODO it is debug feature, when we can pass nullptr to the func. Remove later?
-    // if nullptr is given as parameter, we will automatically give a ball to the current player
-    if (!PlayerState)
-        PlayerState = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    check(Player);
+    //Server_TakeBallFromHand(PlayerWithCueBall, PlayerWithCueBall->GetHandedBall());
 
-    PlayerState->SetBallInHand(CueBall);
-    PlayerWithCueBall = PlayerState;
+    Player->SetBallInHand(CueBall);
+    PlayerWithCueBall = Cast<IPlayerWithHandableBall>(Player.GetObject());
 
     UE_LOG(LogPool, Warning, TEXT("gave ball to the player with index %d"), PlayerIndexTurn);
 }
 
-bool AEightBallGameState::Server_GiveBallInHand_Validate(APoolPlayerState* PlayerState /*= nullptr*/)
+void AEightBallGameState::TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
+{
+    Server_TakeBallFromHand(Player, Ball);
+}
+
+void AEightBallGameState::Server_TakeBallFromHand_Implementation(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)
+{
+    TakeBallFromHand_Internal(Player, Ball);
+}
+
+bool AEightBallGameState::Server_TakeBallFromHand_Validate(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)
 {
     return true;
 }
 
-void AEightBallGameState::Server_TakeBallFromHand_Implementation()
+void AEightBallGameState::TakeBallFromHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
 {
     if (PlayerWithCueBall)
     {
         PlayerWithCueBall->SetBallInHand(nullptr);
         PlayerWithCueBall = nullptr;
     }
-}
-
-bool AEightBallGameState::Server_TakeBallFromHand_Validate()
-{
-    return true;
 }
 
 class ABallAmerican* const AEightBallGameState::GetCueBall()
@@ -68,6 +83,13 @@ void AEightBallGameState::OnFrameRestarted()
 {
     Super::OnFrameRestarted();
     CueBall = nullptr;
+
+    for (auto& Player : PlayerArray)
+    {
+        auto PoolPlayer = Cast<AEightBallPlayerState>(Player);
+        if (PoolPlayer)
+            PoolPlayer->AssignBallType(FBallType::NotInitialized);
+    }
 }
 
 void AEightBallGameState::HandleTurnEnd_Internal()
@@ -98,7 +120,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
 
         if (!bTableOpened)
         {
-            APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+            const auto Player = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
             FBallType CurrentPlayerBallType = Player->GetAssignedBallType();
 
             if (Ball->GetType() == CurrentPlayerBallType)
@@ -164,14 +186,14 @@ void AEightBallGameState::HandleTurnEnd_Internal()
             }
         }
 
-        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        auto Player = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
         Player->AssignBallType(CurrentAssignedType);
 
         // if we are playing standalone, then do not reassign another type to the player
         if (PlayerArray.Num() > 1)
         {
             auto OtherPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
-            Player = Cast<APoolPlayerState>(PlayerArray[OtherPlayerIndex]);
+            Player = Cast<AEightBallPlayerState>(PlayerArray[OtherPlayerIndex]);
             Player->AssignBallType(OtherAssignedType);
         }
 
@@ -190,7 +212,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     else
     {
         // TODO move to other method
-        APoolPlayerState* Player = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+        auto Player = Cast<ITurnBasedPlayer>(PlayerArray[PlayerIndexTurn]);
         if (Player)
             Player->SetIsMyTurn(true);
     }
@@ -203,7 +225,8 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         }
         else
         {
-            Server_GiveBallInHand();
+            auto Player = Cast<IPlayerWithHandableBall>(PlayerArray[PlayerIndexTurn]);
+            //Server_GiveBallInHand(Player, CueBall);
         }
     }
 
@@ -228,7 +251,7 @@ bool AEightBallGameState::DecideWinCondition()
     // are stuck with the situation
     if (!ensure(GM != nullptr)) return true;
 
-    APoolPlayerState* PoolPlayer = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
+    auto PoolPlayer = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
     if (!ensure(PoolPlayer != nullptr)) return true;
 
     FBallType PlayersType = PoolPlayer->GetAssignedBallType();
@@ -303,7 +326,7 @@ void AEightBallGameState::HandleBlackBallOutOfPlay()
         }
 
         WonPoolPlayer = Cast<APoolPlayerState>(PlayerArray[WonPlayerIndex]);
-        WonPoolPlayer->HandleFrameWon();
+        WonPoolPlayer->Server_HandleFrameWon();
         NewFramesWon = WonPoolPlayer->GetFramesWon();
 
         if (NewFramesWon >= GM->RequiredFramesToWin)

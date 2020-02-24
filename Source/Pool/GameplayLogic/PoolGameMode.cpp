@@ -3,7 +3,6 @@
 #include "PoolGameMode.h"
 
 #include "Objects/Table/Table.h"
-#include "Billiardist.h"
 #include "BilliardistController.h"
 #include "GameplayLogic/PoolGameState.h"
 

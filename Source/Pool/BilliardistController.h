@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Player/Billiardist/BilliardistStates.h"
 #include "BilliardistController.generated.h"
 
 class ABilliardistPawn;
