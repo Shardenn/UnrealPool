@@ -70,8 +70,7 @@ void APoolGameState::OnBallStartMoving(UPrimitiveComponent* Comp, FName BoneName
     // Not on any ball added
     if (BallsManager->GetMovingBalls().Num() == 1)
     {
-        APoolPlayerState* PlayerTurn = Cast<APoolPlayerState>(PlayerArray[PlayerIndexTurn]);
-        PlayerTurn->SetIsMyTurn(false);
+        TurnBasedPlayers[PlayerIndexTurn]->SetIsMyTurn(false);
     }
 }
 
@@ -123,7 +122,7 @@ void APoolGameState::OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
     if (!DroppedBall)
         return;
 
-    BallsManager->AddDroppedBall(DroppedBall);
+    BallsManager->AddBallDroppedDuringTurn(DroppedBall);
     //OverlappedComponent->BodyInstance.bGenerateWakeEvents = false;
     OnBallStopMoving(OverlappedComponent, NAME_None);
 }
@@ -137,8 +136,7 @@ void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent,
     ABall* Ball = Cast<ABall>(OtherActor);
     if (!Ball) return;
 
-    // TODO AddUnique?
-    //BallsHittedByTheCue.Add(Ball);
+    BallsManager->AddBallHittedByTheCue(Ball);
 }
 
 void APoolGameState::OnFrameRestarted()
@@ -201,13 +199,11 @@ bool APoolGameState::DecideWinCondition()
 
 void APoolGameState::HandlePocketedBall(ABall* PocketedBall)
 {
-    BallsManager->AddPocketedBall(PocketedBall);
+    BallsManager->AddBallPocketedDuringTurn(PocketedBall);
 
     auto Comp = Cast<UStaticMeshComponent>(PocketedBall->GetRootComponent());
     OnBallStopMoving(Comp, NAME_None);
-    Comp->SetSimulatePhysics(false);
-
-    PocketedBall->SetActorHiddenInGame(true);
+    PocketedBall->RemoveBallFromGame();
 }
 
 void APoolGameState::ClearTurnStateVariables()
@@ -216,7 +212,7 @@ void APoolGameState::ClearTurnStateVariables()
     bShouldSwitchTurn = true;
 }
 
-bool APoolGameState::IsMyTurn(const ITurnBasedPlayer* Player)
+bool APoolGameState::IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Player)
 {
     if (BallsManager->GetMovingBalls().Num() > 0)
         return false;
@@ -262,6 +258,15 @@ void APoolGameState::PostInitializeComponents()
         // point to the version from the server. The one the client allocated would
         // eventually be garbage collected.
         BallsManager = NewObject<UBallsManager>(this); // NOTE: Very important, objects Outer must be our Actor!
+        if (!BallsManager)
+        {
+            UE_LOG(LogPool, Error, TEXT("Failed to create BallsManager in PoolGameState"));
+            return;
+        }
+        else
+        {
+            OnTurnEnd.AddDynamic(BallsManager, &UBallsManager::OnTurnEnd);
+        }
     }
 }
 

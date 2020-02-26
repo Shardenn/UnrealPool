@@ -21,7 +21,7 @@ public:
     virtual void OnFrameRestarted() override;
 
     virtual void GiveBallInHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
-    virtual void TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
+    virtual void TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball) override;
 protected:
     virtual void HandleTurnEnd_Internal() override;
     virtual bool DecideWinCondition() override;
@@ -32,10 +32,10 @@ protected:
     UPROPERTY(Replicated)
     class ABallAmerican* CueBall{ nullptr };
 
-    class IPlayerWithHandableBall* PlayerWithCueBall{ nullptr };
+    TScriptInterface<class IPlayerWithHandableBall> PlayerWithCueBall{ nullptr };
 
     virtual void GiveBallInHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
-    virtual void TakeBallFromHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
+    virtual void TakeBallFromHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball) override;
 private:
     bool FindAndInitializeCueBall();
     

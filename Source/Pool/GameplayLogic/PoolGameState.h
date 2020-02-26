@@ -90,7 +90,7 @@ public:
     virtual void HandleTurnEnd() override;
     virtual void AssignFoul() override;
 
-    virtual bool IsMyTurn(const ITurnBasedPlayer* Player) override;
+    virtual bool IsMyTurn(const TScriptInterface<ITurnBasedPlayer>&) override;
 
     UFUNCTION(BlueprintPure)
     APoolPlayerState* GetOtherPlayerState(const APoolPlayerState* Mine);
@@ -112,11 +112,9 @@ protected:
     bool bPlayerFouled = false;
     bool bShouldSwitchTurn = true;
 
-    APoolPlayerState* PlayerWithCueBall = nullptr;
-
     void OnRep_UpdatePlayerStateTurn();
 
-    void ClearTurnStateVariables();
+    virtual void ClearTurnStateVariables();
 
 private:
     UFUNCTION(Server, Reliable, WithValidation)

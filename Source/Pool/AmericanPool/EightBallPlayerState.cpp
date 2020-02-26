@@ -6,31 +6,35 @@
 #include "EightBallGameState.h"
 
 #include "Objects/Ball.h"
+#include "Player/Billiardist/BilliardistWithPlacableBall.h"
+#include "GameplayLogic/Interfaces/BallInHandUpdateListener.h"
+#include "GameplayLogic/Interfaces/GameWithHandableBall.h"
 
 #include "Kismet/GameplayStatics.h"
 
-// TODO refactor
-#include "Player/Billiardist/BilliardistPawn.h"
-
-void AEightBallPlayerState::SetBallInHand(ABall* const CueBall)
+void AEightBallPlayerState::SetIsMyTurn(const bool bInMyTurn) noexcept
 {
-    BallHanded = CueBall;
-    // TODO refactor
-    Cast<ABilliardistPawn>(GetPawn())->Client_NotifyBallInHand(CueBall != nullptr);
+    Super::SetIsMyTurn(bInMyTurn);
 }
 
-void AEightBallPlayerState::PlaceHandedBall(const FVector& TablePoint) const
+void AEightBallPlayerState::SetBallInHand(ABall* const Ball)
+{
+    BallHanded = Ball;
+    Multicast_BroadcastBallInHandUpdate(Ball);
+}
+
+void AEightBallPlayerState::PlaceHandedBall(const FVector& TablePoint)
 {
     Server_PlaceHandedBall(TablePoint);
 }
 
 bool AEightBallPlayerState::Server_PlaceHandedBall_Validate(const FVector&) { return true; }
-void AEightBallPlayerState::Server_PlaceHandedBall_Implementation(const FVector& TablePoint) const
+void AEightBallPlayerState::Server_PlaceHandedBall_Implementation(const FVector& TablePoint)
 {
     PlaceHandedBall_Internal(TablePoint);
 }
 
-void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint) const
+void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint)
 {
     if (!BallHanded)
     {
@@ -47,11 +51,24 @@ void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint) 
     Cast<UPrimitiveComponent>(BallHanded->GetRootComponent())->SetSimulatePhysics(true);
     BallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
 
-    const auto State = Cast<IGameWithHandableBall>(UGameplayStatics::GetGameState(World));
-    check(State);
+    TScriptInterface<IGameWithHandableBall> GameStateWithHandableBall{
+        UGameplayStatics::GetGameState(World) };
+    check(GameStateWithHandableBall);
 
-   // auto Me = Cast<IPlayerWithHandableBall>(this);
-    //State->TakeBallFromHand(this, BallHanded);
+    GameStateWithHandableBall->TakeBallFromHand(this, BallHanded);
+}
+
+void AEightBallPlayerState::SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener)
+{
+    BallInHandUpdateListeners.AddUnique(Listener);
+}
+
+void AEightBallPlayerState::Multicast_BroadcastBallInHandUpdate_Implementation(ABall* Ball)
+{
+    for (const auto& Listener : BallInHandUpdateListeners)
+    {
+        Listener->OnBallInHandUpdate(Ball);
+    }
 }
 
 void AEightBallPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

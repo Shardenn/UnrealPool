@@ -27,7 +27,7 @@ class POOL_API ITurnBasedGameHandler
     // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
     virtual void EndCurrentTurn() = 0;
-    virtual bool IsMyTurn(const ITurnBasedPlayer* Player) = 0;
+    virtual bool IsMyTurn(const TScriptInterface<ITurnBasedPlayer>&) = 0;
 
 protected:
     // For actual implementation. To put into _Implementation for example.

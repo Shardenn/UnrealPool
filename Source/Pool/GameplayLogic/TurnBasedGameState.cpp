@@ -8,7 +8,7 @@
 
 #include "Pool.h"
 
-bool ATurnBasedGameState::IsMyTurn(const ITurnBasedPlayer* Player)
+bool ATurnBasedGameState::IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Player)
 {
     const auto CurrentPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
     return CurrentPlayerTurn == Player;
@@ -21,15 +21,19 @@ void ATurnBasedGameState::EndCurrentTurn()
 
 void ATurnBasedGameState::EndCurrentTurn_Internal()
 {
-    OnTurnEnd.Broadcast();
+    Multicast_BroadcastOnTurnEnd();
 
     const auto FormerPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
     FormerPlayerTurn->SetIsMyTurn(false);
 
     PlayerIndexTurn = (PlayerIndexTurn + 1) % TurnBasedPlayers.Num();
-    UE_LOG(LogPool, Warning, TEXT("Turn is on player indexed %d"), PlayerIndexTurn);
     const auto NewPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
     NewPlayerTurn->SetIsMyTurn(true);
+}
+
+void ATurnBasedGameState::Multicast_BroadcastOnTurnEnd_Implementation()
+{
+    OnTurnEnd.Broadcast();
 }
 
 void ATurnBasedGameState::Server_EndCurrentTurn_Implementation()
@@ -46,10 +50,9 @@ void ATurnBasedGameState::AddPlayerState(APlayerState* PlayerState)
 {
     Super::AddPlayerState(PlayerState);
     
-    ITurnBasedPlayer* TurnBasedPlayerState = Cast<ITurnBasedPlayer>(PlayerState);
-    if (TurnBasedPlayerState)
+    if (Cast<ITurnBasedPlayer>(PlayerState))
     {
-        TurnBasedPlayers.AddUnique(TurnBasedPlayerState);
+        TurnBasedPlayers.AddUnique(PlayerState);
     }
 }
 
@@ -57,12 +60,11 @@ void ATurnBasedGameState::RemovePlayerState(APlayerState* PlayerState)
 {
     Super::RemovePlayerState(PlayerState);
 
-    ITurnBasedPlayer* TurnBasedPlayerState = Cast<ITurnBasedPlayer>(PlayerState);
-    if (TurnBasedPlayerState)
+    if (PlayerState)
     {
         for (int32 i = 0; i < TurnBasedPlayers.Num(); i++)
         {
-            if (TurnBasedPlayers[i] == TurnBasedPlayerState)
+            if (TurnBasedPlayers[i] == PlayerState)
             {
                 TurnBasedPlayers.RemoveAt(i, 1);
                 return;

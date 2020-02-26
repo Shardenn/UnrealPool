@@ -15,6 +15,8 @@ class UPlayerWithHandableBall : public UInterface
 
 class ABall;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBallInHandUpdate, ABall* const, Ball);
+
 /**
  *
  */
@@ -24,11 +26,12 @@ class POOL_API IPlayerWithHandableBall
 
         // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-    virtual void SetBallInHand(ABall* const CueBall) = 0;
+    virtual void SetBallInHand(ABall* const Ball) = 0;
     virtual bool GetIsBallInHand() const = 0;
-    virtual void PlaceHandedBall(const FVector& TablePoint) const = 0;
+    virtual void PlaceHandedBall(const FVector& TablePoint) = 0;
     virtual ABall* GetHandedBall() const noexcept = 0;
+    virtual void SubscribeToBallInHandUpdate(const TScriptInterface<class IBallInHandUpdateListener>&) = 0;
 protected:
     // For server chain of call
-    virtual void PlaceHandedBall_Internal(const FVector& TablePoint) const = 0;
+    virtual void PlaceHandedBall_Internal(const FVector& TablePoint) = 0;
 };

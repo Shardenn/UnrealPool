@@ -9,7 +9,7 @@
 #include "EightBallPlayerState.generated.h"
 
 class ABall;
-
+class IBallInHandUpdateListener;
 /**
  *
  */
@@ -22,12 +22,14 @@ public:
     virtual void SetBallInHand(ABall* const CueBall) override;
     virtual ABall* GetHandedBall() const noexcept override { return BallHanded; }
     virtual bool GetIsBallInHand() const override { return BallHanded != nullptr; }
-    virtual void PlaceHandedBall(const FVector& TablePoint) const override;
+    virtual void PlaceHandedBall(const FVector& TablePoint) override;
 
     void AssignBallType(const FBallType& Type) noexcept { AssignedBallType = Type; }
     
     UFUNCTION(BlueprintGetter)
     FBallType GetAssignedBallType() const noexcept { return AssignedBallType; }
+
+    virtual void SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener) override;
 
 protected:
     UPROPERTY(replicated)
@@ -36,8 +38,15 @@ protected:
     UPROPERTY(replicated)
     class ABall* BallHanded{ nullptr };
 
-    virtual void PlaceHandedBall_Internal(const FVector& TablePoint) const override;
+    TArray<TScriptInterface<IBallInHandUpdateListener>> BallInHandUpdateListeners;
+
+    virtual void SetIsMyTurn(const bool bInMyTurn) noexcept override;
+
+    virtual void PlaceHandedBall_Internal(const FVector& TablePoint) override;
 private:
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_PlaceHandedBall(const FVector& TablePoint) const;
+    void Server_PlaceHandedBall(const FVector& TablePoint);
+
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_BroadcastBallInHandUpdate(ABall* Ball);
 };

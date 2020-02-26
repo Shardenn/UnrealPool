@@ -25,6 +25,22 @@ ABall::ABall()
     SphereMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 }
 
+void ABall::RemoveBallFromGame()
+{
+    auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
+    Comp->SetSimulatePhysics(false);
+
+    SetActorHiddenInGame(true);
+}
+
+void ABall::ReturnBallIntoGame()
+{
+    auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
+    Comp->SetSimulatePhysics(true);
+
+    SetActorHiddenInGame(false);
+}
+
 // Called when the game starts or when spawned
 void ABall::BeginPlay()
 {

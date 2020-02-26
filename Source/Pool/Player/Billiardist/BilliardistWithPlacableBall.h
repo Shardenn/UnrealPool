@@ -13,6 +13,8 @@ class UBilliardistWithPlacableBall : public UInterface
     GENERATED_BODY()
 };
 
+class IPlayerWithHandableBall;
+
 /**
  *
  */
@@ -22,4 +24,11 @@ class POOL_API IBilliardistWithPlacableBall
 
     // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+    virtual void TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player) = 0;
+protected:
+    // No input as implementation may take anything into account, starting from
+    // ball's location ending up with its radius or other features.
+    virtual bool IsBallPlacementValid() = 0;
+
+
 };

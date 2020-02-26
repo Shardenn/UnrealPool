@@ -10,8 +10,12 @@
 #include "BilliardistController.h"
 #include "GameplayLogic/PoolPlayerState.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
+
+// Separate interface of the game with CueBall
 #include "AmericanPool/EightBallGameState.h"
 #include "Objects/BallAmerican.h"
+
+#include "Objects/Ball.h"
 
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -19,7 +23,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "UnrealNetwork.h" // still needed for State replication, though we have RepComp
+#include "UnrealNetwork.h"
 
 ABilliardistPawn::ABilliardistPawn()
 {
@@ -55,24 +59,6 @@ void ABilliardistPawn::BeginPlay()
 void ABilliardistPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    if (!BillPlayerState && !TryInitializePlayerState())
-        return;
-
-    // Draw cue ball possible location when putting it from hand
-    const auto HandablePlayerState = Cast<IPlayerWithHandableBall>(BillPlayerState);
-    if (HandablePlayerState && HandablePlayerState->GetIsBallInHand())
-    {
-        auto BillController = Cast<ABilliardistController>(GetController());
-        if (!ensure(BillController != nullptr)) return;
-
-        FVector TableHitResult;
-        if (GhostHandedBall && BillController->TryRaycastTable(TableHitResult))
-        {
-            float BallRadius = GhostHandedBall->GetRootComponent()->Bounds.SphereRadius;
-            GhostHandedBall->SetActorLocation(TableHitResult + FVector(0, 0, BallRadius + 1));
-        }
-    }
 }
 
 void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -99,6 +85,7 @@ void ABilliardistPawn::SetSpline(USplineComponent* Spline)
     MovementComponent->SetSpline(Spline);
 }
 
+#pragma region MovementAndInputRelated
 void ABilliardistPawn::MoveForward(float Value)
 {
     if (!MovementComponent) return;
@@ -143,6 +130,7 @@ void ABilliardistPawn::FinishedZoomAdjustement()
 {
     bAdjustingZoom = false;
 }
+#pragma endregion
 
 void ABilliardistPawn::ActionPressHandle()
 {
@@ -159,38 +147,6 @@ void ABilliardistPawn::ActionPressHandle()
     }
 }
 
-void ABilliardistPawn::TryPlaceCueBall(APoolPlayerState* InPlayerState)
-{
-    auto BillController = Cast<ABilliardistController>(GetController());
-    if (!ensure(BillController != nullptr)) return;
-
-    FVector TableHitResult;
-    if (IsCueBallPlacementValid() && BillController->TryRaycastTable(TableHitResult))
-    {
-        //InPlayerState->PlaceCueBall(TableHitResult);
-    }
-}
-
-bool ABilliardistPawn::IsCueBallPlacementValid() const
-{
-    if (!GhostHandedBall) return false;
-
-    TArray<UPrimitiveComponent*> OverlappingComponents;
-    const auto PrimComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
-    PrimComp->GetOverlappingComponents(OverlappingComponents);
-
-    for (const auto& Component : OverlappingComponents)
-    {
-        if (Cast<UStaticMeshComponent>(Component))
-        {
-            UE_LOG(LogPool, Warning, TEXT("Overlapping with %s, cannot place cue ball"), *Component->GetName());
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void ABilliardistPawn::HandleBallSelected(ABall* Ball)
 {
     AimingComponent->HandleStartedAiming(Ball->GetActorLocation());
@@ -199,19 +155,9 @@ void ABilliardistPawn::HandleBallSelected(ABall* Ball)
 
 void ABilliardistPawn::ActionReleaseHandle()
 {
-    // If not our turn - terminate
-    if (!BillPlayerState && !TryInitializePlayerState())
+    const auto TurnPlayerState = Cast<ITurnBasedPlayer>(GetPlayerState());
+    if (!TurnPlayerState || !TurnPlayerState->GetIsMyTurn())
         return;
-    if (!BillPlayerState->GetIsMyTurn())
-        return;
-
-    // If we have a ball in hand - try place it
-    const auto HandablePlayerState = Cast<IPlayerWithHandableBall>(BillPlayerState);
-    if (HandablePlayerState && HandablePlayerState->GetIsBallInHand())
-    {
-        TryPlaceCueBall(BillPlayerState);
-        return;
-    }
 
     switch (State)
     {
@@ -290,31 +236,6 @@ void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
         SetState(FBilliardistState::WALKING);
 }
 
-void ABilliardistPawn::Client_NotifyBallInHand_Implementation(bool IsInHand)
-{
-    if (IsInHand)
-    {
-        UE_LOG(LogPool, Warning, TEXT("spawning ghost ball"));
-        if (!IsValid(GhostBallClass))
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Ghost ball class is not set"));
-            return;
-        }
-        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(0, 0, 2000), FRotator::ZeroRotator);
-        auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
-        BallRootComp->SetSimulatePhysics(false);
-        BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
-    }
-    else
-    {
-        if (GhostHandedBall)
-        {
-            GhostHandedBall->Destroy();
-            GhostHandedBall = nullptr;
-        }
-    }
-}
-
 void ABilliardistPawn::SetState(const FBilliardistState& NewState)
 {
     State = NewState;
@@ -348,6 +269,17 @@ float ABilliardistPawn::GetMaxHitStrength()
 float ABilliardistPawn::GetCurrentHitStrength()
 {
     return AimingComponent->GetHitStrength();
+}
+
+void ABilliardistPawn::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+
+    const auto MyPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+    if (MyPlayerState)
+    {
+        BillPlayerState = MyPlayerState;
+    }
 }
 
 void ABilliardistPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

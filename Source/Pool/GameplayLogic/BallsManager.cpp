@@ -7,6 +7,7 @@
 #include "Engine/Engine.h"
 #include "Engine/NetDriver.h"
 
+
 void UBallsManager::Reset()
 {
     MovingBalls.Empty();
@@ -15,6 +16,19 @@ void UBallsManager::Reset()
     BallsHittedByTheCue.Empty();
     DroppedBalls.Empty();
     BallsPlayedOutOfGame.Empty();
+}
+
+void UBallsManager::OnTurnEnd()
+{
+    PocketedBalls.Append(BallsPocketedDuringTurn);
+    DroppedBalls.Append(BallsDroppedDuringTurn);
+    ResetTurnArrays();
+}
+
+void UBallsManager::ResetTurnArrays()
+{
+    BallsPocketedDuringTurn.Empty();
+    BallsDroppedDuringTurn.Empty();
 }
 
 void UBallsManager::AddMovingBall(ABall* Ball)
@@ -31,25 +45,31 @@ void UBallsManager::RemoveMovingBall(ABall* Ball)
         MovingBalls.Remove(Ball);
 }
 
-void UBallsManager::AddPocketedBall(ABall* Ball)
+void UBallsManager::AddBallPocketedDuringTurn(ABall* Ball)
 {
     if (!Ball)
         return;
 
-    PocketedBalls.AddUnique(Ball);
+    BallsPocketedDuringTurn.AddUnique(Ball);
     BallsPlayedOutOfGame.AddUnique(Ball);
 
     Multicast_OnBallPocketed(Ball);
 }
 
-void UBallsManager::AddDroppedBall(ABall* Ball)
+void UBallsManager::AddBallDroppedDuringTurn(ABall* Ball)
 {
     if (!Ball)
         return;
 
-    DroppedBalls.AddUnique(Ball);
+    BallsDroppedDuringTurn.AddUnique(Ball);
     BallsPlayedOutOfGame.AddUnique(Ball);
+
     Multicast_OnBallPocketed(Ball);
+}
+
+void UBallsManager::AddBallHittedByTheCue(ABall* Ball)
+{
+    BallsHittedByTheCue.Add(Ball);
 }
 
 void UBallsManager::Multicast_OnBallPocketed_Implementation(const ABall* Ball)

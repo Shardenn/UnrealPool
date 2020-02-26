@@ -40,15 +40,15 @@ void AEightBallGameState::GiveBallInHand_Internal(const TScriptInterface<IPlayer
     CueBall->SetActorLocation(FVector(0, 0, 2000));
 
     check(Player);
-    //Server_TakeBallFromHand(PlayerWithCueBall, PlayerWithCueBall->GetHandedBall());
+    TakeBallFromHand(PlayerWithCueBall, CueBall);
 
     Player->SetBallInHand(CueBall);
-    PlayerWithCueBall = Cast<IPlayerWithHandableBall>(Player.GetObject());
+    PlayerWithCueBall = Player;
 
     UE_LOG(LogPool, Warning, TEXT("gave ball to the player with index %d"), PlayerIndexTurn);
 }
 
-void AEightBallGameState::TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
+void AEightBallGameState::TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)
 {
     Server_TakeBallFromHand(Player, Ball);
 }
@@ -65,9 +65,9 @@ bool AEightBallGameState::Server_TakeBallFromHand_Validate(const TScriptInterfac
 
 void AEightBallGameState::TakeBallFromHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
 {
-    if (PlayerWithCueBall)
+    if (Player)
     {
-        PlayerWithCueBall->SetBallInHand(nullptr);
+        Player->SetBallInHand(nullptr);
         PlayerWithCueBall = nullptr;
     }
 }
@@ -94,8 +94,10 @@ void AEightBallGameState::OnFrameRestarted()
 
 void AEightBallGameState::HandleTurnEnd_Internal()
 {
-    const auto PocketedBalls = BallsManager->GetPocketedBalls();
-    const auto DroppedBalls = BallsManager->GetDroppedBalls();
+    Super::HandleTurnEnd_Internal();
+
+    const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
+    const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
 
     for (const auto& RawBall : PocketedBalls)
     {
@@ -145,25 +147,18 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         else if (Type == FBallType::Cue)
         {
             CueBall = Ball;
-            UE_LOG(LogPool, Warning, TEXT("Cue ball is assigned: %s"), *CueBall->GetName());
             AssignFoul();
         }
     }
-
-    if (bTableOpened &&
-        PocketedBalls.Num() > 0)
-    {
-        bShouldSwitchTurn = false;
-    }
     /*
-    if (BallsHittedByTheCue.Num() == 0)
+    if (BallsManager->GetBallsHittedByTheCue().Num() == 0)
     {
         AssignFoul();
     }*/
 
     // assign balls type if not done yet
     if (PocketedBalls.Num() > 0 &&
-        bBallsRackBroken &&
+        //bBallsRackBroken &&
         bTableOpened &&
         !bPlayerFouled)
     {
@@ -207,15 +202,6 @@ void AEightBallGameState::HandleTurnEnd_Internal()
             bBallsRackBroken = true;
     }
     */
-    if (bShouldSwitchTurn || bPlayerFouled)
-        EndCurrentTurn();
-    else
-    {
-        // TODO move to other method
-        auto Player = Cast<ITurnBasedPlayer>(PlayerArray[PlayerIndexTurn]);
-        if (Player)
-            Player->SetIsMyTurn(true);
-    }
 
     if (bPlayerFouled)
     {
@@ -225,9 +211,18 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         }
         else
         {
-            auto Player = Cast<IPlayerWithHandableBall>(PlayerArray[PlayerIndexTurn]);
-            //Server_GiveBallInHand(Player, CueBall);
+            auto OtherPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
+            GiveBallInHand(PlayerArray[OtherPlayerIndex], CueBall);
         }
+    }
+
+    if (bShouldSwitchTurn || bPlayerFouled)
+    {
+        EndCurrentTurn();
+    }
+    else
+    {
+        TurnBasedPlayers[PlayerIndexTurn]->SetIsMyTurn(true);
     }
 
     ClearTurnStateVariables();
