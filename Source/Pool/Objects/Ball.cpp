@@ -2,7 +2,7 @@
 
 #include "Ball.h"
 #include "Pool.h"
-#include "AmericanPool/PoolGameState.h"
+#include "GameplayLogic/PoolGameState.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -25,6 +25,22 @@ ABall::ABall()
     SphereMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 }
 
+void ABall::RemoveBallFromGame()
+{
+    auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
+    Comp->SetSimulatePhysics(false);
+
+    SetActorHiddenInGame(true);
+}
+
+void ABall::ReturnBallIntoGame()
+{
+    auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
+    Comp->SetSimulatePhysics(true);
+
+    SetActorHiddenInGame(false);
+}
+
 // Called when the game starts or when spawned
 void ABall::BeginPlay()
 {
@@ -35,8 +51,8 @@ void ABall::BeginPlay()
         APoolGameState* GameState = Cast<APoolGameState>(UGameplayStatics::GetGameState(GetWorld()));
         if (!ensure(GameState != nullptr)) return;
 
-        SphereMesh->OnComponentWake.AddDynamic(GameState, &APoolGameState::AddMovingBall);
-        SphereMesh->OnComponentSleep.AddDynamic(GameState, &APoolGameState::RemoveMovingBall);
+        SphereMesh->OnComponentWake.AddDynamic(GameState, &APoolGameState::OnBallStartMoving);
+        SphereMesh->OnComponentSleep.AddDynamic(GameState, &APoolGameState::OnBallStopMoving);
 
         SphereMesh->OnComponentBeginOverlap.AddDynamic(GameState, &APoolGameState::OnBallOverlap);
         SphereMesh->OnComponentEndOverlap.AddDynamic(GameState, &APoolGameState::OnBallEndOverlap);

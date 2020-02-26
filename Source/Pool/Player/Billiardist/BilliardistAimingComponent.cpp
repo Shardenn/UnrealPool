@@ -66,7 +66,6 @@ void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLook
     FinalTransform.Location = GetDefaultCameraSpringWorldLocation();
     FinalTransform.Rotation = (ActorToLookAtWhileBlending->GetActorLocation() - GetDefaultCameraSpringWorldLocation()).ToOrientationQuat();
 
-    UE_LOG(LogTemp, Warning, TEXT("Last spring arm distance: %f"), LastSpringArmLength);
     BlendingState = EBlendingState::BlendingOut;
 }
 

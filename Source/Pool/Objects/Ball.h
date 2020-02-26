@@ -15,6 +15,8 @@ class POOL_API ABall : public AActor
 public:
     ABall();
 
+    virtual void RemoveBallFromGame();
+    virtual void ReturnBallIntoGame();
 protected:
     virtual void BeginPlay() override;
 

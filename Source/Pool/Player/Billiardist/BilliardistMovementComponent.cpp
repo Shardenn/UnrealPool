@@ -3,7 +3,7 @@
 #include "BilliardistMovementComponent.h"
 #include "Pool.h"
 
-#include "AmericanPool/PoolGameMode.h"
+#include "GameplayLogic/PoolGameMode.h"
 
 #include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"

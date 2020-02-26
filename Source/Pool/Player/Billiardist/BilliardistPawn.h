@@ -43,10 +43,9 @@ public:
     float GetCurrentHitStrength();
 
     virtual void NotifyTurnUpdate(bool NewTurn);
-    UFUNCTION(Client, Reliable)
-    virtual void Client_NotifyBallInHand(bool IsInHand);
 protected:
     virtual void BeginPlay() override;
+    virtual void PossessedBy(AController* NewController) override;
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     FBilliardistState State = FBilliardistState::WALKING;
@@ -56,12 +55,6 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class ABall* SelectedBall = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TSubclassOf<class ABall> GhostBallClass;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    class ABall* GhostHandedBall = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistMovementComponent* MovementComponent = nullptr;
@@ -92,14 +85,7 @@ protected:
     virtual void HandleFinishedAiming(AActor* const ActorToLookAt);
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
-private:
-    // Checks current GhostHandedBall for overlaps with static mesh components.
-    // If there is no GhostHandedBall - returns false!!!
-    bool IsCueBallPlacementValid() const;
-    void TryPlaceCueBall(class APoolPlayerState* InPlayerState);
 
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Server_SetState(const FBilliardistState& NewState);
 
 #pragma region InputBindedFunctions
     UFUNCTION()
@@ -119,7 +105,7 @@ private:
     UFUNCTION()
     void ActionPressHandle();
     UFUNCTION()
-    void ActionReleaseHandle();
+    virtual void ActionReleaseHandle();
     UFUNCTION()
     void ReturnPressHandle();
     //UFUNCTION()
@@ -127,4 +113,8 @@ private:
     UFUNCTION()
     void ReadyStateToggle();
 #pragma endregion
+
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_SetState(const FBilliardistState& NewState);
 };

@@ -32,11 +32,11 @@ public:
     UFUNCTION(BlueprintImplementableEvent)
     void SetupStripeness();
 
-    UFUNCTION(BlueprintPure)
-    int32 GetNumber() { return BallNumber; }
+    UFUNCTION(BlueprintGetter)
+    int32 GetNumber() const noexcept { return BallNumber; }
 
-    UFUNCTION(BlueprintPure)
-    FBallType GetType() { return BallType; }
+    UFUNCTION(BlueprintGetter)
+    FBallType GetType() const noexcept { return BallType; }
 
 protected:
     virtual void BeginPlay() override;

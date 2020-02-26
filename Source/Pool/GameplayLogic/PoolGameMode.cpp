@@ -3,9 +3,8 @@
 #include "PoolGameMode.h"
 
 #include "Objects/Table/Table.h"
-#include "Billiardist.h"
 #include "BilliardistController.h"
-#include "PoolGameState.h"
+#include "GameplayLogic/PoolGameState.h"
 
 #include "EngineUtils.h"
 #include "Kismet/KismetMathLibrary.h"
