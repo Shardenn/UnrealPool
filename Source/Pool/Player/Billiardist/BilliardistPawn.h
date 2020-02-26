@@ -35,23 +35,25 @@ public:
     UFUNCTION(BlueprintPure)
     FBilliardistState GetState() { return State; }
 
-    bool TryInitializePlayerState();
-
     UFUNCTION(BlueprintPure)
     float GetMaxHitStrength();
     UFUNCTION(BlueprintPure)
     float GetCurrentHitStrength();
 
     virtual void NotifyTurnUpdate(bool NewTurn);
+
+    virtual void OnRep_PlayerState() override;
+
+    virtual void PossessedBy(AController* NewController) override;
+
 protected:
     virtual void BeginPlay() override;
-    virtual void PossessedBy(AController* NewController) override;
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     FBilliardistState State = FBilliardistState::WALKING;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    class APoolPlayerState* BillPlayerState = nullptr;
+    //UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    //class APoolPlayerState* BillPlayerState = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class ABall* SelectedBall = nullptr;
@@ -86,7 +88,7 @@ protected:
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
 
-
+    virtual void SubscribeToBallInHandUpdate();
 #pragma region InputBindedFunctions
     UFUNCTION()
     void MoveForward(float Value);
@@ -117,4 +119,6 @@ protected:
 private:
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_SetState(const FBilliardistState& NewState);
+
+
 };

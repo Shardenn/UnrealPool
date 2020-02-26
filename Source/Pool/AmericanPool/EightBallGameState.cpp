@@ -45,7 +45,7 @@ void AEightBallGameState::GiveBallInHand_Internal(const TScriptInterface<IPlayer
     Player->SetBallInHand(CueBall);
     PlayerWithCueBall = Player;
 
-    UE_LOG(LogPool, Warning, TEXT("gave ball to the player with index %d"), PlayerIndexTurn);
+    UE_LOG(LogPool, Warning, TEXT("gave ball to the player %s"), *Player.GetObject()->GetName());
 }
 
 void AEightBallGameState::TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball)

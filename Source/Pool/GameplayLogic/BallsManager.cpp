@@ -87,6 +87,8 @@ void UBallsManager::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutL
     DOREPLIFETIME(UBallsManager, BallsHittedByTheCue);
     DOREPLIFETIME(UBallsManager, DroppedBalls);
     DOREPLIFETIME(UBallsManager, BallsPlayedOutOfGame);
+    DOREPLIFETIME(UBallsManager, BallsPocketedDuringTurn);
+    DOREPLIFETIME(UBallsManager, BallsDroppedDuringTurn);
 }
 
 bool UBallsManager::CallRemoteFunction(UFunction* Function, void* Params, FOutParmRec* OutParms, FFrame* Stack)

@@ -235,6 +235,29 @@ void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
     if (NewTurn)
         SetState(FBilliardistState::WALKING);
 }
+// Internal player state init for client
+void ABilliardistPawn::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    SubscribeToBallInHandUpdate();
+}
+// Internal player state init for server
+void ABilliardistPawn::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    SubscribeToBallInHandUpdate();
+}
+
+void ABilliardistPawn::SubscribeToBallInHandUpdate()
+{
+    /*
+    BillPlayerState = Cast<APoolPlayerState>(GetPlayerState());
+
+    if (!BillPlayerState)
+    {
+        UE_LOG(LogPool, Error, TEXT("OnRep_PlayerState: BillPlayerState in null"));
+    }*/
+}
 
 void ABilliardistPawn::SetState(const FBilliardistState& NewState)
 {
@@ -249,18 +272,6 @@ void ABilliardistPawn::Server_SetState_Implementation(const FBilliardistState& N
     State = NewState;
 }
 
-bool ABilliardistPawn::TryInitializePlayerState()
-{
-    auto GotPlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    BillPlayerState = GotPlayerState;
-    if (!BillPlayerState)
-    {
-        UE_LOG(LogPool, Warning, TEXT("BilliardistPawn initialized its PlayerState with NULL"));
-        return false;
-    }
-    return true;
-}
-
 float ABilliardistPawn::GetMaxHitStrength()
 {
     return AimingComponent->GetMaxHitStrength();
@@ -269,17 +280,6 @@ float ABilliardistPawn::GetMaxHitStrength()
 float ABilliardistPawn::GetCurrentHitStrength()
 {
     return AimingComponent->GetHitStrength();
-}
-
-void ABilliardistPawn::PossessedBy(AController* NewController)
-{
-    Super::PossessedBy(NewController);
-
-    const auto MyPlayerState = Cast<APoolPlayerState>(GetPlayerState());
-    if (MyPlayerState)
-    {
-        BillPlayerState = MyPlayerState;
-    }
 }
 
 void ABilliardistPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

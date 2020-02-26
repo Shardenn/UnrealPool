@@ -18,9 +18,9 @@ class POOL_API ABilliardistPawnWithPlacableBall : public ABilliardistPawn, publi
 public:
     virtual void TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player) override;
     virtual void OnBallInHandUpdate(class ABall* const Ball) override;
+
 protected:
     virtual void Tick(float DeltaTime) override;
-    virtual void PossessedBy(AController* NewController) override;
 
     bool IsBallPlacementValid() override;
 
@@ -32,7 +32,9 @@ protected:
 
     virtual void ActionReleaseHandle() override;
 
+    void BeginPlay() override;
+    void SubscribeToBallInHandUpdate();
 private:
     TScriptInterface<IPlayerWithHandableBall> HandablePlayer;
-    class ABilliardistController* BillController{ nullptr };
+
 };

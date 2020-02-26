@@ -9,12 +9,36 @@
 #include "Objects/Ball.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
 
+void ABilliardistPawnWithPlacableBall::BeginPlay()
+{
+    Super::BeginPlay();
+    SubscribeToBallInHandUpdate();
+}
+
+void ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate()
+{
+    const auto MyPlayerState = GetPlayerState();
+    const auto CastedToInterface = Cast<IPlayerWithHandableBall>(MyPlayerState);
+    if (CastedToInterface)
+    {
+        HandablePlayer.SetInterface(CastedToInterface);
+        HandablePlayer.SetObject(MyPlayerState);
+        HandablePlayer->SubscribeToBallInHandUpdate(this);
+
+        if (GetLocalRole() < ROLE_Authority)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Subscribed on client"));
+        }
+    }
+}
+
 void ABilliardistPawnWithPlacableBall::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     // Draw cue ball possible location when putting it from hand
     FVector TableHitResult;
+    const auto BillController = Cast<ABilliardistController>(GetController());
     if (GhostHandedBall && BillController && 
         BillController->TryRaycastTable(TableHitResult))
     {
@@ -58,17 +82,6 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
 
 void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Ball)
 {
-    if (Role < ROLE_Authority)
-    {
-        if (!Ball)
-        {
-            UE_LOG(LogPool, Warning, TEXT("OnBallInHandUpdate called with nullptr"));
-        }
-        else
-        {
-            UE_LOG(LogPool, Warning, TEXT("OnBallInHandUpdate called with %s"), *Ball->GetName());
-        }
-    }
     if (Ball)
     {
         if (!IsValid(GhostBallClass))
@@ -100,37 +113,4 @@ void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()
         return;
     }
     Super::ActionReleaseHandle();
-}
-
-void ABilliardistPawnWithPlacableBall::PossessedBy(AController* NewController)
-{
-    Super::PossessedBy(NewController);
-
-    if (Role < ROLE_Authority)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("PossesedBy called on client"));
-    }
-
-    if (Cast<IPlayerWithHandableBall>(BillPlayerState))
-    {
-        HandablePlayer = BillPlayerState;
-        HandablePlayer->SubscribeToBallInHandUpdate(this);
-
-        if (Role < ROLE_Authority)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Subscribed on client"));
-        }
-    }
-    else
-    {
-        UE_LOG(LogPool, Error, TEXT("Object %s of class ABilliardistPawnWithPlacableBall has HandablePlayerState nullptr"),
-            *GetName());
-    }
-
-    BillController = Cast<ABilliardistController>(GetController());
-    if (!BillController)
-    {
-        UE_LOG(LogPool, Error, TEXT("Object %s of class ABilliardistPawnWithPlacableBall has BillController nullptr"),
-            *GetName());
-    }
 }
