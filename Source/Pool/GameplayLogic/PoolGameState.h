@@ -41,6 +41,9 @@ public:
     void SetPlayersReadyNum(uint32 PlayersReady);
 
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+    int32 FramesToWin = 0;
+
+    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
 
     UPROPERTY(BlueprintAssignable)
@@ -77,6 +80,10 @@ public:
             UPrimitiveComponent* OtherComp,
             int32 OtherBodyIndex);
 
+    // That function watches for the balls that were hit by the
+    // current cue ball. That does NOT mean that the game type has a 
+    // mandatory cue ball, like eight ball. That's just the ball
+    // that we touch with our cue
     UFUNCTION()
     void OnCueBallHit(UPrimitiveComponent* HitComponent,
             AActor* OtherActor,

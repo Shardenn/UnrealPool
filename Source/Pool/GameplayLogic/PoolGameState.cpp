@@ -33,6 +33,8 @@ void APoolGameState::BeginPlay()
         if (!ensure(GM != nullptr)) return;
 
         GM->OnFrameRestart.AddDynamic(this, &APoolGameState::OnFrameRestarted);
+
+        FramesToWin = GM->RequiredFramesToWin;
     }
 }
 
@@ -149,7 +151,7 @@ void APoolGameState::OnFrameRestarted()
 
     BallsManager->Reset();
 
-    EndCurrentTurn();
+    SwitchTurn();
 }
 
 void APoolGameState::HandleTurnEnd()
@@ -210,6 +212,7 @@ void APoolGameState::ClearTurnStateVariables()
 {
     bPlayerFouled = false;
     bShouldSwitchTurn = true;
+    BallsManager->OnTurnEnd();
 }
 
 bool APoolGameState::IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Player)
@@ -244,6 +247,7 @@ void APoolGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
     DOREPLIFETIME(APoolGameState, PlayersReadyNum);
     DOREPLIFETIME(APoolGameState, PlayerIndexTurn);
     DOREPLIFETIME(APoolGameState, BallsManager);
+    DOREPLIFETIME(APoolGameState, FramesToWin);
 }
 
 void APoolGameState::PostInitializeComponents()

@@ -94,8 +94,6 @@ void AEightBallGameState::OnFrameRestarted()
 
 void AEightBallGameState::HandleTurnEnd_Internal()
 {
-    Super::HandleTurnEnd_Internal();
-
     const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
     const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
 
@@ -150,15 +148,21 @@ void AEightBallGameState::HandleTurnEnd_Internal()
             AssignFoul();
         }
     }
-    /*
+
+    if (bTableOpened &&
+        PocketedBalls.Num() > 0)
+    {
+        bShouldSwitchTurn = false;
+    }
+
     if (BallsManager->GetBallsHittedByTheCue().Num() == 0)
     {
         AssignFoul();
-    }*/
+    }
 
     // assign balls type if not done yet
     if (PocketedBalls.Num() > 0 &&
-        //bBallsRackBroken &&
+        bBallsRackBroken &&
         bTableOpened &&
         !bPlayerFouled)
     {
@@ -195,13 +199,12 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         // now the types are assigned
         bTableOpened = false;
     }
-    /*
-    if (BallsHittedByTheCue.Num() > 0)
+    
+    if (!bBallsRackBroken && BallsManager->GetBallsHittedByTheCue().Num() > 0)
     {
-        if (!bBallsRackBroken)
-            bBallsRackBroken = true;
+        bBallsRackBroken = true;
     }
-    */
+    
 
     if (bPlayerFouled)
     {
@@ -218,7 +221,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
 
     if (bShouldSwitchTurn || bPlayerFouled)
     {
-        EndCurrentTurn();
+        SwitchTurn();
     }
     else
     {
@@ -226,6 +229,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     }
 
     ClearTurnStateVariables();
+    BroadcastOnTurnEnd();
 }
 
 bool AEightBallGameState::DecideWinCondition()
@@ -254,7 +258,7 @@ bool AEightBallGameState::DecideWinCondition()
     for (const auto& PlayedOutBall : BallsManager->GetBallsPlayedOut())
     {
         const auto AmericanBall = Cast<ABallAmerican>(PlayedOutBall);
-        if (AmericanBall->GetType() == PlayersType)
+        if (AmericanBall && AmericanBall->GetType() == PlayersType)
             ++BallsOfTypePlayedOut;
     }
 

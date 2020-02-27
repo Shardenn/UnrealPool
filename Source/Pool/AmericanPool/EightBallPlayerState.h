@@ -26,7 +26,7 @@ public:
 
     void AssignBallType(const FBallType& Type) noexcept { AssignedBallType = Type; }
     
-    UFUNCTION(BlueprintGetter)
+    UFUNCTION(BlueprintPure)
     FBallType GetAssignedBallType() const noexcept { return AssignedBallType; }
 
     virtual void SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener) override;

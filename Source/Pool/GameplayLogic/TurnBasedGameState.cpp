@@ -14,15 +14,13 @@ bool ATurnBasedGameState::IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Pla
     return CurrentPlayerTurn == Player;
 }
 
-void ATurnBasedGameState::EndCurrentTurn()
+void ATurnBasedGameState::SwitchTurn()
 {
-    Server_EndCurrentTurn();
+    Server_SwitchTurn();
 }
 
-void ATurnBasedGameState::EndCurrentTurn_Internal()
+void ATurnBasedGameState::SwitchTurn_Internal()
 {
-    Multicast_BroadcastOnTurnEnd();
-
     const auto FormerPlayerTurn = TurnBasedPlayers[PlayerIndexTurn];
     FormerPlayerTurn->SetIsMyTurn(false);
 
@@ -31,17 +29,36 @@ void ATurnBasedGameState::EndCurrentTurn_Internal()
     NewPlayerTurn->SetIsMyTurn(true);
 }
 
+void ATurnBasedGameState::BroadcastOnTurnEnd()
+{
+    if (GetLocalRole() < ROLE_Authority)
+        Server_BroadcastOnTurnEnd();
+    else
+        Multicast_BroadcastOnTurnEnd();
+}
+
+void ATurnBasedGameState::Server_BroadcastOnTurnEnd_Implementation()
+{
+    Multicast_BroadcastOnTurnEnd();
+}
+
+bool ATurnBasedGameState::Server_BroadcastOnTurnEnd_Validate() { return true; }
+
 void ATurnBasedGameState::Multicast_BroadcastOnTurnEnd_Implementation()
+{
+    BroadcastOnTurnEnd_Internal();
+}
+
+void ATurnBasedGameState::BroadcastOnTurnEnd_Internal()
 {
     OnTurnEnd.Broadcast();
 }
-
-void ATurnBasedGameState::Server_EndCurrentTurn_Implementation()
+void ATurnBasedGameState::Server_SwitchTurn_Implementation()
 {
-    EndCurrentTurn_Internal();
+    SwitchTurn_Internal();
 }
 
-bool ATurnBasedGameState::Server_EndCurrentTurn_Validate()
+bool ATurnBasedGameState::Server_SwitchTurn_Validate()
 {
     return true;
 }

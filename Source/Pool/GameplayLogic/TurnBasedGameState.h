@@ -20,7 +20,7 @@ class POOL_API ATurnBasedGameState : public AGameState, public ITurnBasedGameHan
 public:
     virtual bool IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Player) override;
 
-    virtual void EndCurrentTurn() override;
+    virtual void SwitchTurn() override;
 
     UPROPERTY(BlueprintAssignable)
     FOnTurnEnd OnTurnEnd;
@@ -34,11 +34,19 @@ protected:
     uint8 PlayerIndexTurn;
 
     // Override THIS in order to define turn end behavior
-    virtual void EndCurrentTurn_Internal() override;
+    virtual void SwitchTurn_Internal() override;
+
+    void BroadcastOnTurnEnd();
+    // Override THIS in order to define turn end broadcast behavior
+    // (probably you don't need to)
+    virtual void BroadcastOnTurnEnd_Internal();
 
 private:
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_EndCurrentTurn();
+    void Server_SwitchTurn();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_BroadcastOnTurnEnd();
 
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_BroadcastOnTurnEnd();

@@ -15,6 +15,8 @@ class URulesHandler : public UInterface
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerFouled);
 
+class FFoulType;
+
 /**
  *
  */
