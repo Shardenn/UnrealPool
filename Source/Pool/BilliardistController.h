@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameplayLogic/Interfaces/NetworkTimeProvider.h"
 #include "Player/Billiardist/BilliardistStates.h"
 #include "BilliardistController.generated.h"
 
@@ -13,7 +14,7 @@ class ABilliardistPawn;
  * 
  */
 UCLASS()
-class POOL_API ABilliardistController : public APlayerController
+class POOL_API ABilliardistController : public APlayerController, public INetworkTimeProvider
 {
     GENERATED_BODY()
 
@@ -33,6 +34,11 @@ public:
     void SubscribeToPlayerStateChange(ABilliardistPawn* Billardist);
 
     void HandleMatchEnd();
+
+    virtual int64 GetNetworkTime() override;
+    virtual int64 GetTimeOffsetFromServer() override { return TimeOffsetFromServer; }
+    virtual bool IsTimeOffsetValid() override { return bTimeOffsetFromServerValid; }
+    static int64 GetLocalTime();
 protected:
     virtual void BeginPlay() override;
 
@@ -51,6 +57,12 @@ protected:
 
     UFUNCTION(BlueprintImplementableEvent)
     void OnMatchEnd();
+
+
+
+    int64 TimeOffsetFromServer{ 0 };
+    int64 ServerTimeRequestWasPlaced{ 0 };
+    bool bTimeOffsetFromServerValid{ false };
 private:
     UFUNCTION(reliable, server, WithValidation)
     void Server_SubscribeToStateChange(ABilliardistPawn* Billardist);
@@ -59,4 +71,10 @@ private:
 
     void SetExaminingView();
     void ReturnFromExaminingView();
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_GetServerTime();
+
+    UFUNCTION(Client, Reliable)
+    void Client_GetServerTime(int64 ServerTime);
 };
