@@ -22,7 +22,7 @@ public:
     void ReadyStateToggle();
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_PerformBallHit(ABall* Ball, const FVector& Velocity);
+    void Server_PerformBallHit(class ABall* Ball, const FVector& Velocity);
 protected:
     virtual void BeginPlay() override;
 
