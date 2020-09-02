@@ -87,6 +87,7 @@ void UBilliardistReplicationComponent::Server_PerformBallHit_Implementation(ABal
 
     if (!ensure(Ball != nullptr)) return;
     Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
+    UE_LOG(LogTemp, Warning, TEXT("Added impulse %s"), *Velocity.ToString());
 }
 
 bool UBilliardistReplicationComponent::Server_UpdatePlayerLocation_Validate(const FVector&) { return true; }

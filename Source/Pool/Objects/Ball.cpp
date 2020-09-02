@@ -43,8 +43,8 @@ void ABall::BeginPlay()
 
         SphereMesh->BodyInstance.bGenerateWakeEvents = true;
         //SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
-        SphereMesh->SetAngularDamping(0.6);
-        SphereMesh->SetLinearDamping(0.2);
+        SphereMesh->SetAngularDamping(0.6f);
+        SphereMesh->SetLinearDamping(0.2f);
 
         SphereMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         SphereMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
@@ -70,7 +70,7 @@ void ABall::Tick(float DeltaTime)
     }
     else
     {
-        ServerPhysicsState.Position = GetActorLocation();
+        ServerPhysicsState.Location = GetActorLocation();
         ServerPhysicsState.Rotation = GetActorRotation().Quaternion();
         ServerPhysicsState.Velocity = SphereMesh->GetComponentVelocity();
         ServerPhysicsState.TimeStamp = ABilliardistController::GetLocalTime();
@@ -96,8 +96,8 @@ FHermiteCubicSpline ABall::CreateSpline()
 {
     FHermiteCubicSpline Spline;
     Spline.StartLocation = ClientStartTransform.GetLocation();
-    Spline.TargetLocation = ServerPhysicsState.Position;
-    Spline.StartDerivative = ClientStartVelocity * VelocityToDerivative();
+    Spline.TargetLocation = ServerPhysicsState.Location;
+    Spline.StartDerivative = ClientLastKnownDerivative;//ClientLastKnownVelocity * VelocityToDerivative();
     Spline.TargetDerivative = ServerPhysicsState.Velocity * VelocityToDerivative();
 
     return Spline;
@@ -105,7 +105,16 @@ FHermiteCubicSpline ABall::CreateSpline()
 
 void ABall::InterpolateLocation(const FHermiteCubicSpline& Spline, const float Ratio)
 {
-    const FVector NewLocation = Spline.InterpolateLocation(Ratio);
+    FVector NewLocation{ 0 };
+    switch (InterpolationType)
+    {
+    case FInterpolationType::Cubic:
+        NewLocation = Spline.InterpolateLocationCubic(Ratio);
+        break;
+    case FInterpolationType::Linear:
+        NewLocation = Spline.InterpolateLocationLinear(Ratio);
+        break;
+    }
     SetActorLocation(NewLocation);
 }
 
@@ -119,8 +128,16 @@ void ABall::InterpolateRotation(const float Ratio)
 
 void ABall::InterpolateVelocity(const FHermiteCubicSpline& Spline, const float Ratio)
 {
+    UE_LOG(LogTemp, Warning, TEXT("+++++++++++++++++++"));
+    UE_LOG(LogTemp, Warning, TEXT("\nClientCurrentDerivative previous: %s"), *ClientStartDerivative.ToString());
     const FVector NewDerivative = Spline.InterpolateDerivative(Ratio);
-    ClientStartVelocity = NewDerivative / VelocityToDerivative();
+
+    UE_LOG(LogTemp, Warning, TEXT("Difference: %f"), FVector::CrossProduct(ClientStartDerivative, NewDerivative).Size());
+    ClientStartDerivative = NewDerivative;
+
+    UE_LOG(LogTemp, Warning, TEXT("ClientCurrentDerivative next: %s \n"), *ClientStartDerivative.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("+++++++++++++++++++"));
+    //ClientStartVelocity = NewDerivative / VelocityToDerivative();
 }
 
 void ABall::OnRep_SmoothPhysicsState()
@@ -129,6 +146,16 @@ void ABall::OnRep_SmoothPhysicsState()
     ClientTimeSinceUpdate = 0;
 
     ClientStartTransform = GetActorTransform();
+    //ClientLastKnownVelocity = ClientStartVelocity;
+    ClientLastKnownDerivative = ClientStartDerivative;
+
+    UE_LOG(LogTemp, Warning, TEXT("================="));
+    UE_LOG(LogTemp, Warning, TEXT("Client start location: %s, client start derivative: %s"),
+        *ClientStartTransform.GetLocation().ToString(), *ClientLastKnownDerivative.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("Taget location: %s, target velocity: %s"),
+        *ServerPhysicsState.Location.ToString(), *ServerPhysicsState.Velocity.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("================="));
+
 }
 
 void ABall::RemoveBallFromGame()

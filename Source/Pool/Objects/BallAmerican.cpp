@@ -17,6 +17,12 @@ void ABallAmerican::BeginPlay()
     SphereMesh->SetNotifyRigidBodyCollision(true);
 }
 
+
+void ABallAmerican::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+}
+
 void ABallAmerican::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);

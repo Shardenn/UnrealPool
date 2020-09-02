@@ -17,7 +17,7 @@ public:
     uint64 TimeStamp;
 
     UPROPERTY()
-    FVector Position;
+    FVector Location;
 
     UPROPERTY()
     FVector Velocity;
@@ -28,21 +28,32 @@ public:
     FSmoothPhysicsState()
     {
         TimeStamp = 0;
-        Position = FVector::ZeroVector;
+        Location = FVector::ZeroVector;
         Velocity = FVector::ZeroVector;
         Rotation = FQuat::Identity;
     }
 
 };
 
+UENUM(BlueprintType)
+enum class FInterpolationType : uint8
+{
+    Linear UMETA(DisplayName = "Linear"),
+    Cubic  UMETA(DisplayName = "Cubic")
+};
+
 struct FHermiteCubicSpline
 {
     FVector StartLocation, StartDerivative, TargetLocation, TargetDerivative;
 
-    FVector InterpolateLocation(const float LerpRatio) const
+    FVector InterpolateLocationLinear(const float LerpRatio) const
     {
-        //return FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
-        return FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+        return FMath::Lerp(StartLocation, TargetLocation, LerpRatio);
+    }
+
+    FVector InterpolateLocationCubic(const float LerpRatio) const
+    {
+        return FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
     }
 
     FVector InterpolateDerivative(const float LerpRatio) const
@@ -68,6 +79,9 @@ protected:
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FVector SpawnLocation = FVector(0);
 
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    FInterpolationType InterpolationType{ FInterpolationType::Cubic };
+
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     UStaticMeshComponent* SphereMesh;
 
@@ -77,7 +91,7 @@ protected:
     UFUNCTION()
     void OnRep_SmoothPhysicsState();
     
-private:
+protected:
     void ClientTick(float DeltaTime);
 
     FHermiteCubicSpline CreateSpline();
@@ -86,16 +100,15 @@ private:
     void InterpolateVelocity(const FHermiteCubicSpline& Spline, const float Ratio);
 
     // * 100 because we are measuring in m/sec, while Unreal's default unit is cm
-    float VelocityToDerivative() { return ClientTimeBetweenLastUpdates * 100; }
+    float VelocityToDerivative() { return ClientTimeBetweenLastUpdates; }
 
     float ClientTimeSinceUpdate{ 0.0 };
     float ClientTimeBetweenLastUpdates{ 0.0 };
 
     FTransform ClientStartTransform;
-    FVector ClientStartVelocity;
+    FVector ClientStartVelocity{ FVector(0) };
+    FVector ClientLastKnownVelocity{ FVector(0) };
 
-    static const uint8 PROXY_STATE_ARRAY_SIZE_MAX{ 32 };
-    uint8 ProxyStateCountCurrent{ 0 };
-    uint8 ProxyStateLatestIndex{ 0 };
-    TCircularBuffer<FSmoothPhysicsState> ProxyStates{ PROXY_STATE_ARRAY_SIZE_MAX };
+    FVector ClientStartDerivative{ FVector(0) };
+    FVector ClientLastKnownDerivative{ FVector(0) };
 };

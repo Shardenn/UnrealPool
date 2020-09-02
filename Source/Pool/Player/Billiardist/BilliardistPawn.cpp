@@ -186,7 +186,7 @@ void ABilliardistPawn::ActionReleaseHandle()
             if (HitStrength <= AimingComponent->GetMaxHitStrength() * 0.01)
                 break;
 
-            FVector LookDirection = GetControlRotation().Vector();
+            FVector LookDirection = GetControlRotation().Vector().GetSafeNormal(KINDA_SMALL_NUMBER);
             LookDirection.Z = 0; // TODO handle jump/curve later
             LaunchBall(SelectedBall, LookDirection * HitStrength);
             HandleFinishedAiming(SelectedBall);
