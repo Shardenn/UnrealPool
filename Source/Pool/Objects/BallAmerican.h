@@ -40,6 +40,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
 
     UPROPERTY(ReplicatedUsing=OnRep_BallType, EditAnywhere, BlueprintReadWrite)
     FBallType BallType = FBallType::NotInitialized;

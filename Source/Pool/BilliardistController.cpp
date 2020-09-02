@@ -9,6 +9,8 @@
 
 #include "DrawDebugHelpers.h"
 
+#include <chrono>
+
 ABilliardistController::ABilliardistController()
 {
 
@@ -17,6 +19,12 @@ ABilliardistController::ABilliardistController()
 void ABilliardistController::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (GetLocalRole() < ROLE_Authority)
+    {
+        ServerTimeRequestWasPlaced = GetLocalTime();
+        Server_GetServerTime();
+    }
 }
 
 void ABilliardistController::SubscribeToPlayerStateChange(ABilliardistPawn* Billiardist)
@@ -135,6 +143,19 @@ void ABilliardistController::HandleMatchEnd()
     OnMatchEnd();
 }
 
+int64 ABilliardistController::GetLocalTime()
+{
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now().time_since_epoch()
+        );
+    return (int64)ms.count();
+}
+
+int64 ABilliardistController::GetNetworkTime()
+{
+    return GetLocalTime() + TimeOffsetFromServer;
+}
+
 void ABilliardistController::SetExaminingView()
 {
     
@@ -144,6 +165,37 @@ void ABilliardistController::ReturnFromExaminingView()
 {
     
 }
+
+
+void ABilliardistController::Client_GetServerTime_Implementation(int64 ServerTime)
+{
+    const auto LocalTime = GetLocalTime();
+
+    // Calculate the server's system time at the moment we actually sent the request for it.
+    int64 RoundTripTime = LocalTime - ServerTimeRequestWasPlaced;
+    ServerTime -= RoundTripTime / 2;
+
+    // Now calculate the difference between the two values
+    TimeOffsetFromServer = ServerTime - ServerTimeRequestWasPlaced;
+
+    // Now we can safely say that the following is true
+    //
+    // serverTime = timeServerTimeRequestWasPlaced + timeOffsetFromServer
+    //
+    // which is another way of saying
+    //
+    // NetworkTime = LocalTime + timeOffsetFromServer
+
+    bTimeOffsetFromServerValid = true;
+}
+
+void ABilliardistController::Server_GetServerTime_Implementation()
+{
+    Client_GetServerTime(GetLocalTime());
+}
+
+
+bool ABilliardistController::Server_GetServerTime_Validate() { return true; }
 
 void ABilliardistController::LookAtBall()
 {

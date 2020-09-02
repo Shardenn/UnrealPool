@@ -9,6 +9,6 @@ public class PoolEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 
-		ExtraModuleNames.AddRange( new string[] { "Pool" } );
+		ExtraModuleNames.AddRange( new string[] { "Pool"/*, "SmoothSyncPlugin"*/ } );
 	}
 }

@@ -9,6 +9,6 @@ public class PoolTarget : TargetRules
 	{
 		Type = TargetType.Game;
 
-		ExtraModuleNames.AddRange( new string[] { "Pool" } );
+		ExtraModuleNames.AddRange( new string[] { "Pool"/*, "SmoothSyncPlugin" */} );
 	}
 }
