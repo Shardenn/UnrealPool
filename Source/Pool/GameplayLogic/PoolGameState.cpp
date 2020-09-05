@@ -60,6 +60,8 @@ UBallsManager* const APoolGameState::GetBallsManager()
 
 void APoolGameState::OnBallStartMoving(UPrimitiveComponent* Comp, FName BoneName)
 {
+    // TODO FIX onBallStartMoving is not triggered, while onStopMoving is triggered
+    UE_LOG(LogTemp, Warning, TEXT("OnBallStartMoving"));
     if (!bWatchBallsMovement)
         return;
 
@@ -78,6 +80,7 @@ void APoolGameState::OnBallStartMoving(UPrimitiveComponent* Comp, FName BoneName
 
 void APoolGameState::OnBallStopMoving(UPrimitiveComponent* Comp, FName BoneName)
 {
+    UE_LOG(LogTemp, Warning, TEXT("OnBallStopMoving"));
     if (!bWatchBallsMovement)
         return;
     

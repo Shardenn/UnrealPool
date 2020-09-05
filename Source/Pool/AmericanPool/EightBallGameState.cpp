@@ -96,7 +96,9 @@ void AEightBallGameState::HandleTurnEnd_Internal()
 {
     const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
     const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
-
+    
+    UE_LOG(LogTemp, Warning, TEXT("Handle turn end in eight ball"));
+    
     for (const auto& RawBall : PocketedBalls)
     {
         const auto Ball = Cast<ABallAmerican>(RawBall);
