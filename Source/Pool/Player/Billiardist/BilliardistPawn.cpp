@@ -13,6 +13,7 @@
 
 // Separate interface of the game with CueBall
 #include "AmericanPool/EightBallGameState.h"
+#include "AmericanPool/EightBallPlayerState.h" // TODO refactor BillPawn for different game types
 #include "Objects/BallAmerican.h"
 
 #include "Objects/Ball.h"
@@ -22,8 +23,6 @@
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
-
-#include "UnrealNetwork.h"
 
 ABilliardistPawn::ABilliardistPawn()
 {
@@ -156,7 +155,7 @@ void ABilliardistPawn::HandleBallSelected(ABall* Ball)
 void ABilliardistPawn::ActionReleaseHandle()
 {
     const auto TurnPlayerState = Cast<ITurnBasedPlayer>(GetPlayerState());
-    if (!TurnPlayerState || !TurnPlayerState->GetIsMyTurn())
+    if (!TurnPlayerState)
         return;
 
     switch (State)
@@ -164,21 +163,34 @@ void ABilliardistPawn::ActionReleaseHandle()
         // for less typing
         using FState = FBilliardistState;
 
+        case FState::OBSERVING:
+        {
+            const bool bMyTurn = TurnPlayerState->GetIsMyTurn();
+            if (bMyTurn)
+                SetState(FBilliardistState::WALKING);
+            else
+                break;
+            // Intentionally no "break"
+        }
         case FState::WALKING:
         {
-            //SetState(FState::PICKING);
-            if (!SelectedBall)
-            {
-                const auto PoolGameState = Cast<AEightBallGameState>(GetWorld()->GetGameState());
-                check(PoolGameState);
-                const auto Ball = Cast<ABall>(PoolGameState->GetCueBall());
-                SelectedBall = Ball;
-            }
-            HandleBallSelected(SelectedBall);
+            SelectedBall = Cast<AEightBallPlayerState>(GetPlayerState())->GetCueBall();
+
+            if (SelectedBall)
+                HandleBallSelected(SelectedBall);
+            else
+                UE_LOG(LogTemp, Warning, TEXT("BilliardistPawn::ActionReleaseHandle: SelectedBall is nullptr"));
+
             break;
         }
         case FState::AIMING:
         {
+            if (!SelectedBall)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Pawn: no selected ball to hit"));
+                break;
+            }
+
             bAdjustingHitStrength = false;
 
             float HitStrength = AimingComponent->GetHitStrength();
@@ -229,12 +241,12 @@ void ABilliardistPawn::ReadyStateToggle()
     if (BillPlayerState) BillPlayerState->Server_ToggleReady();
 }
 
-void ABilliardistPawn::NotifyTurnUpdate(bool NewTurn)
+void ABilliardistPawn::OnTurnUpdate(bool NewTurn)
 {
-    UE_LOG(LogPool, Warning, TEXT("%s : now my new turn state is %d"), *GetName(), NewTurn);
     if (NewTurn)
         SetState(FBilliardistState::WALKING);
 }
+
 // Internal player state init for client
 void ABilliardistPawn::OnRep_PlayerState()
 {

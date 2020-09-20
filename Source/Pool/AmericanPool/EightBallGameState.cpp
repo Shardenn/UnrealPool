@@ -72,7 +72,7 @@ void AEightBallGameState::TakeBallFromHand_Internal(const TScriptInterface<IPlay
     }
 }
 
-class ABallAmerican* const AEightBallGameState::GetCueBall()
+class ABall* AEightBallGameState::GetCueBall()
 {
     if (!CueBall && !FindAndInitializeCueBall())
         return nullptr;
@@ -96,7 +96,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
 {
     const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
     const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
-
+    
     for (const auto& RawBall : PocketedBalls)
     {
         const auto Ball = Cast<ABallAmerican>(RawBall);

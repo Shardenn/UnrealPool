@@ -32,6 +32,8 @@ public:
 
     UFUNCTION()
     void OnTurnEnd();
+
+    void OnFrameRestarted();
     // they are attached to awake and sleep events in ABall class.
     // NOTE And they are attached only on the server.
     // So the function is only called on server.
@@ -87,6 +89,8 @@ protected:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_OnBallPocketed(const ABall* Ball);
 
+    UFUNCTION(Client, Reliable)
+    void Client_OnFrameRestarted();
 private:
     // Clears turn-relevant arrays 
     void ResetTurnArrays();

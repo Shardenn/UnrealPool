@@ -50,12 +50,8 @@ void APoolGameMode::RestartPlayer(AController* Controller)
 
     UWorld* World = GetWorld();
     auto Pawn = World->SpawnActor<APawn>(DefaultPawnClass, GetSpawnTransform());
-    
-    //Cast<ABilliardist>(Pawn)->Initialize(GameTable->GetSplinePath());
 
     Controller->Possess(Pawn);
-
-    //Controller->ClientSetRotation(Controller->GetPawn()->GetActorRotation(), true);
 }
 
 void APoolGameMode::HandleMatchHasStarted()

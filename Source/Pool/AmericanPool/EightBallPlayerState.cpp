@@ -9,6 +9,7 @@
 #include "Player/Billiardist/BilliardistWithPlacableBall.h"
 #include "GameplayLogic/Interfaces/BallInHandUpdateListener.h"
 #include "GameplayLogic/Interfaces/GameWithHandableBall.h"
+#include "GameplayLogic/Interfaces/GameWithMainCueBall.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -28,6 +29,12 @@ void AEightBallPlayerState::PlaceHandedBall(const FVector& TablePoint)
     Server_PlaceHandedBall(TablePoint);
 }
 
+ABall* AEightBallPlayerState::GetCueBall()
+{
+    const auto GS = Cast<IGameWithMainCueBall>(UGameplayStatics::GetGameState(GetWorld()));
+    return GS->GetCueBall();
+}
+
 bool AEightBallPlayerState::Server_PlaceHandedBall_Validate(const FVector&) { return true; }
 void AEightBallPlayerState::Server_PlaceHandedBall_Implementation(const FVector& TablePoint)
 {
@@ -45,10 +52,9 @@ void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint)
     UWorld* World = GetWorld();
     if (!World) return;
 
-    float BallRadius = BallHanded->GetRootComponent()->Bounds.SphereRadius;
+    BallHanded->ReturnBallIntoGame();
 
-    // If we first SetLocation and then SimulatePhys(true), then SetLocation not working
-    Cast<UPrimitiveComponent>(BallHanded->GetRootComponent())->SetSimulatePhysics(true);
+    float BallRadius = BallHanded->GetRootComponent()->Bounds.SphereRadius;
     BallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
 
     TScriptInterface<IGameWithHandableBall> GameStateWithHandableBall{
@@ -56,6 +62,12 @@ void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint)
     check(GameStateWithHandableBall);
 
     GameStateWithHandableBall->TakeBallFromHand(this, BallHanded);
+}
+
+void AEightBallPlayerState::OnFrameRestarted_Internal()
+{
+    Super::OnFrameRestarted_Internal();
+    CueBall = nullptr;
 }
 
 void AEightBallPlayerState::SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener)

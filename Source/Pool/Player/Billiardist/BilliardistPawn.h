@@ -40,7 +40,7 @@ public:
     UFUNCTION(BlueprintPure)
     float GetCurrentHitStrength();
 
-    virtual void NotifyTurnUpdate(bool NewTurn);
+    virtual void OnTurnUpdate(bool NewTurn);
 
     virtual void OnRep_PlayerState() override;
 

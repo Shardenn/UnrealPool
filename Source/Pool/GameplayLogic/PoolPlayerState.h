@@ -8,6 +8,8 @@
 #include "AmericanPool/EightPoolBallType.h"
 #include "PoolPlayerState.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFrameRestarted);
+
 /**
  *
  */
@@ -17,6 +19,9 @@ class POOL_API APoolPlayerState : public APlayerState, public ITurnBasedPlayer
     GENERATED_BODY()
 
 public:
+    UPROPERTY(BlueprintAssignable)
+    FOnFrameRestarted OnFrameRestartedDelegate;
+
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_ToggleReady();
 
@@ -35,9 +40,16 @@ public:
     UFUNCTION(BlueprintPure)
     uint8 GetFramesWon() { return FramesWon; }
 
+    UFUNCTION(Client, Reliable)
+    void Client_OnFrameRestarted();
+
     virtual void OnTurnStarted() override {};
     virtual void OnTurnEnded() override {};
 protected:
+    virtual void BeginPlay() override;
+
+    virtual void OnFrameRestarted_Internal();
+
     UPROPERTY(replicated)
     bool bIsReady = false;
 

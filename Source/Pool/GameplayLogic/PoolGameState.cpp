@@ -108,7 +108,8 @@ void APoolGameState::OnBallOverlap(UPrimitiveComponent* OverlappedComponent,
         return;
 
     ABall* PocketedBall = Cast<ABall>(OverlappedComponent->GetOwner());
-    HandlePocketedBall(PocketedBall);
+    if (PocketedBall && !PocketedBall->IsActorBeingDestroyed() && PocketedBall->IsInGame())
+        HandlePocketedBall(PocketedBall);
 }
 
 void APoolGameState::OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -121,11 +122,10 @@ void APoolGameState::OnBallEndOverlap(UPrimitiveComponent* OverlappedComponent,
         return;
 
     ABall* DroppedBall = Cast<ABall>(OverlappedComponent->GetOwner());
-    if (!DroppedBall)
+    if (!DroppedBall || DroppedBall->IsActorBeingDestroyed() || !DroppedBall->IsInGame())
         return;
 
     BallsManager->AddBallDroppedDuringTurn(DroppedBall);
-    //OverlappedComponent->BodyInstance.bGenerateWakeEvents = false;
     OnBallStopMoving(OverlappedComponent, NAME_None);
 }
 
@@ -149,7 +149,7 @@ void APoolGameState::OnFrameRestarted()
     bTableOpened = true;
     bBallsRackBroken = false;
 
-    BallsManager->Reset();
+    BallsManager->OnFrameRestarted();
 
     SwitchTurn();
 }
