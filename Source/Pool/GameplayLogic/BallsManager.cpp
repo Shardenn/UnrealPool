@@ -25,6 +25,23 @@ void UBallsManager::OnTurnEnd()
     ResetTurnArrays();
 }
 
+// This gets called on server
+void UBallsManager::OnFrameRestarted()
+{
+    Reset();
+
+    AActor* owner = Cast<AActor>(GetOuter());
+    if (owner == nullptr)
+        return;
+    
+    Client_OnFrameRestarted();
+}
+
+void UBallsManager::Client_OnFrameRestarted_Implementation()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Client_OnFrameRestarted fired"));
+}
+
 void UBallsManager::ResetTurnArrays()
 {
     BallsPocketedDuringTurn.Empty();
@@ -44,7 +61,7 @@ void UBallsManager::RemoveMovingBall(ABall* Ball)
     if (MovingBalls.Contains(Ball))
         MovingBalls.Remove(Ball);
 }
-
+// Fires on server
 void UBallsManager::AddBallPocketedDuringTurn(ABall* Ball)
 {
     if (!Ball)
@@ -55,7 +72,7 @@ void UBallsManager::AddBallPocketedDuringTurn(ABall* Ball)
 
     Multicast_OnBallPocketed(Ball);
 }
-
+// Fires on server
 void UBallsManager::AddBallDroppedDuringTurn(ABall* Ball)
 {
     if (!Ball)

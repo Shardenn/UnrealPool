@@ -5,18 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameplayLogic/PoolGameState.h"
 #include "GameplayLogic/Interfaces/GameWithHandableBall.h"
+#include "GameplayLogic/Interfaces/GameWithMainCueBall.h"
 #include "EightBallGameState.generated.h"
 
 /**
  *
  */
 UCLASS()
-class POOL_API AEightBallGameState : public APoolGameState, public IGameWithHandableBall
+class POOL_API AEightBallGameState : public APoolGameState, public IGameWithHandableBall, public IGameWithMainCueBall
 {
     GENERATED_BODY()
 
 public:
-    class ABallAmerican* const GetCueBall();
+    class ABall* GetCueBall() override;
 
     virtual void OnFrameRestarted() override;
 
@@ -30,7 +31,7 @@ protected:
     void HandleBlackBallOutOfPlay();
 
     UPROPERTY(Replicated)
-    class ABallAmerican* CueBall{ nullptr };
+    class ABall* CueBall{ nullptr };
 
     TScriptInterface<class IPlayerWithHandableBall> PlayerWithCueBall{ nullptr };
 

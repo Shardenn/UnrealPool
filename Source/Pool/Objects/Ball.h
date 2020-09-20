@@ -70,6 +70,9 @@ class POOL_API ABall : public AActor
 public:
     ABall();
 
+    bool IsInGame() { return bCurrentlyInGame; }
+    void SetIsInGame(const bool NewInGame) { bCurrentlyInGame = NewInGame; }
+
     virtual void RemoveBallFromGame();
     virtual void ReturnBallIntoGame();
 protected:
@@ -88,6 +91,8 @@ protected:
     UPROPERTY(ReplicatedUsing = OnRep_SmoothPhysicsState)
     FSmoothPhysicsState ServerPhysicsState;
     
+    bool bCurrentlyInGame{ true };
+
     UFUNCTION()
     void OnRep_SmoothPhysicsState();
     

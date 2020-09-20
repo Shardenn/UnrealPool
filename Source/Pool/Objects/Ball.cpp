@@ -129,17 +129,9 @@ void ABall::InterpolateRotation(const float Ratio)
 
 void ABall::InterpolateVelocity(const FHermiteCubicSpline& Spline, const float Ratio)
 {
-
-    //UE_LOG(LogTemp, Warning, TEXT("+++++++++++++++++++"));
-    //UE_LOG(LogTemp, Warning, TEXT("\nClientCurrentDerivative previous: %s"), *ClientStartDerivative.ToString());
     const FVector NewDerivative = Spline.InterpolateDerivative(Ratio);
 
-    //UE_LOG(LogTemp, Warning, TEXT("Difference: %f"), FVector::CrossProduct(ClientStartDerivative, NewDerivative).Size());
     ClientStartDerivative = NewDerivative;
-
-    //UE_LOG(LogTemp, Warning, TEXT("ClientCurrentDerivative next: %s \n"), *ClientStartDerivative.ToString());
-    //UE_LOG(LogTemp, Warning, TEXT("+++++++++++++++++++"));
-    //ClientStartVelocity = NewDerivative / VelocityToDerivative();
 }
 
 void ABall::OnRep_SmoothPhysicsState()
@@ -150,18 +142,12 @@ void ABall::OnRep_SmoothPhysicsState()
     ClientStartTransform = GetActorTransform();
     //ClientLastKnownVelocity = ClientStartVelocity;
     ClientLastKnownDerivative = ClientStartDerivative;
-
-    //UE_LOG(LogTemp, Warning, TEXT("================="));
-    //UE_LOG(LogTemp, Warning, TEXT("Client start location: %s, client start derivative: %s"),
-    //    *ClientStartTransform.GetLocation().ToString(), *ClientLastKnownDerivative.ToString());
-    //UE_LOG(LogTemp, Warning, TEXT("Taget location: %s, target velocity: %s"),
-    //    *ServerPhysicsState.Location.ToString(), *ServerPhysicsState.Velocity.ToString());
-    //UE_LOG(LogTemp, Warning, TEXT("================="));
-
 }
 
 void ABall::RemoveBallFromGame()
 {
+    bCurrentlyInGame = false;
+
     auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
     Comp->SetSimulatePhysics(false);
 
@@ -170,6 +156,8 @@ void ABall::RemoveBallFromGame()
 
 void ABall::ReturnBallIntoGame()
 {
+    bCurrentlyInGame = true;
+
     auto Comp = Cast<UStaticMeshComponent>(GetRootComponent());
     Comp->SetSimulatePhysics(true);
 

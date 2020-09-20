@@ -24,6 +24,8 @@ public:
     virtual bool GetIsBallInHand() const override { return BallHanded != nullptr; }
     virtual void PlaceHandedBall(const FVector& TablePoint) override;
 
+    ABall* GetCueBall();
+
     void AssignBallType(const FBallType& Type) noexcept { AssignedBallType = Type; }
     
     UFUNCTION(BlueprintPure)
@@ -32,17 +34,21 @@ public:
     virtual void SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener) override;
 
 protected:
-    UPROPERTY(replicated)
+    UPROPERTY(Replicated)
     FBallType AssignedBallType = FBallType::NotInitialized;
 
-    UPROPERTY(replicated)
-    class ABall* BallHanded{ nullptr };
+    UPROPERTY(Replicated)
+    ABall* BallHanded{ nullptr };
+
+    UPROPERTY(Replicated)
+    ABall* CueBall{ nullptr };
 
     TArray<TScriptInterface<IBallInHandUpdateListener>> BallInHandUpdateListeners;
 
     virtual void SetIsMyTurn(const bool bInMyTurn) noexcept override;
 
     virtual void PlaceHandedBall_Internal(const FVector& TablePoint) override;
+    virtual void OnFrameRestarted_Internal() override;
 private:
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_PlaceHandedBall(const FVector& TablePoint);

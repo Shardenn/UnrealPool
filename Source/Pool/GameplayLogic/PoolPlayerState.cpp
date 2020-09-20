@@ -3,10 +3,23 @@
 #include "PoolPlayerState.h"
 #include "Pool.h"
 
+#include "GameplayLogic/PoolGameMode.h"
 #include "GameplayLogic/PoolGameState.h"
-#include "Player/Billiardist/BilliardistPawn.h" // TODO dependency invertion is violated
 
 #include "Kismet/GameplayStatics.h"
+
+void APoolPlayerState::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (HasAuthority())
+    {
+        APoolGameMode* GM = Cast<APoolGameMode>(GetWorld()->GetAuthGameMode());
+        if (!ensure(GM != nullptr)) return;
+
+        GM->OnFrameRestart.AddDynamic(this, &APoolPlayerState::Client_OnFrameRestarted);
+    }
+} 
 
 bool APoolPlayerState::Server_ToggleReady_Validate() { return true; }
 void APoolPlayerState::Server_ToggleReady_Implementation()
@@ -24,8 +37,18 @@ void APoolPlayerState::Server_ToggleReady_Implementation()
 void APoolPlayerState::SetIsMyTurn(const bool bInIsMyTurn) noexcept
 {
     bMyTurn = bInIsMyTurn;
-    Cast<ABilliardistPawn>(GetPawn())->NotifyTurnUpdate(bMyTurn);
 } 
+
+void APoolPlayerState::Client_OnFrameRestarted_Implementation()
+{
+    OnFrameRestarted_Internal();
+}
+
+void APoolPlayerState::OnFrameRestarted_Internal()
+{
+    if (OnFrameRestartedDelegate.IsBound())
+        OnFrameRestartedDelegate.Broadcast();
+}
 
 bool APoolPlayerState::Server_HandleFrameWon_Validate() { return true; }
 void APoolPlayerState::Server_HandleFrameWon_Implementation()
