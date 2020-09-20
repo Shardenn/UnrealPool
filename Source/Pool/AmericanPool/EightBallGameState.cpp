@@ -113,7 +113,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         else if (Type == FBallType::Cue)
         {
             CueBall = Ball;
-            AssignFoul();
+            AssignFoul(FFoulReason::CueBallOut);
         }
 
         // TODO handle named shot
@@ -145,7 +145,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         else if (Type == FBallType::Cue)
         {
             CueBall = Ball;
-            AssignFoul();
+            AssignFoul(FFoulReason::CueBallOut);
         }
     }
 
@@ -157,14 +157,14 @@ void AEightBallGameState::HandleTurnEnd_Internal()
 
     if (BallsManager->GetBallsHittedByTheCue().Num() == 0)
     {
-        AssignFoul();
+        AssignFoul(FFoulReason::NoBallsHit);
     }
 
     // assign balls type if not done yet
     if (PocketedBalls.Num() > 0 &&
         bBallsRackBroken &&
         bTableOpened &&
-        !bPlayerFouled)
+        FoulReason == FFoulReason::None)
     {
         FBallType CurrentAssignedType = FBallType::NotInitialized,
             OtherAssignedType = FBallType::NotInitialized;
@@ -206,7 +206,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     }
     
 
-    if (bPlayerFouled)
+    if (FoulReason != FFoulReason::None)
     {
         if (!CueBall && !FindAndInitializeCueBall())
         {
@@ -219,7 +219,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         }
     }
 
-    if (bShouldSwitchTurn || bPlayerFouled)
+    if (bShouldSwitchTurn || FoulReason != FFoulReason::None)
     {
         SwitchTurn();
     }

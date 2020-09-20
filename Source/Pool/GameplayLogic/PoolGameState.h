@@ -16,12 +16,7 @@ enum class FBallPlayOutReason : uint8
     Dropped       UMETA(DisplayName = "Dropped")
 };
 
-UENUM(BlueprintType)
-enum class FPlayerFoulReason : uint8
-{
-    CueBallOut          UMETA(DisplayName = "Cue ball out of table"),
-    EightBallPocketed   UMETA(DisplayName = "Eight ball pocketed")
-};
+
 
 /**
  *
@@ -46,13 +41,9 @@ public:
     UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
     int32 PlayersReadyNum = 0;
 
-    UPROPERTY(BlueprintAssignable)
-    FOnPlayerFouled OnPlayerFouled;
-
     UFUNCTION(BlueprintPure)
     class UBallsManager* const GetBallsManager();
-    // not Server. It is only called from LaunchBall, that is 
-    // already on Server. Maybe make it server later
+    
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_StartWatchingBallsMovement();
 
@@ -95,7 +86,12 @@ public:
     virtual void OnFrameRestarted();
 
     virtual void HandleTurnEnd() override;
-    virtual void AssignFoul() override;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnPlayerFouled OnPlayerFouled;
+
+    virtual void AssignFoul(const FFoulReason Reason) override;
+    virtual FFoulReason GetFoulReason() override;
 
     virtual bool IsMyTurn(const TScriptInterface<ITurnBasedPlayer>&) override;
 
@@ -106,7 +102,7 @@ protected:
 
     // Override THIS for defining rules
     virtual void HandleTurnEnd_Internal() override;
-    virtual void AssignFoul_Internal() override;
+    virtual void AssignFoul_Internal(const FFoulReason Reason) override;
     virtual bool DecideWinCondition();
     virtual void HandlePocketedBall(class ABall* Ball);
 
@@ -117,6 +113,7 @@ protected:
     bool bTableOpened = true;
     bool bBallsRackBroken = false;
     bool bPlayerFouled = false;
+    FFoulReason FoulReason{ FFoulReason::None };
     bool bShouldSwitchTurn = true;
 
     void OnRep_UpdatePlayerStateTurn();
@@ -127,5 +124,7 @@ private:
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_HandleTurnEnd();
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_AssignFoul();
+    void Server_AssignFoul(const FFoulReason Reason);
+    UFUNCTION(NetMulticast, Reliable, WithValidation)
+    void Multicast_BroadcastPlayerFouled(const FFoulReason Reason);
 };

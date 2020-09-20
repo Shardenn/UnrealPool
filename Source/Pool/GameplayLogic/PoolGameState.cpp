@@ -174,24 +174,25 @@ void APoolGameState::HandleTurnEnd_Internal()
     ClearTurnStateVariables();
 }
 
-void APoolGameState::AssignFoul()
+void APoolGameState::AssignFoul(const FFoulReason Reason)
 {
-    Server_AssignFoul();
+    Server_AssignFoul(Reason);
 }
 
-void APoolGameState::Server_AssignFoul_Implementation()
+FFoulReason APoolGameState::GetFoulReason() { return FoulReason; }
+
+void APoolGameState::Server_AssignFoul_Implementation(const FFoulReason Reason)
 {
-    AssignFoul_Internal();
+    AssignFoul_Internal(Reason);
 }
 
-bool APoolGameState::Server_AssignFoul_Validate()
-{
-    return true;
-}
+bool APoolGameState::Server_AssignFoul_Validate(const FFoulReason Reason) { return true; }
 
-void APoolGameState::AssignFoul_Internal()
+void APoolGameState::AssignFoul_Internal(const FFoulReason Reason)
 {
-    bPlayerFouled = true;
+    bPlayerFouled = Reason == FFoulReason::None ? false : true;
+    FoulReason = Reason;
+    Multicast_BroadcastPlayerFouled(FoulReason);
 }
 
 bool APoolGameState::DecideWinCondition()
@@ -210,10 +211,18 @@ void APoolGameState::HandlePocketedBall(ABall* PocketedBall)
 
 void APoolGameState::ClearTurnStateVariables()
 {
-    bPlayerFouled = false;
+    AssignFoul(FFoulReason::None);
     bShouldSwitchTurn = true;
     BallsManager->OnTurnEnd();
 }
+
+void APoolGameState::Multicast_BroadcastPlayerFouled_Implementation(const FFoulReason Reason)
+{
+    if (OnPlayerFouled.IsBound())
+        OnPlayerFouled.Broadcast(Reason);
+}
+
+bool APoolGameState::Multicast_BroadcastPlayerFouled_Validate(const FFoulReason Reason) { return true; }
 
 bool APoolGameState::IsMyTurn(const TScriptInterface<ITurnBasedPlayer>& Player)
 {
