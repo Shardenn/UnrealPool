@@ -8,6 +8,7 @@
 #include "GameplayLogic/PoolPlayerState.h"
 #include "Objects/Ball.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
+#include "Objects/Table/Components/InitialBallPlacementArea.h"
 
 void ABilliardistPawnWithPlacableBall::BeginPlay()
 {
@@ -76,6 +77,7 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
     const auto PrimComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
     PrimComp->GetOverlappingComponents(OverlappingComponents);
 
+    bool bOverlappingInitialArea = false;
     for (const auto& Component : OverlappingComponents)
     {
         if (Cast<UStaticMeshComponent>(Component))
@@ -83,12 +85,19 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
             UE_LOG(LogPool, Warning, TEXT("Overlapping with %s, cannot place cue ball"), *Component->GetName());
             return false;
         }
+        if (Cast<UInitialBallPlacementArea>(Component))
+        {
+            bOverlappingInitialArea = true;
+        }
     }
+
+    if (bInitialPlacement && !bOverlappingInitialArea)
+        return false;
 
     return true;
 }
 
-void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Ball)
+void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Ball, bool bInitialPlacementIn)
 {
     if (Ball)
     {
@@ -101,6 +110,8 @@ void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Bal
         auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
         BallRootComp->SetSimulatePhysics(false);
         BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
+        
+        bInitialPlacement = bInitialPlacementIn;
     }
     else
     {

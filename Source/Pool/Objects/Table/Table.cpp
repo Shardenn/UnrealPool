@@ -4,13 +4,15 @@
 #include "Pool.h"
 
 #include "BallSpawner.h"
-#include "ActivePlayArea.h"
-#include "BallRegistrator.h"
+#include "Components/ActivePlayArea.h"
+#include "Components/BallRegistrator.h"
+#include "Components/InitialBallPlacementArea.h"
 // TODO doubtful include
 #include "Objects/Ball.h"
 #include "GameplayLogic/PoolGameMode.h"
 
 #include "Components/SplineComponent.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ATable::ATable()
@@ -26,8 +28,8 @@ ATable::ATable()
     CueBallLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Cue ball location"));
 
     BallRegistrator = CreateDefaultSubobject<UBallRegistrator>(TEXT("Falling balls registrator"));
-
     ActivePlayArea = CreateDefaultSubobject<UActivePlayArea>(TEXT("Dropped balls registrator"));
+    InitialBallPlacementArea = CreateDefaultSubobject<UInitialBallPlacementArea>(TEXT("Initial cue ball placement area"));
 
     float zBound = RootComponent->Bounds.BoxExtent.Z; // size of the table for default ball spawn location
     FrontBallLocation->SetRelativeLocation(FVector(0, 0, 2 * zBound)); // spawn above the table if we did not define otherwise

@@ -90,6 +90,18 @@ void AEightBallGameState::OnFrameRestarted()
         if (PoolPlayer)
             PoolPlayer->AssignBallType(FBallType::NotInitialized);
     }
+
+    const auto CurrentPlayer = TurnBasedPlayers[PlayerIndexTurn].GetObjectRef();
+    const auto HandableBallPlayer = Cast<IPlayerWithHandableBall>(CurrentPlayer);
+
+    if (FindAndInitializeCueBall())
+    {
+        HandableBallPlayer->SetBallInHand(CueBall, true);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Could not find a cue ball from EightBallGameState::OnFrameRestarted"));
+    }
 }
 
 void AEightBallGameState::HandleTurnEnd_Internal()

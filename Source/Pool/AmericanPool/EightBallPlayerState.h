@@ -20,7 +20,7 @@ class POOL_API AEightBallPlayerState : public APoolPlayerState, public IPlayerWi
     GENERATED_BODY()
 
 public:
-    virtual void SetBallInHand(ABall* const CueBall) override;
+    virtual void SetBallInHand(ABall* const CueBall, bool bInitialPlacement = false) override;
     virtual ABall* GetHandedBall() const noexcept override { return BallHanded; }
     virtual bool GetIsBallInHand() const override { return BallHanded != nullptr; }
     virtual void PlaceHandedBall(const FVector& Location) override;
@@ -36,10 +36,13 @@ public:
 
 protected:
     UPROPERTY(Replicated)
-    FBallType AssignedBallType = FBallType::NotInitialized;
+    FBallType AssignedBallType{ FBallType::NotInitialized };
 
     UPROPERTY(Replicated)
     ABall* BallHanded{ nullptr };
+
+    UPROPERTY(Replicated)
+    bool bInitialPlacement{ true };
 
     UPROPERTY(Replicated)
     ABall* CueBall{ nullptr };
@@ -55,5 +58,5 @@ private:
     void Server_PlaceHandedBall(const FVector& Location);
 
     UFUNCTION(NetMulticast, Reliable)
-    void Multicast_BroadcastBallInHandUpdate(ABall* Ball);
+    void Multicast_BroadcastBallInHandUpdate(ABall* Ball, bool bInitialPlacementIn);
 };

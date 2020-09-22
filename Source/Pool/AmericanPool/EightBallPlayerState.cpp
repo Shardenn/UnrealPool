@@ -17,10 +17,11 @@ void AEightBallPlayerState::SetIsMyTurn(const bool bInMyTurn) noexcept
     Super::SetIsMyTurn(bInMyTurn);
 }
 
-void AEightBallPlayerState::SetBallInHand(ABall* const Ball)
+void AEightBallPlayerState::SetBallInHand(ABall* const Ball, bool bInitialPlacementIn)
 {
     BallHanded = Ball;
-    Multicast_BroadcastBallInHandUpdate(Ball);
+    bInitialPlacement = bInitialPlacementIn;
+    Multicast_BroadcastBallInHandUpdate(Ball, bInitialPlacementIn);
 }
 
 void AEightBallPlayerState::PlaceHandedBall(const FVector& Location)
@@ -69,11 +70,11 @@ void AEightBallPlayerState::SubscribeToBallInHandUpdate(const TScriptInterface<I
     BallInHandUpdateListeners.AddUnique(Listener);
 }
 
-void AEightBallPlayerState::Multicast_BroadcastBallInHandUpdate_Implementation(ABall* Ball)
+void AEightBallPlayerState::Multicast_BroadcastBallInHandUpdate_Implementation(ABall* Ball, bool bInitialPlacementIn)
 {
     for (const auto& Listener : BallInHandUpdateListeners)
     {
-        Listener->OnBallInHandUpdate(Ball);
+        Listener->OnBallInHandUpdate(Ball, bInitialPlacementIn);
     }
 }
 

@@ -49,6 +49,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     class UBallSpawner* BallSpawner = nullptr;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    class UInitialBallPlacementArea* InitialBallPlacementArea = nullptr;
+
 private:
     // pointers to spawned balls.
     // Needed to destroy the balls on a frame end

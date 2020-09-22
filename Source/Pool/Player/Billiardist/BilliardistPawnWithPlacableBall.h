@@ -17,7 +17,7 @@ class POOL_API ABilliardistPawnWithPlacableBall : public ABilliardistPawn, publi
     GENERATED_BODY()
 public:
     virtual void TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player) override;
-    virtual void OnBallInHandUpdate(class ABall* const Ball) override;
+    virtual void OnBallInHandUpdate(class ABall* const Ball, bool bInitialPlacement = false) override;
 
 protected:
     virtual void Tick(float DeltaTime) override;
@@ -34,6 +34,9 @@ protected:
 
     void BeginPlay() override;
     void SubscribeToBallInHandUpdate();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    bool bInitialPlacement{ false };
 private:
     TScriptInterface<IPlayerWithHandableBall> HandablePlayer;
     FVector PreviousGhostBallLocation{ 0 };

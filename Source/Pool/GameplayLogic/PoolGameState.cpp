@@ -7,8 +7,8 @@
 //#include "Objects/Ball.h"
 
 #include "Objects/Table/Table.h"
-#include "Objects/Table/ActivePlayArea.h"
-#include "Objects/Table/BallRegistrator.h"
+#include "Objects/Table/Components/ActivePlayArea.h"
+#include "Objects/Table/Components/BallRegistrator.h"
 #include "Objects/Ball.h"
 
 #include "GameplayLogic/BallsManager.h"
