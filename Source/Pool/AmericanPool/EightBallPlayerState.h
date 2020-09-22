@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayLogic/PoolPlayerState.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
+#include "GameplayLogic/Interfaces/PlayerWithMainCueBall.h"
 #include "EightPoolBallType.h"
 #include "EightBallPlayerState.generated.h"
 
@@ -14,7 +15,7 @@ class IBallInHandUpdateListener;
  *
  */
 UCLASS()
-class POOL_API AEightBallPlayerState : public APoolPlayerState, public IPlayerWithHandableBall
+class POOL_API AEightBallPlayerState : public APoolPlayerState, public IPlayerWithHandableBall, public IPlayerWithMainCueBall
 {
     GENERATED_BODY()
 
@@ -22,9 +23,9 @@ public:
     virtual void SetBallInHand(ABall* const CueBall) override;
     virtual ABall* GetHandedBall() const noexcept override { return BallHanded; }
     virtual bool GetIsBallInHand() const override { return BallHanded != nullptr; }
-    virtual void PlaceHandedBall(const FVector& TablePoint) override;
+    virtual void PlaceHandedBall(const FVector& Location) override;
 
-    ABall* GetCueBall();
+    virtual ABall* GetCueBall() override;
 
     void AssignBallType(const FBallType& Type) noexcept { AssignedBallType = Type; }
     
@@ -47,11 +48,11 @@ protected:
 
     virtual void SetIsMyTurn(const bool bInMyTurn) noexcept override;
 
-    virtual void PlaceHandedBall_Internal(const FVector& TablePoint) override;
+    virtual void PlaceHandedBall_Internal(const FVector& Location) override;
     virtual void OnFrameRestarted_Internal() override;
 private:
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_PlaceHandedBall(const FVector& TablePoint);
+    void Server_PlaceHandedBall(const FVector& Location);
 
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_BroadcastBallInHandUpdate(ABall* Ball);

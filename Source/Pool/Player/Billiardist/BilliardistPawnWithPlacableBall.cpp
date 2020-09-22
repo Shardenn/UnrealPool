@@ -44,6 +44,14 @@ void ABilliardistPawnWithPlacableBall::Tick(float DeltaTime)
     {
         float BallRadius = GhostHandedBall->GetRootComponent()->Bounds.SphereRadius;
         GhostHandedBall->SetActorLocation(TableHitResult + FVector(0, 0, BallRadius + 1));
+        if (IsBallPlacementValid())
+        {
+            PreviousGhostBallLocation = GhostHandedBall->GetActorLocation();
+        }
+        else
+        {
+            GhostHandedBall->SetActorLocation(PreviousGhostBallLocation);
+        }
     }
 }
 
@@ -52,11 +60,11 @@ void ABilliardistPawnWithPlacableBall::TryPlaceBall(const TScriptInterface<IPlay
     auto BilliardistController = Cast<ABilliardistController>(GetController());
     check(BilliardistController);
 
-    FVector TableHitResult;
-    if (IsBallPlacementValid() && 
-        BilliardistController->TryRaycastTable(TableHitResult))
+    //FVector TableHitResult;
+    if (IsBallPlacementValid())
+        //&& BilliardistController->TryRaycastTable(TableHitResult))
     {
-        Player->PlaceHandedBall(TableHitResult);
+        Player->PlaceHandedBall(GhostHandedBall->GetActorLocation());
     }
 }
 
@@ -89,7 +97,7 @@ void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Bal
             UE_LOG(LogTemp, Warning, TEXT("Ghost ball class is not set"));
             return;
         }
-        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(0, 0, 2000), FRotator::ZeroRotator);
+        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(100, 0, 2000), FRotator::ZeroRotator);
         auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
         BallRootComp->SetSimulatePhysics(false);
         BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);

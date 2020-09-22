@@ -6,7 +6,6 @@
 #include "EightBallGameState.h"
 
 #include "Objects/Ball.h"
-#include "Player/Billiardist/BilliardistWithPlacableBall.h"
 #include "GameplayLogic/Interfaces/BallInHandUpdateListener.h"
 #include "GameplayLogic/Interfaces/GameWithHandableBall.h"
 #include "GameplayLogic/Interfaces/GameWithMainCueBall.h"
@@ -24,9 +23,9 @@ void AEightBallPlayerState::SetBallInHand(ABall* const Ball)
     Multicast_BroadcastBallInHandUpdate(Ball);
 }
 
-void AEightBallPlayerState::PlaceHandedBall(const FVector& TablePoint)
+void AEightBallPlayerState::PlaceHandedBall(const FVector& Location)
 {
-    Server_PlaceHandedBall(TablePoint);
+    Server_PlaceHandedBall(Location);
 }
 
 ABall* AEightBallPlayerState::GetCueBall()
@@ -36,12 +35,12 @@ ABall* AEightBallPlayerState::GetCueBall()
 }
 
 bool AEightBallPlayerState::Server_PlaceHandedBall_Validate(const FVector&) { return true; }
-void AEightBallPlayerState::Server_PlaceHandedBall_Implementation(const FVector& TablePoint)
+void AEightBallPlayerState::Server_PlaceHandedBall_Implementation(const FVector& Location)
 {
-    PlaceHandedBall_Internal(TablePoint);
+    PlaceHandedBall_Internal(Location);
 }
 
-void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint)
+void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& Location)
 {
     if (!BallHanded)
     {
@@ -49,16 +48,11 @@ void AEightBallPlayerState::PlaceHandedBall_Internal(const FVector& TablePoint)
         return;
     }
 
-    UWorld* World = GetWorld();
-    if (!World) return;
-
     BallHanded->ReturnBallIntoGame();
 
-    float BallRadius = BallHanded->GetRootComponent()->Bounds.SphereRadius;
-    BallHanded->SetActorLocation(TablePoint + FVector(0, 0, BallRadius + 1));
-
+    BallHanded->SetActorLocation(Location);
     TScriptInterface<IGameWithHandableBall> GameStateWithHandableBall{
-        UGameplayStatics::GetGameState(World) };
+        UGameplayStatics::GetGameState(GetWorld()) };
     check(GameStateWithHandableBall);
 
     GameStateWithHandableBall->TakeBallFromHand(this, BallHanded);

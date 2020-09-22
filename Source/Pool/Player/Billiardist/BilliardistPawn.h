@@ -105,11 +105,11 @@ protected:
     void FinishedZoomAdjustement();
 
     UFUNCTION()
-    void ActionPressHandle();
+    virtual void ActionPressHandle();
     UFUNCTION()
     virtual void ActionReleaseHandle();
     UFUNCTION()
-    void ReturnPressHandle();
+    virtual void ReturnPressHandle();
     //UFUNCTION()
     //void ExaminingPressHandle();
     UFUNCTION()

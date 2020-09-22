@@ -4,17 +4,15 @@
 #include "BilliardistPawn.h"
 
 #include "Pool.h"
-#include "BilliardistMovementComponent.h"
-#include "BilliardistAimingComponent.h"
-#include "BilliardistReplicationComponent.h"
+
+#include "Player/Components/BilliardistMovementComponent.h"
+#include "Player/Components/BilliardistAimingComponent.h"
+#include "Player/Components/BilliardistReplicationComponent.h"
 #include "BilliardistController.h"
+
 #include "GameplayLogic/PoolPlayerState.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
-
-// Separate interface of the game with CueBall
-#include "AmericanPool/EightBallGameState.h"
-#include "AmericanPool/EightBallPlayerState.h" // TODO refactor BillPawn for different game types
-#include "Objects/BallAmerican.h"
+#include "GameplayLogic/Interfaces/PlayerWithMainCueBall.h"
 
 #include "Objects/Ball.h"
 
@@ -174,7 +172,7 @@ void ABilliardistPawn::ActionReleaseHandle()
         }
         case FState::WALKING:
         {
-            SelectedBall = Cast<AEightBallPlayerState>(GetPlayerState())->GetCueBall();
+            SelectedBall = Cast<IPlayerWithMainCueBall>(GetPlayerState())->GetCueBall();
 
             if (SelectedBall)
                 HandleBallSelected(SelectedBall);

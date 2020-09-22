@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Player/Billiardist/BilliardistPawn.h"
-#include "Player/Billiardist/BilliardistWithPlacableBall.h"
+#include "Player/Interfaces/BilliardistWithPlacableBall.h"
 #include "GameplayLogic/Interfaces/BallInHandUpdateListener.h"
 #include "BilliardistPawnWithPlacableBall.generated.h"
 
@@ -36,5 +36,5 @@ protected:
     void SubscribeToBallInHandUpdate();
 private:
     TScriptInterface<IPlayerWithHandableBall> HandablePlayer;
-
+    FVector PreviousGhostBallLocation{ 0 };
 };
