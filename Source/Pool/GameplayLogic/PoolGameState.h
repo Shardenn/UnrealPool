@@ -16,7 +16,7 @@ enum class FBallPlayOutReason : uint8
     Dropped       UMETA(DisplayName = "Dropped")
 };
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFrameRestartFired);
 
 /**
  *
@@ -28,6 +28,9 @@ class POOL_API APoolGameState : public ATurnBasedGameState, public IRulesHandler
 
 public:
     APoolGameState();
+
+    UPROPERTY(BlueprintAssignable)
+    FOnFrameRestartFired OnFrameRestartFired;
 
     virtual void PostInitializeComponents() override;
     virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
@@ -127,4 +130,6 @@ private:
     void Server_AssignFoul(const FFoulReason Reason);
     UFUNCTION(NetMulticast, Reliable, WithValidation)
     void Multicast_BroadcastPlayerFouled(const FFoulReason Reason);
+    UFUNCTION(NetMulticast, Reliable, WithValidation)
+    void Multicast_BroadcastFrameRestartFired();
 };

@@ -143,6 +143,8 @@ void APoolGameState::OnCueBallHit(UPrimitiveComponent* HitComponent,
 
 void APoolGameState::OnFrameRestarted()
 {
+    Multicast_BroadcastFrameRestartFired();
+
     ClearTurnStateVariables();
 
     bWatchBallsMovement = false;
@@ -215,6 +217,15 @@ void APoolGameState::ClearTurnStateVariables()
     bShouldSwitchTurn = true;
     BallsManager->OnTurnEnd();
 }
+
+
+void APoolGameState::Multicast_BroadcastFrameRestartFired_Implementation()
+{
+    if (OnFrameRestartFired.IsBound())
+        OnFrameRestartFired.Broadcast();
+}
+
+bool APoolGameState::Multicast_BroadcastFrameRestartFired_Validate() { return true; }
 
 void APoolGameState::Multicast_BroadcastPlayerFouled_Implementation(const FFoulReason Reason)
 {

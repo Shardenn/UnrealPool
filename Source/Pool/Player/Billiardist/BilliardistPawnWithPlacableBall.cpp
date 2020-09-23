@@ -77,21 +77,19 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
     const auto PrimComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
     PrimComp->GetOverlappingComponents(OverlappingComponents);
 
+    bool bOverlappingStaticMesh = false;
     bool bOverlappingInitialArea = false;
     for (const auto& Component : OverlappingComponents)
     {
-        if (Cast<UStaticMeshComponent>(Component))
-        {
-            UE_LOG(LogPool, Warning, TEXT("Overlapping with %s, cannot place cue ball"), *Component->GetName());
-            return false;
-        }
+        if (Cast<UStaticMeshComponent>(Component) &&
+            Component->GetCollisionObjectType() != ECC_PlacementAreaHint)
+            bOverlappingStaticMesh = true;
         if (Cast<UInitialBallPlacementArea>(Component))
-        {
             bOverlappingInitialArea = true;
-        }
     }
 
-    if (bInitialPlacement && !bOverlappingInitialArea)
+    if (bInitialPlacement && !bOverlappingInitialArea ||
+        bOverlappingStaticMesh)
         return false;
 
     return true;
