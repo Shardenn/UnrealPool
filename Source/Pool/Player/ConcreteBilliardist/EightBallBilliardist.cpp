@@ -3,17 +3,7 @@
 
 #include "EightBallBilliardist.h"
 
-void AEightBallBilliardist::ActionPressHandle()
-{
-
-}
-
-void AEightBallBilliardist::ActionReleaseHandle()
-{
-
-}
-
-void AEightBallBilliardist::ReturnPressHandle()
+void AEightBallBilliardist::NameShot(UPocketArea* SelectedPocket)
 {
 
 }

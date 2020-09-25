@@ -9,6 +9,7 @@
 #include "BilliardistController.generated.h"
 
 class ABilliardistPawn;
+class UPocketArea;
 
 /**
  * 
@@ -29,6 +30,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     bool TryRaycastTable(FVector& RaycastHit);
+
+    UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
+    UPocketArea* TryRaycastPocketArea();
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     void SubscribeToPlayerStateChange(ABilliardistPawn* Billardist);

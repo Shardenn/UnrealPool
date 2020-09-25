@@ -4,6 +4,7 @@
 #include "Pool.h"
 #include "Player/Billiardist/BilliardistPawn.h"
 #include "Objects/Ball.h"
+#include "Objects/Table/Components/PocketArea.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -58,7 +59,6 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
     FVector Direction; // look direction
     if (!GetLookDirection(ScreenLocation, Direction))
     {
-        UE_LOG(LogPool, Error, TEXT("%s could not get LookDirection."), *GetName());
         return false;
     }
 
@@ -121,6 +121,35 @@ bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
     }
     RaycastHit = HitResult.Location;
     return true;
+}
+
+UPocketArea* ABilliardistController::TryRaycastPocketArea()
+{
+    int32 ViewportSizeX, ViewportSizeY;
+    GetViewportSize(ViewportSizeX, ViewportSizeY);
+    auto ScreenLocation = FVector2D(ViewportSizeX * CrosshairXLocation, ViewportSizeY * CrosshairYLocation);
+
+    FVector Direction; // look direction
+    if (!GetLookDirection(ScreenLocation, Direction)) return nullptr;
+
+    // TODO split in the other method later
+    FHitResult HitResult;
+    auto StartLocation = PlayerCameraManager->GetCameraLocation();
+    auto EndLocation = StartLocation + Direction * RaycastLength;
+
+    if (!GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        StartLocation,
+        EndLocation,
+        ECollisionChannel::ECC_PocketAreaCasting
+    ))
+    {
+        return nullptr;
+    }
+
+    auto HittedActor = Cast<UPocketArea>(HitResult.Actor);
+
+    return HittedActor;
 }
 
 bool ABilliardistController::GetLookDirection(FVector2D ScreenLocation, FVector & LookDirection) const
