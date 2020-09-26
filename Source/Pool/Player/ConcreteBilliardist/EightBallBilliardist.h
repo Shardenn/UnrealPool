@@ -16,5 +16,9 @@ class POOL_API AEightBallBilliardist : public ABilliardistPawnWithPlacableBall, 
     GENERATED_BODY()
 
 protected:
-    virtual void NameShot(UPocketArea* SelectedPocket) override;
+    virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+
+    virtual void ActionReleaseHandle() override;
+
+    UPocketArea* SelectedPocket{ nullptr };
 };

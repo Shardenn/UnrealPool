@@ -14,6 +14,7 @@ class UPlayerWithNamedShot : public UInterface
 };
 
 class UPocketArea;
+class ABall;
 
 /**
  * An interface to be inherited by PlayerState which supports named shot rule
@@ -23,5 +24,5 @@ class POOL_API IPlayerWithNamedShot
     GENERATED_BODY()
 
 public:
-    virtual void NameShot(UPocketArea* SelectedPocket) = 0;
+    virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
 };

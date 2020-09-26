@@ -14,6 +14,32 @@ class UGSWithNamedShot : public UInterface
 };
 
 class UPocketArea;
+class ABall;
+
+USTRUCT(BlueprintType)
+struct FNamedShot
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPocketArea* SelectedPocket;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ABall* SelectedBall;
+
+    FNamedShot()
+    {
+        SelectedPocket = nullptr;
+        SelectedBall = nullptr;
+    }
+
+    FNamedShot(UPocketArea* Pocket, ABall* Ball)
+    {
+        SelectedPocket = Pocket;
+        SelectedBall = Ball;
+    }
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNamedShotRegistered, FNamedShot, NamedShot);
 
 /**
  * An interface to be inherited by GameState which supports a named shot rule
@@ -23,5 +49,8 @@ class POOL_API IGSWithNamedShot
     GENERATED_BODY()
 
 public:
-    virtual void RegisterNamedShot(UPocketArea* SelectedPocket) = 0;
+    virtual void RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+protected:
+    // For replication functions purposes
+    virtual void RegisterNamedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall);
 };

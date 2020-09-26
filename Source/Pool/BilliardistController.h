@@ -26,7 +26,7 @@ public:
     void LookAtBall();
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
-    bool TryRaycastBall(class ABall*& Ball);
+    class ABall* TryRaycastBall();
 
     UFUNCTION(BlueprintCallable, Category = "Billiardist controller")
     bool TryRaycastTable(FVector& RaycastHit);

@@ -7,7 +7,7 @@
 #include "BallSpawner.generated.h"
 
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (TableComponents), meta = (BlueprintSpawnableComponent))
 class POOL_API UBallSpawner : public UActorComponent
 {
     GENERATED_BODY()

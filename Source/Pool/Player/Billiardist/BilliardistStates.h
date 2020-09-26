@@ -10,5 +10,6 @@ enum class FBilliardistState : uint8
     AIMING              UMETA(DisplayName = "Aiming"),      // when a ball is picked, we aim for the shot, holding the cue near the ball
     OBSERVING           UMETA(DisplayName = "Observing"),  // observing the balls after a shot
     EXAMINING           UMETA(DisplayName = "Examinging"),  // watching from the top of the table
+    NAMING_SHOT         UMETA(DisplayName = "Naming shot"), // when the player has choosen the pocket, they now choosing the ball for named shot
     FORCED_TO_NAME_SHOT UMETA(DisplayName = "Forced to name shot") // on last ball pocketing a player must name the pocket and the ball - name shot
 };

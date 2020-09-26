@@ -5,7 +5,7 @@
 #include "Pool.h"
 
 #include "BilliardistController.h"
-#include "GameplayLogic/PoolPlayerState.h"
+#include "GameplayLogic/PSWithHandableBall.h"
 #include "Objects/Ball.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
 #include "Objects/Table/Components/InitialBallPlacementArea.h"
@@ -13,22 +13,77 @@
 void ABilliardistPawnWithPlacableBall::BeginPlay()
 {
     Super::BeginPlay();
+    SetActorTickEnabled(true);
+}
+
+void ABilliardistPawnWithPlacableBall::OnRep_PlayerState()
+{
+    Super::OnRep_PlayerState();
+    SubscribeToBallInHandUpdate();
+}
+
+void ABilliardistPawnWithPlacableBall::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
     SubscribeToBallInHandUpdate();
 }
 
 void ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate()
 {
     const auto MyPlayerState = GetPlayerState();
-    const auto CastedToInterface = Cast<IPlayerWithHandableBall>(MyPlayerState);
-    if (CastedToInterface)
+    const auto CastedTo = Cast<APSWithHandableBall>(MyPlayerState);
+    if (CastedTo)
     {
-        HandablePlayer.SetInterface(CastedToInterface);
-        HandablePlayer.SetObject(MyPlayerState);
-        HandablePlayer->SubscribeToBallInHandUpdate(this);
+        UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate casted successfully"));
+        //CastedTo->OnBallInHandUpdate.AddDynamic(this, &ABilliardistPawnWithPlacableBall::OnBallInHandUpdate);
 
-        if (GetLocalRole() < ROLE_Authority)
+        HandablePlayer = CastedTo;
+    }
+}
+
+void ABilliardistPawnWithPlacableBall::SetBallInHand(ABall* Ball, bool bInitialPlacementIn)
+{
+    const FString ballNull = Ball == nullptr ? "null" : Ball->GetName();
+    UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::SetBallInHand: %s"), *ballNull);
+    const FString auth = HasAuthority() ? "server" : "client";
+    UE_LOG(LogTemp, Warning, TEXT("I am %s version of %s"), *auth, *GetName());
+
+    Client_OnBallInHandUpdate(Ball, bInitialPlacementIn);
+}
+
+void ABilliardistPawnWithPlacableBall::Client_OnBallInHandUpdate_Implementation(ABall* Ball, bool bInitialPlacementIn /*= false*/)
+{
+    const FString ballNull = Ball == nullptr ? "null" : Ball->GetName();
+    UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::Client_OnBallInHandUpdate_Implementation: %s"), *ballNull);
+    const FString auth = HasAuthority() ? "server" : "client";
+    UE_LOG(LogTemp, Warning, TEXT("I am %s version of %s"), *auth, *GetName());
+    OnBallInHandUpdate(Ball, bInitialPlacementIn);
+}
+
+void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(ABall* Ball, bool bInitialPlacementIn)
+{
+    if (!HandablePlayer) return;
+
+    if (HandablePlayer->GetIsBallInHand())
+    {
+        if (!IsValid(GhostBallClass))
         {
-            UE_LOG(LogTemp, Warning, TEXT("Subscribed on client"));
+            UE_LOG(LogTemp, Warning, TEXT("Ghost ball class is not set in Pawn"));
+            return;
+        }
+        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(100, 0, 2000), FRotator::ZeroRotator);
+        auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
+        BallRootComp->SetSimulatePhysics(false);
+        BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
+
+        bInitialPlacement = HandablePlayer->GetIsInitialPlacement();
+    }
+    else
+    {
+        if (GhostHandedBall)
+        {
+            GhostHandedBall->Destroy();
+            GhostHandedBall = nullptr;
         }
     }
 }
@@ -61,9 +116,7 @@ void ABilliardistPawnWithPlacableBall::TryPlaceBall(const TScriptInterface<IPlay
     auto BilliardistController = Cast<ABilliardistController>(GetController());
     check(BilliardistController);
 
-    //FVector TableHitResult;
     if (IsBallPlacementValid())
-        //&& BilliardistController->TryRaycastTable(TableHitResult))
     {
         Player->PlaceHandedBall(GhostHandedBall->GetActorLocation());
     }
@@ -93,32 +146,6 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
         return false;
 
     return true;
-}
-
-void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(class ABall* const Ball, bool bInitialPlacementIn)
-{
-    if (Ball)
-    {
-        if (!IsValid(GhostBallClass))
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Ghost ball class is not set"));
-            return;
-        }
-        GhostHandedBall = GetWorld()->SpawnActor<ABall>(GhostBallClass, FVector(100, 0, 2000), FRotator::ZeroRotator);
-        auto BallRootComp = Cast<UPrimitiveComponent>(GhostHandedBall->GetRootComponent());
-        BallRootComp->SetSimulatePhysics(false);
-        BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
-        
-        bInitialPlacement = bInitialPlacementIn;
-    }
-    else
-    {
-        if (GhostHandedBall)
-        {
-            GhostHandedBall->Destroy();
-            GhostHandedBall = nullptr;
-        }
-    }
 }
 
 void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()

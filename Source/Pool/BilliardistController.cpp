@@ -50,17 +50,14 @@ void ABilliardistController::OnPlayerStateChanged(FBilliardistState newState)
     OnPlayerStateChangedEvent(newState);
 }
 
-bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
+ABall* ABilliardistController::TryRaycastBall()
 {
     int32 ViewportSizeX, ViewportSizeY;
     GetViewportSize(ViewportSizeX, ViewportSizeY);
     auto ScreenLocation = FVector2D(ViewportSizeX * CrosshairXLocation, ViewportSizeY * CrosshairYLocation);
 
     FVector Direction; // look direction
-    if (!GetLookDirection(ScreenLocation, Direction))
-    {
-        return false;
-    }
+    if (!GetLookDirection(ScreenLocation, Direction)) return nullptr; 
 
     // TODO split in the other method later
     FHitResult HitResult;
@@ -74,17 +71,11 @@ bool ABilliardistController::TryRaycastBall(ABall*& FoundBall)
         ECollisionChannel::ECC_BallTraceChannel
     ))
     {
-        return false;
+        return nullptr;
     }
 
     auto HittedActor = Cast<ABall>(HitResult.Actor);
-    if (!HittedActor)
-    {
-        return false;
-    }
-    
-    FoundBall = HittedActor;
-    return true;
+    return HittedActor;
 }
 
 // TODO refactor this and function above. They are copy-paste of each other
@@ -147,7 +138,7 @@ UPocketArea* ABilliardistController::TryRaycastPocketArea()
         return nullptr;
     }
 
-    auto HittedActor = Cast<UPocketArea>(HitResult.Actor);
+    auto HittedActor = Cast<UPocketArea>(HitResult.Component);
 
     return HittedActor;
 }

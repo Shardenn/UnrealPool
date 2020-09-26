@@ -14,6 +14,7 @@ class UBilliardistWithNamedShot : public UInterface
 };
 
 class UPocketArea;
+class ABall;
 
 /**
  * An interface to be inherited by a Pawn who supports named shots
@@ -23,5 +24,5 @@ class POOL_API IBilliardistWithNamedShot
     GENERATED_BODY()
 
 public:
-    virtual void NameShot(UPocketArea* SelectedPocket) = 0;
+    virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
 };

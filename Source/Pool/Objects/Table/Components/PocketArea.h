@@ -11,7 +11,7 @@ class UStaticMeshComponent;
 /**
  *
  */
-UCLASS()
+UCLASS(ClassGroup = (TableComponents), meta = (BlueprintSpawnableComponent))
 class POOL_API UPocketArea : public UCapsuleComponent
 {
     GENERATED_BODY()
@@ -22,7 +22,7 @@ public:
     UFUNCTION(BlueprintImplementableEvent)
     void OnStopHoverOver();
     UFUNCTION(BlueprintImplementableEvent)
-    void OnSelect();
+    void OnSelected();
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

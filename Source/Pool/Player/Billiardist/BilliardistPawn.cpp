@@ -12,7 +12,6 @@
 
 #include "GameplayLogic/PoolPlayerState.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
-#include "GameplayLogic/Interfaces/PlayerWithMainCueBall.h"
 
 #include "Objects/Ball.h"
 
@@ -166,19 +165,6 @@ void ABilliardistPawn::ActionReleaseHandle()
             const bool bMyTurn = TurnPlayerState->GetIsMyTurn();
             if (bMyTurn)
                 SetState(FBilliardistState::WALKING);
-            else
-                break;
-            // Intentionally no "break"
-        }
-        case FState::WALKING:
-        {
-            SelectedBall = Cast<IPlayerWithMainCueBall>(GetPlayerState())->GetCueBall();
-
-            if (SelectedBall)
-                HandleBallSelected(SelectedBall);
-            else
-                UE_LOG(LogTemp, Warning, TEXT("BilliardistPawn::ActionReleaseHandle: SelectedBall is nullptr"));
-
             break;
         }
         case FState::AIMING:
@@ -249,24 +235,11 @@ void ABilliardistPawn::OnTurnUpdate(bool NewTurn)
 void ABilliardistPawn::OnRep_PlayerState()
 {
     Super::OnRep_PlayerState();
-    SubscribeToBallInHandUpdate();
 }
 // Internal player state init for server
 void ABilliardistPawn::PossessedBy(AController* NewController)
 {
     Super::PossessedBy(NewController);
-    SubscribeToBallInHandUpdate();
-}
-
-void ABilliardistPawn::SubscribeToBallInHandUpdate()
-{
-    /*
-    BillPlayerState = Cast<APoolPlayerState>(GetPlayerState());
-
-    if (!BillPlayerState)
-    {
-        UE_LOG(LogPool, Error, TEXT("OnRep_PlayerState: BillPlayerState in null"));
-    }*/
 }
 
 void ABilliardistPawn::SetState(const FBilliardistState& NewState)

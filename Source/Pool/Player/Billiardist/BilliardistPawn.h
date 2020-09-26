@@ -88,7 +88,6 @@ protected:
 
     void LaunchBall(ABall* Ball, const FVector& Velocity);
 
-    virtual void SubscribeToBallInHandUpdate();
 #pragma region InputBindedFunctions
     UFUNCTION()
     void MoveForward(float Value);

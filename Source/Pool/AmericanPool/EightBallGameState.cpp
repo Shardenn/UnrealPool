@@ -79,6 +79,17 @@ class ABall* AEightBallGameState::GetCueBall()
     return CueBall;
 }
 
+void AEightBallGameState::RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+    Server_RegisterNamedShot(SelectedPocket, SelectedBall);
+}
+
+void AEightBallGameState::RegisterNamedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+    RegisteredNamedShot = FNamedShot(SelectedPocket, SelectedBall);
+    Multicast_BroadcastNamedShotRegistered(RegisteredNamedShot);
+}
+
 void AEightBallGameState::OnFrameRestarted()
 {
     Super::OnFrameRestarted();
@@ -359,6 +370,19 @@ bool AEightBallGameState::FindAndInitializeCueBall()
     }
     return false;
 }
+
+void AEightBallGameState::Multicast_BroadcastNamedShotRegistered_Implementation(FNamedShot Shot)
+{
+    if (OnNamedShotRegistered.IsBound())
+        OnNamedShotRegistered.Broadcast(Shot);
+}
+
+void AEightBallGameState::Server_RegisterNamedShot_Implementation(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+    RegisterNamedShot_Internal(SelectedPocket, SelectedBall);
+}
+
+bool AEightBallGameState::Server_RegisterNamedShot_Validate(UPocketArea* SelectedPocket, ABall* SelectedBall) { return true; }
 
 void AEightBallGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
