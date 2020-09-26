@@ -48,7 +48,8 @@ void ABilliardistPawnWithPlacableBall::SetBallInHand(ABall* Ball, bool bInitialP
     const FString auth = HasAuthority() ? "server" : "client";
     UE_LOG(LogTemp, Warning, TEXT("I am %s version of %s"), *auth, *GetName());
 
-    Client_OnBallInHandUpdate(Ball, bInitialPlacementIn);
+    //Client_OnBallInHandUpdate(Ball, bInitialPlacementIn);
+    OnBallInHandUpdate(Ball, bInitialPlacementIn);
 }
 
 void ABilliardistPawnWithPlacableBall::Client_OnBallInHandUpdate_Implementation(ABall* Ball, bool bInitialPlacementIn /*= false*/)
@@ -158,3 +159,11 @@ void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()
     }
     Super::ActionReleaseHandle();
 }
+
+void ABilliardistPawnWithPlacableBall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ABilliardistPawnWithPlacableBall, GhostHandedBall);
+}
+

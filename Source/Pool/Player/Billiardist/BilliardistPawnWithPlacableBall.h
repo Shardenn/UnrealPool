@@ -28,7 +28,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSubclassOf<ABall> GhostBallClass;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
     ABall* GhostHandedBall = nullptr;
 
     virtual void ActionReleaseHandle() override;
