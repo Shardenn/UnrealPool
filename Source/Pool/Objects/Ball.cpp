@@ -39,24 +39,24 @@ void ABall::BeginPlay()
 
         SphereMesh->OnComponentBeginOverlap.AddDynamic(GameState, &APoolGameState::OnBallOverlap);
         SphereMesh->OnComponentEndOverlap.AddDynamic(GameState, &APoolGameState::OnBallEndOverlap);
-
+        
         SphereMesh->SetSimulatePhysics(true);
         SphereMesh->SetEnableGravity(true);
-
-        //SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
+        
+        SphereMesh->SetMassOverrideInKg(NAME_None, 0.2);
         SphereMesh->SetAngularDamping(0.6f);
         SphereMesh->SetLinearDamping(0.2f);
-
+        
         SphereMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         SphereMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+        
     }
     // did not put into "else" cuz it is another piece of logic
     if (GetLocalRole() < ROLE_Authority)
     {
-        SphereMesh->PutRigidBodyToSleep();
         SphereMesh->SetSimulatePhysics(false);
         SphereMesh->SetEnableGravity(false);
-        SetActorEnableCollision(false);
+        //SetActorEnableCollision(false);
     }
 }
 

@@ -300,7 +300,7 @@ void AEightBallGameState::HandlePocketedBall(class ABall* Ball)
     Super::HandlePocketedBall(Ball);
 
     auto AmericanBall = Cast<ABallAmerican>(Ball);
-    check(AmericanBall);
+    if (!ensure(AmericanBall != nullptr)) return;
 
     FBallType Type = AmericanBall->GetType();
 

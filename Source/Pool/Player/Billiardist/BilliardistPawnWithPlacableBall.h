@@ -41,15 +41,19 @@ protected:
     virtual void OnRep_PlayerState() override;
     virtual void PossessedBy(AController* NewController) override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
     bool bInitialPlacement{ false };
 private:
     class APSWithHandableBall* HandablePlayer;
-    FVector PreviousGhostBallLocation{ 0 };
+    FVector LastSuccessfullGhostBallLocation{ 1000, 100, 100 };
+
+    class ABilliardistController* MyController{ nullptr };
 
     UFUNCTION()
     void OnBallInHandUpdate(ABall* Ball, bool bInitialPlacementIn = false);
 
     UFUNCTION(Client, Reliable)
-    void Client_OnBallInHandUpdate(ABall* Ball, bool bInitialPlacementIn = false);
+    void Client_UpdateGhostBallLocation();
+    UFUNCTION(Server, Unreliable, WithValidation)
+    void Server_SetGhostBallLocation(const FVector& NewLocaiton);
 };

@@ -32,10 +32,11 @@ public:
     bool GetIsInitialPlacement() const noexcept { return HandedBall.bInitialPlacement; }
     
     virtual void SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener) override;
-protected:
+
     UPROPERTY(Replicated)
     FHandedBallState HandedBall;
 
+protected:
     TArray<TScriptInterface<IBallInHandUpdateListener>> BallInHandUpdateListeners;
 
     virtual void SetIsMyTurn(const bool bInMyTurn) noexcept override;

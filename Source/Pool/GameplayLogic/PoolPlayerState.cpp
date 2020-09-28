@@ -12,8 +12,6 @@ void APoolPlayerState::BeginPlay()
 {
     Super::BeginPlay();
 
-    SetReplicates(true);
-
     if (HasAuthority())
     {
         APoolGameMode* GM = Cast<APoolGameMode>(GetWorld()->GetAuthGameMode());

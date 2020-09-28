@@ -20,47 +20,35 @@ void ABilliardistPawnWithPlacableBall::OnRep_PlayerState()
 {
     Super::OnRep_PlayerState();
     SubscribeToBallInHandUpdate();
+
+    MyController = Cast<ABilliardistController>(GetController());
+    if (!ensure(MyController != nullptr)) return;
 }
 
 void ABilliardistPawnWithPlacableBall::PossessedBy(AController* NewController)
 {
     Super::PossessedBy(NewController);
     SubscribeToBallInHandUpdate();
+
+    MyController = Cast<ABilliardistController>(GetController());
+    if (!ensure(MyController != nullptr)) return;
 }
 
 void ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate()
 {
     const auto MyPlayerState = GetPlayerState();
     const auto CastedTo = Cast<APSWithHandableBall>(MyPlayerState);
-    if (CastedTo)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate casted successfully"));
-        //CastedTo->OnBallInHandUpdate.AddDynamic(this, &ABilliardistPawnWithPlacableBall::OnBallInHandUpdate);
-
-        HandablePlayer = CastedTo;
-    }
+    
+    if (!ensure(CastedTo != nullptr)) return;
+    HandablePlayer = CastedTo;
 }
 
 void ABilliardistPawnWithPlacableBall::SetBallInHand(ABall* Ball, bool bInitialPlacementIn)
 {
-    const FString ballNull = Ball == nullptr ? "null" : Ball->GetName();
-    UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::SetBallInHand: %s"), *ballNull);
-    const FString auth = HasAuthority() ? "server" : "client";
-    UE_LOG(LogTemp, Warning, TEXT("I am %s version of %s"), *auth, *GetName());
-
-    //Client_OnBallInHandUpdate(Ball, bInitialPlacementIn);
     OnBallInHandUpdate(Ball, bInitialPlacementIn);
 }
 
-void ABilliardistPawnWithPlacableBall::Client_OnBallInHandUpdate_Implementation(ABall* Ball, bool bInitialPlacementIn /*= false*/)
-{
-    const FString ballNull = Ball == nullptr ? "null" : Ball->GetName();
-    UE_LOG(LogTemp, Warning, TEXT("ABilliardistPawnWithPlacableBall::Client_OnBallInHandUpdate_Implementation: %s"), *ballNull);
-    const FString auth = HasAuthority() ? "server" : "client";
-    UE_LOG(LogTemp, Warning, TEXT("I am %s version of %s"), *auth, *GetName());
-    OnBallInHandUpdate(Ball, bInitialPlacementIn);
-}
-
+// Gets called on server only. It features SpawnActor
 void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(ABall* Ball, bool bInitialPlacementIn)
 {
     if (!HandablePlayer) return;
@@ -77,7 +65,9 @@ void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(ABall* Ball, bool bIni
         BallRootComp->SetSimulatePhysics(false);
         BallRootComp->SetCollisionResponseToAllChannels(ECR_Overlap);
 
-        bInitialPlacement = HandablePlayer->GetIsInitialPlacement();
+        bInitialPlacement = bInitialPlacementIn;
+
+        MyController = Cast<ABilliardistController>(GetController());
     }
     else
     {
@@ -89,27 +79,46 @@ void ABilliardistPawnWithPlacableBall::OnBallInHandUpdate(ABall* Ball, bool bIni
     }
 }
 
+void ABilliardistPawnWithPlacableBall::Server_SetGhostBallLocation_Implementation(const FVector& NewLocationIn)
+{
+    GhostHandedBall->SetActorLocation(NewLocationIn);
+}
+
+bool ABilliardistPawnWithPlacableBall::Server_SetGhostBallLocation_Validate(const FVector& NewLocaiton)
+{
+    return true; // TODO maybe cheat protection here
+}
+
+void ABilliardistPawnWithPlacableBall::Client_UpdateGhostBallLocation_Implementation()
+{
+    FVector TableHitResult;
+    if (GhostHandedBall && MyController &&
+        MyController->TryRaycastTable(TableHitResult))
+    {
+        float BallRadius = GhostHandedBall->GetRootComponent()->Bounds.SphereRadius;
+        const FVector NewLocation = TableHitResult + FVector(0, 0, BallRadius + 1);
+        
+        GhostHandedBall->SetActorLocation(NewLocation);
+        Server_SetGhostBallLocation(NewLocation);
+        
+        if (IsBallPlacementValid())
+        {
+            LastSuccessfullGhostBallLocation = NewLocation;
+        }
+        else
+        {
+            GhostHandedBall->SetActorLocation(LastSuccessfullGhostBallLocation);
+        }
+        
+    }
+}
+
 void ABilliardistPawnWithPlacableBall::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     // Draw cue ball possible location when putting it from hand
-    FVector TableHitResult;
-    const auto BillController = Cast<ABilliardistController>(GetController());
-    if (GhostHandedBall && BillController && 
-        BillController->TryRaycastTable(TableHitResult))
-    {
-        float BallRadius = GhostHandedBall->GetRootComponent()->Bounds.SphereRadius;
-        GhostHandedBall->SetActorLocation(TableHitResult + FVector(0, 0, BallRadius + 1));
-        if (IsBallPlacementValid())
-        {
-            PreviousGhostBallLocation = GhostHandedBall->GetActorLocation();
-        }
-        else
-        {
-            GhostHandedBall->SetActorLocation(PreviousGhostBallLocation);
-        }
-    }
+    Client_UpdateGhostBallLocation();
 }
 
 void ABilliardistPawnWithPlacableBall::TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player)
@@ -150,7 +159,7 @@ bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
 }
 
 void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()
-{    
+{
     // If we have a ball in hand - try place it
     if (HandablePlayer && HandablePlayer->GetIsBallInHand())
     {
@@ -165,5 +174,6 @@ void ABilliardistPawnWithPlacableBall::GetLifetimeReplicatedProps(TArray<FLifeti
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ABilliardistPawnWithPlacableBall, GhostHandedBall);
+    DOREPLIFETIME(ABilliardistPawnWithPlacableBall, bInitialPlacement);
 }
 

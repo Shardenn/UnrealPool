@@ -82,7 +82,9 @@ ABall* ABilliardistController::TryRaycastBall()
 bool ABilliardistController::TryRaycastTable(FVector& RaycastHit)
 {
     int32 ViewportSizeX, ViewportSizeY;
+
     GetViewportSize(ViewportSizeX, ViewportSizeY);
+
     auto ScreenLocation = FVector2D(ViewportSizeX * CrosshairXLocation, ViewportSizeY * CrosshairYLocation);
 
     FVector Direction; // look direction

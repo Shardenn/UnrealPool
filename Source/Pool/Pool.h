@@ -4,7 +4,6 @@
 
 #include "Core.h"
 #include "UnrealNetwork.h"
-#include "Engine.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogPool, Log, All);
 

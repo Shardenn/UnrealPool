@@ -1,12 +1,12 @@
 // Copyright 2019 Andrei Vikarchuk.
 
-#include "Pool.h"
-
 #include "EightBallPlayerState.h"
+
+#include "Pool.h"
 
 #include "GameplayLogic/Interfaces/GSWithNamedShot.h"
 #include "GameplayLogic/Interfaces/GameWithMainCueBall.h"
-
+#include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 
 void AEightBallPlayerState::NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall)
