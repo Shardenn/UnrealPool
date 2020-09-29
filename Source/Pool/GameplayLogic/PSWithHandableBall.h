@@ -33,7 +33,7 @@ public:
     
     virtual void SubscribeToBallInHandUpdate(const TScriptInterface<IBallInHandUpdateListener>& Listener) override;
 
-    UPROPERTY(Replicated)
+    UPROPERTY(BlueprintReadOnly, EditAnywhere, Replicated)
     FHandedBallState HandedBall;
 
 protected:

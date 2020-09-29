@@ -17,12 +17,14 @@ class ABall;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBallInHandUpdate, ABall*, Ball, bool, bInitialPlacement);
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FHandedBallState
 {
-    GENERATED_BODY()
+    GENERATED_USTRUCT_BODY()
 
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
     ABall* Ball { nullptr };
+    UPROPERTY(BlueprintReadOnly, EditAnywhere)
     bool bInitialPlacement{ false };
 
     FHandedBallState(ABall* inBall, bool bInitialPlacementIn) :

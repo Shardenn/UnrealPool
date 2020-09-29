@@ -24,7 +24,6 @@ void APSWithHandableBall::SetBallInHand(ABall* Ball, bool bInitialPlacementIn)
 {
     HandedBall = FHandedBallState(Ball, bInitialPlacementIn);
 
-    UE_LOG(LogTemp, Warning, TEXT("APSWithHandableBall::SetBallInHand"));
     auto PawnWithHandableBall = Cast<IBilliardistWithPlacableBall>(GetPawn());
     PawnWithHandableBall->SetBallInHand(HandedBall.Ball, HandedBall.bInitialPlacement);
 }

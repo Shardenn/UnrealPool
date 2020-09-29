@@ -99,7 +99,7 @@ void ABilliardistPawnWithPlacableBall::Client_UpdateGhostBallLocation_Implementa
         const FVector NewLocation = TableHitResult + FVector(0, 0, BallRadius + 1);
         
         GhostHandedBall->SetActorLocation(NewLocation);
-        Server_SetGhostBallLocation(NewLocation);
+        //Server_SetGhostBallLocation(NewLocation);
         
         if (IsBallPlacementValid())
         {
@@ -123,13 +123,7 @@ void ABilliardistPawnWithPlacableBall::Tick(float DeltaTime)
 
 void ABilliardistPawnWithPlacableBall::TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player)
 {
-    auto BilliardistController = Cast<ABilliardistController>(GetController());
-    check(BilliardistController);
-
-    if (IsBallPlacementValid())
-    {
-        Player->PlaceHandedBall(GhostHandedBall->GetActorLocation());
-    }
+    Player->PlaceHandedBall(GhostHandedBall->GetActorLocation());
 }
 
 bool ABilliardistPawnWithPlacableBall::IsBallPlacementValid()
