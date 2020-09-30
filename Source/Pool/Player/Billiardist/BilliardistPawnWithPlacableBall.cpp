@@ -158,6 +158,7 @@ void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()
     if (HandablePlayer && HandablePlayer->GetIsBallInHand())
     {
         TryPlaceBall(HandablePlayer);
+        bBallPlacedJustNow = true;
         return;
     }
     Super::ActionReleaseHandle();

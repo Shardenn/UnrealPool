@@ -19,6 +19,7 @@ class POOL_API ABilliardistPawnWithPlacableBall : public ABilliardistPawn, publi
     GENERATED_BODY()
 public:
     virtual void TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player) override;
+    bool IsBallInHand() { return GhostHandedBall != nullptr; }
 
 protected:
     virtual void Tick(float DeltaTime) override;
@@ -37,12 +38,18 @@ protected:
     void SubscribeToBallInHandUpdate();
 
     virtual void SetBallInHand(ABall* Ball, bool bInitialPlacement) override;
-
+    
     virtual void OnRep_PlayerState() override;
     virtual void PossessedBy(AController* NewController) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
     bool bInitialPlacement{ false };
+
+    // A hack workaround. We set it to true when we place a cue ball,
+    // that way our inherited class will know that it should not aim at the ball
+    // right away. The cue ball's position may not be replicated yet.
+    // TODO find a better way
+    bool bBallPlacedJustNow{ false };
 private:
     class APSWithHandableBall* HandablePlayer;
     FVector LastSuccessfullGhostBallLocation{ 1000, 100, 100 };

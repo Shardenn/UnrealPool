@@ -48,11 +48,17 @@ void AEightBallBilliardist::ActionReleaseHandle()
     }
     case FState::WALKING:
     {
+        if (bBallPlacedJustNow)
+        {
+            bBallPlacedJustNow = false;
+            break;
+        }
+
         TScriptInterface<IPlayerWithMainCueBall> PlayerWithCueBall = GetPlayerState();
         if (!ensure(PlayerWithCueBall != nullptr)) return;
 
         SelectedBall = PlayerWithCueBall->GetCueBall();
-     
+
         if (SelectedBall)
             HandleBallSelected(SelectedBall);
         else
