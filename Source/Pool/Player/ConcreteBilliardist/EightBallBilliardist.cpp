@@ -24,7 +24,7 @@ void AEightBallBilliardist::Tick(float DeltaTime)
     bool bInControlOfPawn = GetLocalRole() == ROLE_AutonomousProxy ||
         GetRemoteRole() == ROLE_SimulatedProxy;
     
-    if (State == FBilliardistState::AIMING && bInControlOfPawn)
+    if (State == FBilliardistState::AIMING && bInControlOfPawn && !SelectedPocket)
     {
         if (!SelectedBall)
         {

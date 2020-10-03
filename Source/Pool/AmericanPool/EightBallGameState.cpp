@@ -7,6 +7,7 @@
 
 #include "GameplayLogic/PoolGameMode.h"
 #include "GameplayLogic/Interfaces/PlayerWithHandableBall.h"
+#include "EightBallGameMode.h"
 #include "AmericanPool/EightBallPlayerState.h"
 #include "Objects/BallAmerican.h"
 
@@ -148,7 +149,11 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
     const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
     
-    bool bNamedShotSatisfied = false;
+    AEightBallGameMode* GM = Cast<AEightBallGameMode>(AuthorityGameMode);
+    if (!ensure(GM != nullptr)) return;
+
+    bool bNamedShotRuleActive = GM->bNamedShotRuleActive;
+    bool bNamedShotSatisfied = bNamedShotRuleActive ? false : true;
 
     if (!RegisteredNamedShot.IsSet())
     {
@@ -234,6 +239,16 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         AssignFoul(FFoulReason::NoBallsHit);
     }
 
+    if (!bTableOpened &&
+        GM->bFirstTouchShouldBeFriendlyRuleActive &&
+        BallsManager->GetBallsHittedByTheCue().Num() > 0)
+    {
+        const auto BallAm = Cast<ABallAmerican>(BallsManager->GetBallsHittedByTheCue()[0]);
+        const auto Player = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
+        if (Player->GetAssignedBallType() != BallAm->GetType())
+            AssignFoul(FFoulReason::WrongBallTouchedFirst);
+    }
+
     // assign balls type if not done yet
     if (PocketedBalls.Num() > 0 &&
         bBallsRackBroken &&
@@ -290,8 +305,7 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         else
         {
             auto OtherPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
-            if (bBallsRackBroken == false)
-                GiveBallInHand(PlayerArray[OtherPlayerIndex], CueBall);
+            GiveBallInHand(PlayerArray[OtherPlayerIndex], CueBall);
         }
     }
 

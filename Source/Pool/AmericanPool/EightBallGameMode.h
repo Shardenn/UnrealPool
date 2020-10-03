@@ -15,7 +15,7 @@ class POOL_API AEightBallGameMode : public APoolGameMode, public IGMWithNamedSho
 {
     GENERATED_BODY()
 
-protected:
+public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     bool bNamedShotRuleActive{ true };
 
