@@ -7,6 +7,7 @@
 
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UEightBallSpawner::UEightBallSpawner()
 {
@@ -53,7 +54,7 @@ TArray<class ABall*> UEightBallSpawner::Spawn()
     // remove 8ball, we have special plans for it
     BallsNum.RemoveAt(7);
 
-    ABallAmerican* Ball = World->SpawnActor<ABallAmerican>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
+    ABallAmerican* Ball = World->SpawnActor<ABallAmerican>(BallClass, CurrentBallLocation, UKismetMathLibrary::RandomRotator(true));
     uint8 BallNum = GetRandomBallNum(BallsNum, true);
     Ball->SetBallNumber(BallNum);
     Balls.Add(Ball);
@@ -71,7 +72,7 @@ TArray<class ABall*> UEightBallSpawner::Spawn()
     for (uint8 i = 0; i < Locations.Num(); i++)
     {
         auto Location = Locations[i];
-        Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, FRotator::ZeroRotator);
+        Ball = World->SpawnActor<ABallAmerican>(BallClass, Location, UKismetMathLibrary::RandomRotator(true));
         
         // 8ball position
         if (i == 10)

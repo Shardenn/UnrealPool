@@ -7,6 +7,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UBallSpawner::UBallSpawner()
 {
@@ -46,7 +47,8 @@ TArray<class ABall*> UBallSpawner::Spawn()
     FVector ColumnsIncreaseDirection = -(SpawnComponent->GetRightVector().GetSafeNormal());
 
     FVector CurrentBallLocation = HeadBallLocation;
-    ABall* Ball = World->SpawnActor<ABall>(BallClass, CurrentBallLocation, FRotator::ZeroRotator);
+    FRotator BallRotation = UKismetMathLibrary::RandomRotator(true);
+    ABall* Ball = World->SpawnActor<ABall>(BallClass, CurrentBallLocation, BallRotation);
     Balls.Add(Ball);
 
     BallDiameter = Ball->GetRootComponent()->Bounds.SphereRadius * 2;
@@ -56,7 +58,8 @@ TArray<class ABall*> UBallSpawner::Spawn()
 
     for (auto& Location : Locations)
     {
-        Ball = World->SpawnActor<ABall>(BallClass, Location, FRotator::ZeroRotator);
+        BallRotation = UKismetMathLibrary::RandomRotator(true);
+        Ball = World->SpawnActor<ABall>(BallClass, Location, BallRotation);
         Balls.Add(Ball);
     }
 
