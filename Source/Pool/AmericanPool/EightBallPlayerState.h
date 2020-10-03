@@ -21,7 +21,8 @@ class POOL_API AEightBallPlayerState : public APSWithHandableBall, public IPlaye
 public:
     virtual ABall* GetCueBall() override;
     virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
-
+    virtual void PredictShot(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+    
     void AssignBallType(const FBallType& Type) noexcept { AssignedBallType = Type; }
 
     UFUNCTION(BlueprintPure)
@@ -34,4 +35,13 @@ protected:
     ABall* CueBall { nullptr };
 
     virtual void OnFrameRestarted_Internal() override;
+
+    virtual void NameShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+    virtual void PredictShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+
+private:
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_PredictShot(UPocketArea* SelectedPocket, ABall* SelectedBall);
 };

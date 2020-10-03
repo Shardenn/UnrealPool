@@ -25,4 +25,8 @@ class POOL_API IPlayerWithNamedShot
 
 public:
     virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+    virtual void PredictShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+protected:
+    virtual void NameShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+    virtual void PredictShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
 };

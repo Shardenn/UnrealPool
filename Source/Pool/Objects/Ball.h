@@ -75,28 +75,32 @@ public:
 
     virtual void RemoveBallFromGame();
     virtual void ReturnBallIntoGame();
+
+    class UPocketArea* GetLastOverlappedPocket() const { return LastOverlappedPocket; }
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
-    FVector SpawnLocation = FVector(0);
+    FVector SpawnLocation { FVector(0) };
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FInterpolationType InterpolationType{ FInterpolationType::Cubic };
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-    UStaticMeshComponent* SphereMesh;
+    UStaticMeshComponent* SphereMesh { nullptr };
 
     UPROPERTY(ReplicatedUsing = OnRep_SmoothPhysicsState)
     FSmoothPhysicsState ServerPhysicsState;
     
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+    class UPocketArea* LastOverlappedPocket{ nullptr };
+
     bool bCurrentlyInGame{ true };
 
     UFUNCTION()
     void OnRep_SmoothPhysicsState();
     
-protected:
     void ClientTick(float DeltaTime);
 
     FHermiteCubicSpline CreateSpline();
@@ -116,4 +120,16 @@ protected:
 
     FVector ClientStartDerivative{ FVector(0) };
     FVector ClientLastKnownDerivative{ FVector(0) };
+
+private:
+    UFUNCTION()
+    void OnOverlap(UPrimitiveComponent* OverlappedComponent,
+        AActor* OtherActor,
+        UPrimitiveComponent* OtherComp,
+        int32 OtherBodyIndex,
+        bool bFromSweep,
+        const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void OnTurnEndFired();
 };

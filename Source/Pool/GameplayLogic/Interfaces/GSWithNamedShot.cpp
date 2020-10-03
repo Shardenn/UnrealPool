@@ -9,3 +9,8 @@ void IGSWithNamedShot::RegisterNamedShot_Internal(UPocketArea* SelectedPocket, A
 {
 
 }
+
+void IGSWithNamedShot::RegisterPredictedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+
+}

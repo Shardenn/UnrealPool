@@ -25,4 +25,5 @@ class POOL_API IBilliardistWithNamedShot
 
 public:
     virtual void NameShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+    virtual void PredictShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
 };

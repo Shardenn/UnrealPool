@@ -4,27 +4,36 @@
 
 #include "CoreMinimal.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "PocketArea.generated.h"
-
-class UStaticMeshComponent;
 
 /**
  *
  */
-UCLASS(ClassGroup = (TableComponents), meta = (BlueprintSpawnableComponent))
+UCLASS(Blueprintable, ClassGroup = (TableComponents))//, meta = (BlueprintSpawnableComponent))
 class POOL_API UPocketArea : public UCapsuleComponent
 {
     GENERATED_BODY()
 
 public:
-    UFUNCTION(BlueprintImplementableEvent)
-    void OnHoverOver();
-    UFUNCTION(BlueprintImplementableEvent)
-    void OnStopHoverOver();
-    UFUNCTION(BlueprintImplementableEvent)
-    void OnSelected();
+    virtual void BeginPlay() override;
 
-protected:
+    UFUNCTION(BlueprintNativeEvent)
+    void OnHoverOver();
+    UFUNCTION(BlueprintNativeEvent)
+    void OnStopHoverOver();
+    UFUNCTION(BlueprintNativeEvent)
+    void OnSelected();
+    UFUNCTION(BlueprintNativeEvent)
+    void OnDeselected();
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UStaticMeshComponent* MeshToHighlight { nullptr };
+    class UStaticMeshComponent* MeshToHighlight { nullptr };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FName PocketTag { "Pocket" };
+
+private:
+    UFUNCTION()
+    void OnTurnEndFired();
 };

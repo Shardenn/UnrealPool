@@ -134,7 +134,7 @@ UPocketArea* ABilliardistController::TryRaycastPocketArea()
         HitResult,
         StartLocation,
         EndLocation,
-        ECollisionChannel::ECC_PocketAreaCasting
+        ECollisionChannel::ECC_PocketAreaTracing
     ))
     {
         return nullptr;

@@ -55,7 +55,7 @@ protected:
     //UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     //class APoolPlayerState* BillPlayerState = nullptr;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
     class ABall* SelectedBall = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

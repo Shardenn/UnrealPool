@@ -37,6 +37,35 @@ struct FNamedShot
         SelectedPocket = Pocket;
         SelectedBall = Ball;
     }
+    /*
+    bool operator== (const FNamedShot& a)
+    {
+        if (a.SelectedBall == this->SelectedBall &&
+            a.SelectedPocket == this->SelectedPocket)
+            return true;
+        return false;
+    }
+
+    bool operator!= (const FNamedShot& a)
+    {
+        return !(*this == a);
+    }
+    */
+    bool IsSet()
+    {
+        if (SelectedBall == nullptr ||
+            SelectedPocket == nullptr)
+            return false;
+        return true;
+    }
+
+    bool IsEqual(const FNamedShot& other)
+    {
+        if (other.SelectedBall == this->SelectedBall &&
+            other.SelectedPocket == this->SelectedPocket)
+            return true;
+        return false;
+    }
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNamedShotRegistered, FNamedShot, NamedShot);
@@ -50,7 +79,9 @@ class POOL_API IGSWithNamedShot
 
 public:
     virtual void RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
+    virtual void RegisterPredictedShot(UPocketArea* SelectedPocket, ABall* SelectedBall) = 0;
 protected:
     // For replication functions purposes
     virtual void RegisterNamedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall);
+    virtual void RegisterPredictedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall);
 };

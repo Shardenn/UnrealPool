@@ -10,6 +10,8 @@
 #include "AmericanPool/EightBallPlayerState.h"
 #include "Objects/BallAmerican.h"
 
+#include "Objects/Table/Components/PocketArea.h"
+
 #include "EngineUtils.h" // TObjectIterator
 
 void AEightBallGameState::GiveBallInHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball)
@@ -81,13 +83,39 @@ class ABall* AEightBallGameState::GetCueBall()
 
 void AEightBallGameState::RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall)
 {
-    Server_RegisterNamedShot(SelectedPocket, SelectedBall);
+    RegisterNamedShot_Internal(SelectedPocket, SelectedBall);
 }
 
 void AEightBallGameState::RegisterNamedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall)
 {
+    UPocketArea* PreviousPocket = RegisteredNamedShot.SelectedPocket;
+    if (PreviousPocket)
+    {
+        PreviousPocket->OnDeselected();
+        PreviousPocket->OnStopHoverOver();
+    }
+
     RegisteredNamedShot = FNamedShot(SelectedPocket, SelectedBall);
     Multicast_BroadcastNamedShotRegistered(RegisteredNamedShot);
+}
+
+void AEightBallGameState::RegisterPredictedShot(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+    RegisterPredictedShot_Internal(SelectedPocket, SelectedBall);
+}
+
+void AEightBallGameState::RegisterPredictedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall)
+{
+    PredictedNamedShot = FNamedShot(SelectedPocket, SelectedBall);
+    Multicast_BoradcastPredictedShotRegistered(PredictedNamedShot);
+}
+
+void AEightBallGameState::ClearTurnStateVariables()
+{
+    RegisteredNamedShot = FNamedShot();
+    RegisterNamedShot_Internal(RegisteredNamedShot.SelectedPocket, RegisteredNamedShot.SelectedBall);
+    RegisterPredictedShot_Internal(RegisteredNamedShot.SelectedPocket, RegisteredNamedShot.SelectedBall);
+    Super::ClearTurnStateVariables();
 }
 
 void AEightBallGameState::OnFrameRestarted()
@@ -120,6 +148,18 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     const auto PocketedBalls = BallsManager->GetBallsPocketedDuringTurn();
     const auto DroppedBalls = BallsManager->GetBallsDroppedDuringTurn();
     
+    bool bNamedShotSatisfied = false;
+
+    if (!RegisteredNamedShot.IsSet())
+    {
+        RegisteredNamedShot = PredictedNamedShot;
+        const FString PredictedBall = PredictedNamedShot.SelectedBall ? PredictedNamedShot.SelectedBall->GetName() : "none";
+        const FString PredictedPocket = PredictedNamedShot.SelectedPocket ? PredictedNamedShot.SelectedPocket->GetName() : "none";
+        UE_LOG(LogTemp, Warning, TEXT("No named shot registered. Proceeding with predicted: ball %s, pocket %s"), *PredictedBall, *PredictedPocket);
+    }
+
+    /////////////////////////////
+    // Loop over pocketed balls
     for (const auto& RawBall : PocketedBalls)
     {
         const auto Ball = Cast<ABallAmerican>(RawBall);
@@ -139,19 +179,30 @@ void AEightBallGameState::HandleTurnEnd_Internal()
             AssignFoul(FFoulReason::CueBallOut);
         }
 
-        // TODO handle named shot
+        UPocketArea* lastPocket = RawBall->GetLastOverlappedPocket();
+        if (lastPocket)
+            UE_LOG(LogTemp, Warning, TEXT("Checking %s last overlapped pocket: %s"), *RawBall->GetName(), *lastPocket->GetName());
+        
+        if (RegisteredNamedShot.SelectedBall == RawBall &&
+            RegisteredNamedShot.SelectedPocket == RawBall->GetLastOverlappedPocket())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Named/predicted shot is satisfied"));
+            bNamedShotSatisfied = true;
+        }
 
         if (!bTableOpened)
         {
             const auto Player = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
             FBallType CurrentPlayerBallType = Player->GetAssignedBallType();
 
-            if (Ball->GetType() == CurrentPlayerBallType)
+            if (Ball->GetType() == CurrentPlayerBallType && bNamedShotSatisfied)
                 bShouldSwitchTurn = false;
         }
 
     }
 
+    //////////////////////////
+    // Loop over dropped balls
     for (const auto& RawBall : DroppedBalls)
     {
         const auto Ball = Cast<ABallAmerican>(RawBall);
@@ -187,7 +238,8 @@ void AEightBallGameState::HandleTurnEnd_Internal()
     if (PocketedBalls.Num() > 0 &&
         bBallsRackBroken &&
         bTableOpened &&
-        FoulReason == FFoulReason::None)
+        FoulReason == FFoulReason::None &&
+        bNamedShotSatisfied)
     {
         FBallType CurrentAssignedType = FBallType::NotInitialized,
             OtherAssignedType = FBallType::NotInitialized;
@@ -238,7 +290,8 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         else
         {
             auto OtherPlayerIndex = (PlayerIndexTurn + 1) % PlayerArray.Num();
-            GiveBallInHand(PlayerArray[OtherPlayerIndex], CueBall);
+            if (bBallsRackBroken == false)
+                GiveBallInHand(PlayerArray[OtherPlayerIndex], CueBall);
         }
     }
 
@@ -371,18 +424,17 @@ bool AEightBallGameState::FindAndInitializeCueBall()
     return false;
 }
 
+void AEightBallGameState::Multicast_BoradcastPredictedShotRegistered_Implementation(FNamedShot PredictedShot)
+{
+    if (OnPredictedShotRegistered.IsBound())
+        OnPredictedShotRegistered.Broadcast(PredictedShot);
+}
+
 void AEightBallGameState::Multicast_BroadcastNamedShotRegistered_Implementation(FNamedShot Shot)
 {
     if (OnNamedShotRegistered.IsBound())
         OnNamedShotRegistered.Broadcast(Shot);
 }
-
-void AEightBallGameState::Server_RegisterNamedShot_Implementation(UPocketArea* SelectedPocket, ABall* SelectedBall)
-{
-    RegisterNamedShot_Internal(SelectedPocket, SelectedBall);
-}
-
-bool AEightBallGameState::Server_RegisterNamedShot_Validate(UPocketArea* SelectedPocket, ABall* SelectedBall) { return true; }
 
 void AEightBallGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

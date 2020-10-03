@@ -27,8 +27,9 @@ public:
 
     virtual void GiveBallInHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
     virtual void TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball) override;
-
+    // Should be called on server already
     virtual void RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+    virtual void RegisterPredictedShot(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
 protected:
     virtual void HandleTurnEnd_Internal() override;
     virtual bool DecideWinCondition() override;
@@ -40,15 +41,23 @@ protected:
     class ABall* CueBall{ nullptr };
 
     FNamedShot RegisteredNamedShot;
+    // Tries to predict player's intention to pocket judging on his camera aiming.
+    // It simulates whether the shot is "obvious" or not, warning player about what
+    // shot is predicted
+    FNamedShot PredictedNamedShot;
     UPROPERTY(BlueprintAssignable)
     FOnNamedShotRegistered OnNamedShotRegistered;
-    
+    FOnNamedShotRegistered OnPredictedShotRegistered;
+
     TScriptInterface<class IPlayerWithHandableBall> PlayerWithCueBall{ nullptr };
 
     virtual void GiveBallInHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* const Ball) override;
     virtual void TakeBallFromHand_Internal(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball) override;
     
     virtual void RegisterNamedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+    virtual void RegisterPredictedShot_Internal(UPocketArea* SelectedPocket, ABall* SelectedBall) override;
+
+    virtual void ClearTurnStateVariables() override;
 private:
     bool FindAndInitializeCueBall();
     
@@ -58,9 +67,8 @@ private:
     UFUNCTION(Server, Reliable, WithValidation)
     void Server_TakeBallFromHand(const TScriptInterface<IPlayerWithHandableBall>& Player, ABall* Ball);
 
-    UFUNCTION(Server, Reliable, WithValidation)
-    void Server_RegisterNamedShot(UPocketArea* SelectedPocket, ABall* SelectedBall);
-
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_BroadcastNamedShotRegistered(FNamedShot NamedShot);
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_BoradcastPredictedShotRegistered(FNamedShot PredictedShot);
 };

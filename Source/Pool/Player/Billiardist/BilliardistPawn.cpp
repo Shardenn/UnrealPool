@@ -270,4 +270,5 @@ void ABilliardistPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ABilliardistPawn, State);
+    DOREPLIFETIME(ABilliardistPawn, SelectedBall);
 }

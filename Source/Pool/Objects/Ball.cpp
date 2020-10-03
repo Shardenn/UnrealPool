@@ -4,6 +4,7 @@
 #include "Pool.h"
 #include "GameplayLogic/PoolGameState.h"
 #include "BilliardistController.h"
+#include "Objects/Table/Components/PocketArea.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "OnlineSubsystem.h" // LogOnlineGame
@@ -40,6 +41,10 @@ void ABall::BeginPlay()
         SphereMesh->OnComponentBeginOverlap.AddDynamic(GameState, &APoolGameState::OnBallOverlap);
         SphereMesh->OnComponentEndOverlap.AddDynamic(GameState, &APoolGameState::OnBallEndOverlap);
         
+        SphereMesh->OnComponentBeginOverlap.AddDynamic(this, &ABall::OnOverlap);
+
+        //GameState->OnTurnEnd.AddDynamic(this, &ABall::OnTurnEndFired);
+
         SphereMesh->SetSimulatePhysics(true);
         SphereMesh->SetEnableGravity(true);
         
@@ -162,6 +167,21 @@ void ABall::ReturnBallIntoGame()
     Comp->SetSimulatePhysics(true);
 
     SetActorHiddenInGame(false);
+}
+
+void ABall::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+    UPrimitiveComponent* OtherComp, 
+    int32 OtherBodyIndex, bool bFromSweep,
+    const FHitResult& SweepResult)
+{
+    UPocketArea* Pocket = Cast<UPocketArea>(OtherComp);
+    if (Pocket != nullptr)
+        LastOverlappedPocket = Pocket;
+}
+
+void ABall::OnTurnEndFired()
+{
+    LastOverlappedPocket = nullptr;
 }
 
 void ABall::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
