@@ -243,9 +243,22 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         GM->bFirstTouchShouldBeFriendlyRuleActive &&
         BallsManager->GetBallsHittedByTheCue().Num() > 0)
     {
-        const auto BallAm = Cast<ABallAmerican>(BallsManager->GetBallsHittedByTheCue()[0]);
-        const auto Player = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn]);
-        if (Player->GetAssignedBallType() != BallAm->GetType())
+        const FBallType PlayerAssignedType = Cast<AEightBallPlayerState>(PlayerArray[PlayerIndexTurn])->GetAssignedBallType();
+        
+        bool bAllBallsOfTypeCleared = false;
+        const uint8 RequiredBalls = GM->GetRequiredBallsToPocket();
+        uint8 BallsClearedOut = 0;
+        for (const auto& BallOfType : BallsManager->GetBallsPlayedOut())
+        {
+            if (Cast<ABallAmerican>(BallOfType)->GetType() == PlayerAssignedType)
+                BallsClearedOut++;
+        }
+        if (BallsClearedOut == RequiredBalls)
+            bAllBallsOfTypeCleared = true;
+
+        const FBallType BallAmType = Cast<ABallAmerican>(BallsManager->GetBallsHittedByTheCue()[0])->GetType();
+        if (bAllBallsOfTypeCleared && BallAmType != FBallType::Black ||
+            !bAllBallsOfTypeCleared && BallAmType != PlayerAssignedType)
             AssignFoul(FFoulReason::WrongBallTouchedFirst);
     }
 

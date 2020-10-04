@@ -22,7 +22,6 @@ void ABilliardistPawnWithPlacableBall::OnRep_PlayerState()
     SubscribeToBallInHandUpdate();
 
     MyController = Cast<ABilliardistController>(GetController());
-    if (!ensure(MyController != nullptr)) return;
 }
 
 void ABilliardistPawnWithPlacableBall::PossessedBy(AController* NewController)
@@ -31,7 +30,6 @@ void ABilliardistPawnWithPlacableBall::PossessedBy(AController* NewController)
     SubscribeToBallInHandUpdate();
 
     MyController = Cast<ABilliardistController>(GetController());
-    if (!ensure(MyController != nullptr)) return;
 }
 
 void ABilliardistPawnWithPlacableBall::SubscribeToBallInHandUpdate()
@@ -123,6 +121,7 @@ void ABilliardistPawnWithPlacableBall::Tick(float DeltaTime)
 
 void ABilliardistPawnWithPlacableBall::TryPlaceBall(const TScriptInterface<IPlayerWithHandableBall>& Player)
 {
+    if (!ensure(Player != nullptr || GhostHandedBall != nullptr)) return;
     Player->PlaceHandedBall(GhostHandedBall->GetActorLocation());
 }
 

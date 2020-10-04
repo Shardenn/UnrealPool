@@ -13,7 +13,7 @@
 ABall::ABall()
 {
     SetReplicates(true);
-    SetReplicateMovement(false);
+    SetReplicateMovement(true);
 
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.bTickEvenWhenPaused = true;

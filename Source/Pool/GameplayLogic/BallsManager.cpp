@@ -46,6 +46,7 @@ void UBallsManager::ResetTurnArrays()
 {
     BallsPocketedDuringTurn.Empty();
     BallsDroppedDuringTurn.Empty();
+    BallsHittedByTheCue.Empty();
 }
 
 void UBallsManager::AddMovingBall(ABall* Ball)
