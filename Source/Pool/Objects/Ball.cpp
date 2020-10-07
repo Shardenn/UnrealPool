@@ -70,7 +70,7 @@ void ABall::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (GetLocalRole() < ROLE_Authority)
+    if (GetLocalRole() < ROLE_Authority && bSimulateClientMovement)
     {
         ClientTick(DeltaTime);
     }

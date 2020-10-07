@@ -101,6 +101,9 @@ protected:
     UFUNCTION()
     void OnRep_SmoothPhysicsState();
     
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bSimulateClientMovement{ true };
+    
     void ClientTick(float DeltaTime);
 
     FHermiteCubicSpline CreateSpline();

@@ -156,7 +156,8 @@ void ABilliardistPawnWithPlacableBall::ActionReleaseHandle()
     // If we have a ball in hand - try place it
     if (HandablePlayer && HandablePlayer->GetIsBallInHand())
     {
-        TryPlaceBall(HandablePlayer);
+        if (IsBallPlacementValid())
+            TryPlaceBall(HandablePlayer);
         bBallPlacedJustNow = true;
         return;
     }
