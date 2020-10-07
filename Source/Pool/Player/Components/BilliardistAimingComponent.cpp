@@ -3,6 +3,9 @@
 #include "BilliardistAimingComponent.h"
 
 #include "Pool.h"
+
+#include "Objects/Cue.h"
+
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -17,6 +20,65 @@ UBilliardistAimingComponent::UBilliardistAimingComponent()
 void UBilliardistAimingComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    MyOwner = Cast<APawn>(GetOwner());
+
+    if (!ensure(MyOwner != nullptr)) return;
+
+    bInControlOfPawn = MyOwner->GetLocalRole() == ROLE_AutonomousProxy ||
+        MyOwner->GetRemoteRole() == ROLE_SimulatedProxy;
+}
+
+
+void UBilliardistAimingComponent::GetCueLocationAndRotation(FVector& Location, FQuat& Rotation)
+{
+    FVector LookDir = MyOwner->GetController()->GetControlRotation().Vector();
+    //LookDir.Z = 0;
+    Location = FinalTransform.Location + (-LookDir * (BallRadius + CuePlacementThreshold));
+    
+    FRotator StartRotation = MyOwner->GetController()->GetControlRotation();
+    StartRotation.Pitch += CueRotationOffsetFromControlRotation;
+
+    Rotation = StartRotation.Quaternion();
+}
+
+void UBilliardistAimingComponent::UpdateCueLocation(const FVector& AimOffset /*= FVector(0,0,0)*/)
+{
+    if (!Cue || !bInControlOfPawn)
+        return;
+    FVector CueCreationLocation;
+    FQuat CueCreationRotation;
+    GetCueLocationAndRotation(CueCreationLocation, CueCreationRotation);
+    Server_MoveCue(CueCreationLocation, CueCreationRotation);
+}
+
+void UBilliardistAimingComponent::Server_DestroyCue_Implementation()
+{
+    if (Cue)
+        Cue->Destroy();
+}
+
+void UBilliardistAimingComponent::Server_MoveCue_Implementation(const FVector& Location, const FQuat& Rotation)
+{
+    if (!Cue)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No cue created, but tried to move it."));
+        return;
+    }
+
+    Cue->SetActorLocation(Location);
+    Cue->SetActorRotation(Rotation);
+}
+
+void UBilliardistAimingComponent::Server_CreateCue_Implementation(const FVector& Location, const FQuat& Rotation)
+{
+    if (!IsValid(CueClass))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No correct cue class is set in aiming component."));
+        return;
+    }
+
+    Cue = GetWorld()->SpawnActor<ACue>(CueClass, Location, FRotator(Rotation));
 }
 
 void UBilliardistAimingComponent::Initialize(USpringArmComponent* InSpringArm)
@@ -30,6 +92,8 @@ void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta)
 {
     HitStrengthRatio = FMath::Clamp(HitStrengthRatio + Delta * HitStrengthadjustmentSpeed, 0.f, 1.f);
     HitStrength = MaxAcceptableHitStrength * HitStrengthRatio;
+
+    CueOffsetMultiplier = MaxCueOffsetMultiplier * HitStrengthRatio;
 }
 
 void UBilliardistAimingComponent::AdjustZoom(float Delta)
@@ -51,6 +115,13 @@ void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
     FinalTransform.Rotation = (AimedAt - GetDefaultCameraSpringWorldLocation()).Rotation().Quaternion();;
 
     BlendingState = EBlendingState::BlendingIn;
+
+    const FVector LookDir = MyOwner->GetController()->GetControlRotation().Vector();
+    FVector CueCreationLocation;
+    FQuat CueCreationRotation;
+    GetCueLocationAndRotation(CueCreationLocation, CueCreationRotation);
+
+    Server_CreateCue(CueCreationLocation, CueCreationRotation);
 }
 
 void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLookAt)
@@ -61,12 +132,14 @@ void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLook
     ActorToLookAtWhileBlending = ActorToLookAt;
 
     StartingTransform.Location = SpringArm->GetComponentLocation();
-    StartingTransform.Rotation = Cast<APawn>(GetOwner())->GetController()->GetControlRotation().Quaternion();
+    StartingTransform.Rotation = MyOwner->GetController()->GetControlRotation().Quaternion();
 
     FinalTransform.Location = GetDefaultCameraSpringWorldLocation();
     FinalTransform.Rotation = (ActorToLookAtWhileBlending->GetActorLocation() - GetDefaultCameraSpringWorldLocation()).ToOrientationQuat();
 
     BlendingState = EBlendingState::BlendingOut;
+
+    Server_DestroyCue();
 }
 
 void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -75,16 +148,25 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
     
     float EasedAlpha = 0.f;
     float SpringArmAlpha = 0.f;
+    FVector AimOffset;
 
     switch (BlendingState)
     {
+        case EBlendingState::BlendedIn:
+            if (Cue)
+            {
+                const FVector Forward = Cue->GetActorForwardVector();
+                AimOffset = -Forward * CueOffsetMultiplier;
+            }
+            UpdateCueLocation(AimOffset);
+            break;
         case EBlendingState::BlendingIn:
             EasedAlpha = UKismetMathLibrary::Ease(0.f, 1.f, BlendAlpha, EEasingFunc::ExpoOut);
 
             CurrentTransform.Location = FMath::Lerp(StartingTransform.Location, FinalTransform.Location, EasedAlpha);
             CurrentTransform.Rotation = FMath::Lerp(StartingTransform.Rotation, FinalTransform.Rotation, EasedAlpha);
 
-            Cast<APawn>(GetOwner())->GetController()->SetControlRotation(CurrentTransform.Rotation.Rotator());
+            MyOwner->GetController()->SetControlRotation(CurrentTransform.Rotation.Rotator());
             SpringArm->SetWorldLocation(CurrentTransform.Location);
 
             SpringArm->TargetArmLength = FMath::Lerp(0.f, LastSpringArmLength, EasedAlpha);
@@ -93,12 +175,18 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
             if (BlendAlpha >= 1.f)
             {
-                BlendingState = EBlendingState::None;
+                BlendingState = EBlendingState::BlendedIn;
                 BlendAlpha = 1.f;
 
                 SpringArm->TargetArmLength = LastSpringArmLength;
                 SpringArm->SetWorldLocation(FinalTransform.Location);
             }
+            if (Cue)
+            {
+                const FVector Forward = Cue->GetActorForwardVector();
+                AimOffset = -Forward * CueOffsetMultiplier;
+            }
+            UpdateCueLocation(AimOffset);
             break;
 
         case EBlendingState::BlendingOut:
@@ -111,7 +199,7 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
             CurrentTransform.Location = FMath::Lerp(StartingTransform.Location, FinalTransform.Location, EasedAlpha);
             CurrentTransform.Rotation = FMath::Lerp(StartingTransform.Rotation, FinalTransform.Rotation, EasedAlpha);
 
-            Cast<APawn>(GetOwner())->GetController()->SetControlRotation(CurrentTransform.Rotation.Rotator());
+            MyOwner->GetController()->SetControlRotation(CurrentTransform.Rotation.Rotator());
             SpringArm->SetWorldLocation(CurrentTransform.Location);
 
             SpringArm->TargetArmLength = FMath::Lerp(LastSpringArmLength, 0.f, EasedAlpha);
@@ -120,7 +208,7 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
             if (BlendAlpha <= 0.f)
             {
-                BlendingState = EBlendingState::None;
+                BlendingState = EBlendingState::BlendedOut;
                 BlendAlpha = 0.f;
 
                 SpringArm->TargetArmLength = 0.f;
@@ -128,4 +216,26 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
             }
             break;
     }
+}
+
+void UBilliardistAimingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UBilliardistAimingComponent, Cue);
+}
+
+bool UBilliardistAimingComponent::Server_CreateCue_Validate(const FVector& Location, const FQuat& Rotation)
+{
+    return true;
+}
+
+bool UBilliardistAimingComponent::Server_MoveCue_Validate(const FVector& Location, const FQuat& Rotation)
+{
+    return true;
+}
+
+bool UBilliardistAimingComponent::Server_DestroyCue_Validate()
+{
+    return true;
 }

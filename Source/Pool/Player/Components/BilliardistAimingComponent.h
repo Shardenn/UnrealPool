@@ -12,7 +12,9 @@ enum class EBlendingState : uint8
 {
     None,
     BlendingIn,
-    BlendingOut
+    BlendingOut,
+    BlendedIn,
+    BlendedOut
 };
 
 struct InterpolationData
@@ -45,6 +47,24 @@ public:
 protected:
     virtual void BeginPlay() override;
 
+    // Needed for cue placement
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float BallRadius{ 2.6f };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float CuePlacementThreshold{ 0.5f };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float CueRotationOffsetFromControlRotation{ 20.f };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float CuePositionOffsetStepWhileAiming{ 1.f };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float MaxCueOffsetMultiplier{ 25.f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Cue placement")
+    class ACue* Cue{ nullptr };
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    TSubclassOf<class ACue> CueClass;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     USpringArmComponent* SpringArm = nullptr;
 
@@ -56,9 +76,6 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float HitStrengthadjustmentSpeed = 0.05f;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Hit strength")
-    float HitStrengthRatio = 0.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;
@@ -85,6 +102,26 @@ protected:
 #pragma endregion
 
 private:
+    float HitStrengthRatio{ 0.f };
+    // Offset from ball to the player.
+    // Used for cue swinging while strength adjustment
+    float CueOffsetMultiplier{ 0.f };
+
     FVector GetDefaultCameraSpringWorldLocation() const { return DefaultSpringArmLocation + GetOwner()->GetActorLocation(); }
     float LastSpringArmLength = ZoomSpringArmLengthMax * 0.2f;
+
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_CreateCue(const FVector& Location, const FQuat& Rotation);
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_DestroyCue();
+    UFUNCTION(Server, Reliable, WithValidation)
+    void Server_MoveCue(const FVector& Location, const FQuat& Rotation);
+
+    class APawn* MyOwner{ nullptr };
+
+    void GetCueLocationAndRotation(FVector& Location, FQuat& Rotation);
+
+    void UpdateCueLocation(const FVector& AimOffset = FVector(0,0,0));
+
+    bool bInControlOfPawn{ false };
 };
