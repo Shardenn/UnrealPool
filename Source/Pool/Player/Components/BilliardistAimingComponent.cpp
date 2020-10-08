@@ -42,14 +42,25 @@ void UBilliardistAimingComponent::GetCueLocationAndRotation(FVector& Location, F
     Rotation = StartRotation.Quaternion();
 }
 
-void UBilliardistAimingComponent::UpdateCueLocation(const FVector& AimOffset /*= FVector(0,0,0)*/)
+void UBilliardistAimingComponent::UpdateCueLocation(const FVector& AimOffset /*= FVector(0,0,0)*/, const FQuat& RotationOffset)
 {
-    if (!Cue || !bInControlOfPawn)
-        return;
-    FVector CueCreationLocation;
-    FQuat CueCreationRotation;
-    GetCueLocationAndRotation(CueCreationLocation, CueCreationRotation);
-    Server_MoveCue(CueCreationLocation, CueCreationRotation);
+    if (!bInControlOfPawn) return;
+
+    FVector CueLocation;
+    FQuat CueRotation;
+    GetCueLocationAndRotation(CueLocation, CueRotation);
+    Server_MoveCue(CueLocation + AimOffset, CueRotation);
+}
+
+
+void UBilliardistAimingComponent::OnCueOverlap(UPrimitiveComponent* OverlappedComponent, 
+    AActor* OtherActor, 
+    UPrimitiveComponent* OtherComp, 
+    int32 OtherBodyIndex, 
+    bool bFromSweep, 
+    const FHitResult& SweepResult)
+{
+
 }
 
 void UBilliardistAimingComponent::Server_DestroyCue_Implementation()
@@ -157,6 +168,8 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
             {
                 const FVector Forward = Cue->GetActorForwardVector();
                 AimOffset = -Forward * CueOffsetMultiplier;
+                const FVector Up = Cue->GetActorUpVector();
+                AimOffset += -Up * CueDownOffsetMultiplier;
             }
             UpdateCueLocation(AimOffset);
             break;
@@ -185,6 +198,8 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
             {
                 const FVector Forward = Cue->GetActorForwardVector();
                 AimOffset = -Forward * CueOffsetMultiplier;
+                const FVector Up = Cue->GetActorUpVector();
+                AimOffset += -Up * CueDownOffsetMultiplier;
             }
             UpdateCueLocation(AimOffset);
             break;

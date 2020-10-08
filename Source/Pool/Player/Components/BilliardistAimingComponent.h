@@ -58,7 +58,9 @@ protected:
     float CuePositionOffsetStepWhileAiming{ 1.f };
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
     float MaxCueOffsetMultiplier{ 25.f };
-
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    float CueDownOffsetMultiplier{ 1.f };
+    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Cue placement")
     class ACue* Cue{ nullptr };
     
@@ -121,7 +123,15 @@ private:
 
     void GetCueLocationAndRotation(FVector& Location, FQuat& Rotation);
 
-    void UpdateCueLocation(const FVector& AimOffset = FVector(0,0,0));
+    void UpdateCueLocation(const FVector& AimOffset = FVector(0,0,0), const FQuat& RotationOffset = FQuat::Identity);
 
     bool bInControlOfPawn{ false };
+
+    UFUNCTION()
+    void OnCueOverlap(UPrimitiveComponent* OverlappedComponent,
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp,
+            int32 OtherBodyIndex,
+            bool bFromSweep,
+            const FHitResult& SweepResult);
 };
