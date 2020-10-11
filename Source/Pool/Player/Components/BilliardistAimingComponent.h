@@ -30,7 +30,8 @@ class POOL_API UBilliardistAimingComponent : public UActorComponent
 
 public:
     UBilliardistAimingComponent();
-    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+                               FActorComponentTickFunction* ThisTickFunction) override;
 
     UFUNCTION(BlueprintCallable, Category = "Setup")
     void Initialize(USpringArmComponent* InSpringArm);
@@ -52,18 +53,28 @@ protected:
     float BallRadius{ 2.6f };
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
     float CuePlacementThreshold{ 0.5f };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Camera adjustment")
     float CueRotationOffsetFromControlRotation{ 20.f };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
-    float CuePositionOffsetStepWhileAiming{ 1.f };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
-    float MaxCueOffsetMultiplier{ 25.f };
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
+    // As we manually rotate cue a bit down (in order not to collide with camera)
+    // we should also move it a bit down, that way it looks better
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Camera adjustment")
     float CueDownOffsetMultiplier{ 1.f };
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Swinging")
+    float CuePositionOffsetStepWhileAiming{ 1.f };
+    // Offset during the swinging
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Swinging")
+    float MaxCueOffsetMultiplier{ 25.f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Overlap compensation")
+    float OverlapCompensationRotationStep{ 5.f };
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Overlap compensation")
+    float OverlapCompensationRotationMax{ 5.f };
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Cue placement")
     class ACue* Cue{ nullptr };
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement")
     TSubclassOf<class ACue> CueClass;
 
@@ -109,7 +120,13 @@ private:
     // Used for cue swinging while strength adjustment
     float CueOffsetMultiplier{ 0.f };
 
-    FVector GetDefaultCameraSpringWorldLocation() const { return DefaultSpringArmLocation + GetOwner()->GetActorLocation(); }
+    FRotator CurrentCueOverlapOffset{ 0.f, 0.f, 0.f };
+    
+    FVector GetDefaultCameraSpringWorldLocation() const
+    {
+        return DefaultSpringArmLocation + GetOwner()->GetActorLocation();
+    }
+
     float LastSpringArmLength = ZoomSpringArmLengthMax * 0.2f;
 
     UFUNCTION(Server, Reliable, WithValidation)
@@ -123,15 +140,7 @@ private:
 
     void GetCueLocationAndRotation(FVector& Location, FQuat& Rotation);
 
-    void UpdateCueLocation(const FVector& AimOffset = FVector(0,0,0), const FQuat& RotationOffset = FQuat::Identity);
+    void UpdateCueLocation(const FVector& AimOffset = FVector(0, 0, 0), const FQuat& RotationOffset = FQuat::Identity);
 
     bool bInControlOfPawn{ false };
-
-    UFUNCTION()
-    void OnCueOverlap(UPrimitiveComponent* OverlappedComponent,
-            AActor* OtherActor,
-            UPrimitiveComponent* OtherComp,
-            int32 OtherBodyIndex,
-            bool bFromSweep,
-            const FHitResult& SweepResult);
 };

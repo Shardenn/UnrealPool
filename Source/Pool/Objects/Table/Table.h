@@ -16,7 +16,7 @@ public:
     ATable();
 
     UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Spline Path"))
-    USplineComponent* GetSplinePath()                  { return SplinePath; }
+    class USplineComponent* GetSplinePath()                  { return SplinePath; }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USceneComponent* FrontBallLocation = nullptr;

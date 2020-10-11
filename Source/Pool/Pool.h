@@ -11,3 +11,4 @@ DECLARE_LOG_CATEGORY_EXTERN(LogPool, Log, All);
 #define ECC_TableTraceChannel ECC_GameTraceChannel2
 #define ECC_PlacementAreaHint ECC_GameTraceChannel3
 #define ECC_PocketAreaTracing ECC_GameTraceChannel4
+#define ECC_BallRegistration ECC_GameTraceChannel5

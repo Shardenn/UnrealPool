@@ -2,7 +2,12 @@
 
 #include "BilliardistAimingComponent.h"
 
+
+
+#include "CollisionShape.h"
+#include "DrawDebugHelpers.h"
 #include "Pool.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 
 #include "Objects/Cue.h"
 
@@ -49,18 +54,7 @@ void UBilliardistAimingComponent::UpdateCueLocation(const FVector& AimOffset /*=
     FVector CueLocation;
     FQuat CueRotation;
     GetCueLocationAndRotation(CueLocation, CueRotation);
-    Server_MoveCue(CueLocation + AimOffset, CueRotation);
-}
-
-
-void UBilliardistAimingComponent::OnCueOverlap(UPrimitiveComponent* OverlappedComponent, 
-    AActor* OtherActor, 
-    UPrimitiveComponent* OtherComp, 
-    int32 OtherBodyIndex, 
-    bool bFromSweep, 
-    const FHitResult& SweepResult)
-{
-
+    Server_MoveCue(CueLocation + AimOffset, CueRotation * RotationOffset);
 }
 
 void UBilliardistAimingComponent::Server_DestroyCue_Implementation()
@@ -90,6 +84,7 @@ void UBilliardistAimingComponent::Server_CreateCue_Implementation(const FVector&
     }
 
     Cue = GetWorld()->SpawnActor<ACue>(CueClass, Location, FRotator(Rotation));
+    if (Cue) Cue->SubscribeToMeshOverlaps();
 }
 
 void UBilliardistAimingComponent::Initialize(USpringArmComponent* InSpringArm)
@@ -160,7 +155,9 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
     float EasedAlpha = 0.f;
     float SpringArmAlpha = 0.f;
     FVector AimOffset;
+    FQuat RotationOffset;
 
+    if (!bInControlOfPawn) return;
     switch (BlendingState)
     {
         case EBlendingState::BlendedIn:
@@ -170,8 +167,17 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
                 AimOffset = -Forward * CueOffsetMultiplier;
                 const FVector Up = Cue->GetActorUpVector();
                 AimOffset += -Up * CueDownOffsetMultiplier;
+
+                const uint32 MeshOverlaps = Cue->GetMeshOverlapNum();
+                const uint32 CapsuleOverlaps = Cue->GetCapsuleOverlapNum();
+
+                if (MeshOverlaps > 0 && CapsuleOverlaps > 0)
+                    CurrentCueOverlapOffset.Pitch -= OverlapCompensationRotationStep;
+                else if (CapsuleOverlaps < 1 && MeshOverlaps < 1)
+                    CurrentCueOverlapOffset.Pitch += OverlapCompensationRotationStep;
             }
-            UpdateCueLocation(AimOffset);
+            RotationOffset = CurrentCueOverlapOffset.Quaternion();
+            UpdateCueLocation(AimOffset, RotationOffset);
             break;
         case EBlendingState::BlendingIn:
             EasedAlpha = UKismetMathLibrary::Ease(0.f, 1.f, BlendAlpha, EEasingFunc::ExpoOut);
