@@ -12,3 +12,6 @@ Content/StarterContent
 # Visual studio reproducables
 *.db
 *.vs
+
+# Rider files
+.idea
