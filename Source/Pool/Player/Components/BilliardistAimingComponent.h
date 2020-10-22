@@ -45,6 +45,9 @@ public:
 
     void HandleStartedAiming(const FVector& AimedAt);
     void HandleFinishedAiming(class AActor* const ActorToLookAt);
+
+    void SpinHorizontalUpdate(const float Value);
+    void SpinVerticalUpdate(const float Value);
 protected:
     virtual void BeginPlay() override;
 
@@ -71,6 +74,9 @@ protected:
     float OverlapCompensationRotationStep{ 5.f };
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Overlap compensation")
     float OverlapCompensationRotationMax{ 5.f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cue placement | Spinning")
+    float CueSpinOffsetMax{ 1.5f };
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Cue placement")
     class ACue* Cue{ nullptr };
@@ -121,6 +127,9 @@ private:
     float CueOffsetMultiplier{ 0.f };
 
     FRotator CurrentCueOverlapOffset{ 0.f, 0.f, 0.f };
+
+    float CueSpinOffsetX{ 0.f };
+    float CueSpinOffsetY{ 0.f };
     
     FVector GetDefaultCameraSpringWorldLocation() const
     {

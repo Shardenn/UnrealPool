@@ -73,6 +73,8 @@ void ABilliardistPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAction("Action", IE_Released, this, &ABilliardistPawn::ActionReleaseHandle);
     //PlayerInputComponent->BindAction("TopView", IE_Pressed, this, &ABilliardistPawn::ExaminingPressHandle);
     PlayerInputComponent->BindAction("Ready", IE_Pressed, this, &ABilliardistPawn::ReadyStateToggle);
+    PlayerInputComponent->BindAction("SpinAdjust", IE_Pressed, this, &ABilliardistPawn::StartedSpinAdjustment);
+    PlayerInputComponent->BindAction("SpinAdjust", IE_Released, this, &ABilliardistPawn::FinishedSpinAdjustment);
 }
 
 void ABilliardistPawn::SetSpline(USplineComponent* Spline)
@@ -102,18 +104,22 @@ void ABilliardistPawn::MoveRight(float Value)
 
 void ABilliardistPawn::Turn(float Value)
 {
-    if (!(bAdjustingHitStrength || bAdjustingZoom))
+    if (!(bAdjustingHitStrength || bAdjustingZoom || bAdjustingSpin))
         AddControllerYawInput(Value);
+    if (bAdjustingSpin)
+        AimingComponent->SpinHorizontalUpdate(Value);
 }
 
 void ABilliardistPawn::LookUp(float Value)
 {
     if (bAdjustingHitStrength)
         AimingComponent->UpdateHitStrengthRatio(Value);
-    else if (!bAdjustingZoom)
-        AddControllerPitchInput(Value);
-    else
+    else if (bAdjustingZoom)
         AimingComponent->AdjustZoom(Value);
+    else if (bAdjustingSpin)
+        AimingComponent->SpinVerticalUpdate(Value);
+    else
+        AddControllerPitchInput(Value);
 }
 
 void ABilliardistPawn::StartedZoomAdjustement()
@@ -126,6 +132,17 @@ void ABilliardistPawn::FinishedZoomAdjustement()
 {
     bAdjustingZoom = false;
 }
+
+void ABilliardistPawn::StartedSpinAdjustment()
+{
+    bAdjustingSpin = true;   
+}
+
+void ABilliardistPawn::FinishedSpinAdjustment()
+{
+    bAdjustingSpin = false;
+}
+
 #pragma endregion
 
 void ABilliardistPawn::ActionPressHandle()

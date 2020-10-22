@@ -71,6 +71,9 @@ protected:
     bool bAdjustingZoom = false;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    bool bAdjustingSpin = false;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UBilliardistReplicationComponent* ReplicationComponent = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -103,6 +106,11 @@ protected:
     UFUNCTION()
     void FinishedZoomAdjustement();
 
+    UFUNCTION()
+    void StartedSpinAdjustment();
+    UFUNCTION()
+    void FinishedSpinAdjustment();
+    
     UFUNCTION()
     virtual void ActionPressHandle();
     UFUNCTION()

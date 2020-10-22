@@ -8,21 +8,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e511c46c-ebfa-44de-ba93-5696ba597b55" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_Ball.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_Ball.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Pool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Pool/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallAmerican.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallAmerican.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallHanded.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallHanded.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_Cue.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_Cue.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_TableEightBall.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_TableEightBall.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Billiardist/BP_EightBallBilliardist.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Billiardist/BP_EightBallBilliardist.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Maps/Pool_cozy_room.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Pool_cozy_room.umap" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Pool.sln" beforeDir="false" afterPath="$PROJECT_DIR$/Pool.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Pool/Objects/Cue.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Objects/Cue.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Pool/Objects/Cue.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Objects/Cue.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Pool/Objects/Table/Table.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Objects/Table/Table.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/Pool/Pool.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Pool.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,9 +30,11 @@
       <list>
         <option value="$PROJECT_DIR$/Source/Pool/Objects/Table/Table.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Pool.h" />
-        <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Objects/Cue.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Objects/Cue.cpp" />
+        <option value="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" />
+        <option value="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" />
+        <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" />
       </list>
     </option>
@@ -172,78 +167,78 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="1152" y="430" width="672" height="592" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1602341909314" />
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1602430190807">
+    <state width="1877" height="375" key="GridCell.Tab.0.bottom" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602430190807" />
-    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1602430190807">
+    <state width="1877" height="375" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.0.center" timestamp="1602605080376">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602430190807" />
-    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1602430190806">
+    <state width="1877" height="375" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
+    <state width="1877" height="375" key="GridCell.Tab.0.left" timestamp="1602605080376">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602430190806" />
-    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1602430190807">
+    <state width="1877" height="375" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
+    <state width="1877" height="375" key="GridCell.Tab.0.right" timestamp="1602605080376">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602430190807" />
-    <state width="1877" height="375" key="GridCell.Tab.1.bottom" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
+    <state width="1877" height="375" key="GridCell.Tab.1.bottom" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.1.center" timestamp="1602406312055">
+    <state width="1877" height="375" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.1.center" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312055" />
-    <state width="1877" height="375" key="GridCell.Tab.1.left" timestamp="1602406312055">
+    <state width="1877" height="375" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.1.left" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312055" />
-    <state width="1877" height="375" key="GridCell.Tab.1.right" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.1.right" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.2.bottom" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.2.bottom" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.2.center" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.2.center" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.2.left" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.2.left" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.2.right" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.2.right" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.3.bottom" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.3.bottom" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.3.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.3.center" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.3.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.3.center" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.3.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.3.left" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.3.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.3.left" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.3.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
-    <state width="1877" height="375" key="GridCell.Tab.3.right" timestamp="1602406312056">
+    <state width="1877" height="375" key="GridCell.Tab.3.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
+    <state width="1877" height="375" key="GridCell.Tab.3.right" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.3.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602406312056" />
+    <state width="1877" height="375" key="GridCell.Tab.3.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
     <state x="374" y="138" width="1437" height="807" key="SettingsEditor" timestamp="1602345031452">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="374" y="138" width="1437" height="807" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1602345031452" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1602345003917">
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1602599678608">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1602345003917" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1602599678608" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

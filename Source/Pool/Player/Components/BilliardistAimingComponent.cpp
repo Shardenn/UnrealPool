@@ -148,6 +148,23 @@ void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLook
     Server_DestroyCue();
 }
 
+void UBilliardistAimingComponent::SpinHorizontalUpdate(const float Value)
+{
+    float PossibleSpinOffsetX = CueSpinOffsetX + Value;
+    float DistSqrd = FMath::Square(PossibleSpinOffsetX) + FMath::Square(CueSpinOffsetY); 
+    if (DistSqrd <= FMath::Square(CueSpinOffsetMax))
+        CueSpinOffsetX = PossibleSpinOffsetX;
+}
+
+void UBilliardistAimingComponent::SpinVerticalUpdate(const float Value)
+{
+    // The sign is flipped in Y axis
+    float PossibleSpinOffsetY = CueSpinOffsetY - Value;
+    float DistSqrd = FMath::Square(CueSpinOffsetX) + FMath::Square(PossibleSpinOffsetY);
+    if (DistSqrd <= FMath::Square(CueSpinOffsetMax))
+        CueSpinOffsetY = PossibleSpinOffsetY;
+}
+
 void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -163,11 +180,7 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
         case EBlendingState::BlendedIn:
             if (Cue)
             {
-                const FVector Forward = Cue->GetActorForwardVector();
-                AimOffset = -Forward * CueOffsetMultiplier;
-                const FVector Up = Cue->GetActorUpVector();
-                AimOffset += -Up * CueDownOffsetMultiplier;
-
+                // Find out the rotation compensation needed so we don't cross anything with cue body
                 const uint32 MeshOverlaps = Cue->GetMeshOverlapNum();
                 const uint32 CapsuleOverlaps = Cue->GetCapsuleOverlapNum();
 
@@ -175,7 +188,21 @@ void UBilliardistAimingComponent::TickComponent(float DeltaTime, ELevelTick Tick
                     CurrentCueOverlapOffset.Pitch -= OverlapCompensationRotationStep;
                 else if (CapsuleOverlaps < 1 && MeshOverlaps < 1)
                     CurrentCueOverlapOffset.Pitch += OverlapCompensationRotationStep;
-            }
+
+                // Get the vectors.
+                const FVector Forward = Cue->GetActorForwardVector();
+                const FVector Up = Cue->GetActorUpVector();
+                const FVector Right = Cue->GetActorRightVector();
+
+                // Find the offset for the cue so it levitates nicely in front of the ball
+                AimOffset = -Forward * CueOffsetMultiplier;
+                AimOffset += -Up * CueDownOffsetMultiplier;
+
+                // Find the offset needed for spinning show
+                const FVector SpinOffset = Right * CueSpinOffsetX + Up * CueSpinOffsetY;
+                AimOffset += SpinOffset;
+            }            
+        
             RotationOffset = CurrentCueOverlapOffset.Quaternion();
             UpdateCueLocation(AimOffset, RotationOffset);
             break;
