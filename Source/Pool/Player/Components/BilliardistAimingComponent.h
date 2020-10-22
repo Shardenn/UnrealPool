@@ -36,6 +36,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Setup")
     void Initialize(USpringArmComponent* InSpringArm);
 
+    FVector GetCueForwardVector() const;
+    FVector GetHitLocation() const;
+
     float GetHitStrength() { return HitStrength; }
     float GetMaxHitStrength() { return MaxAcceptableHitStrength; }
 

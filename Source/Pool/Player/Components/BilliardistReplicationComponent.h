@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Misc/Optional.h"
 #include "BilliardistReplicationComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -22,7 +23,7 @@ public:
     void ReadyStateToggle();
 
     UFUNCTION(Server, Reliable, WithValidation)
-    void Server_PerformBallHit(class ABall* Ball, const FVector& Velocity);
+    void Server_PerformBallHit(class ABall* Ball, const FVector& Velocity, const FVector& AtLocation = FVector(0));
 protected:
     virtual void BeginPlay() override;
 

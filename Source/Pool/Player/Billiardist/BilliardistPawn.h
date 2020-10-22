@@ -89,7 +89,7 @@ protected:
     virtual void HandleBallSelected(class ABall* Ball);
     virtual void HandleFinishedAiming(AActor* const ActorToLookAt);
 
-    void LaunchBall(ABall* Ball, const FVector& Velocity);
+    void LaunchBall(ABall* Ball, const FVector& Velocity, const FVector& AtLocation = FVector(0));
 
 #pragma region InputBindedFunctions
     UFUNCTION()

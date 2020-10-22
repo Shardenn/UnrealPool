@@ -76,8 +76,9 @@ void UBilliardistReplicationComponent::ReadyStateToggle()
     PlayerStateBill->Server_ToggleReady();
 }
 
-bool UBilliardistReplicationComponent::Server_PerformBallHit_Validate(ABall* Ball, const FVector& Velocity) { return true; }
-void UBilliardistReplicationComponent::Server_PerformBallHit_Implementation(ABall* Ball, const FVector& Velocity)
+bool UBilliardistReplicationComponent::Server_PerformBallHit_Validate(ABall* Ball, const FVector& Velocity, const FVector&) { return true; }
+void UBilliardistReplicationComponent::Server_PerformBallHit_Implementation(ABall* Ball, const FVector& Velocity,
+    const FVector& AtLocation)
 {
     UWorld* World = GetWorld();
     APoolGameState* State = Cast<APoolGameState>(UGameplayStatics::GetGameState(World));
@@ -86,8 +87,12 @@ void UBilliardistReplicationComponent::Server_PerformBallHit_Implementation(ABal
     State->Server_StartWatchingBallsMovement();
 
     if (!ensure(Ball != nullptr)) return;
-    Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
-    UE_LOG(LogTemp, Warning, TEXT("Added impulse %s"), *Velocity.ToString());
+    if (AtLocation == FVector(0))
+        Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
+    else
+        Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulseAtLocation(Velocity, AtLocation);
+    
+    UE_LOG(LogTemp, Warning, TEXT("Added impulse %s at location"), *Velocity.ToString(), *AtLocation.ToString());
 }
 
 bool UBilliardistReplicationComponent::Server_UpdatePlayerLocation_Validate(const FVector&) { return true; }

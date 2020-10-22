@@ -199,9 +199,10 @@ void ABilliardistPawn::ActionReleaseHandle()
             if (HitStrength <= AimingComponent->GetMaxHitStrength() * 0.01)
                 break;
 
-            FVector LookDirection = GetControlRotation().Vector().GetSafeNormal(KINDA_SMALL_NUMBER);
-            LookDirection.Z = 0; // TODO handle jump/curve later
-            LaunchBall(SelectedBall, LookDirection * HitStrength);
+            //FVector LookDirection = GetControlRotation().Vector().GetSafeNormal(KINDA_SMALL_NUMBER);
+            const FVector HitDirection = AimingComponent->GetCueForwardVector();
+            const FVector HitLocation = AimingComponent->GetHitLocation();
+            LaunchBall(SelectedBall, HitDirection * HitStrength, HitLocation);
             HandleFinishedAiming(SelectedBall);
             SelectedBall = nullptr;
             SetState(FState::OBSERVING);
@@ -231,9 +232,9 @@ void ABilliardistPawn::HandleFinishedAiming(AActor* const ActorToLookAt)
     SetState(FBilliardistState::WALKING);
 }
 
-void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity)
+void ABilliardistPawn::LaunchBall(ABall* Ball, const FVector& Velocity, const FVector& AtLocation)
 {
-    ReplicationComponent->Server_PerformBallHit(Ball, Velocity);
+    ReplicationComponent->Server_PerformBallHit(Ball, Velocity, AtLocation);
 }
 
 void ABilliardistPawn::ReadyStateToggle()

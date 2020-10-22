@@ -94,6 +94,28 @@ void UBilliardistAimingComponent::Initialize(USpringArmComponent* InSpringArm)
         DefaultSpringArmLocation = SpringArm->GetRelativeTransform().GetLocation();
 }
 
+
+FVector UBilliardistAimingComponent::GetCueForwardVector() const
+{
+    check(Cue);
+    return Cue->GetActorForwardVector();
+}
+
+FVector UBilliardistAimingComponent::GetHitLocation() const
+{
+    check(Cue);
+
+    FHitResult HitRes;
+    const FVector CueForward = Cue->GetActorForwardVector();
+    const FVector Start = Cue->GetActorLocation() + 1 * CueForward;
+    const FVector End = Start + CueForward * 150;
+
+    FCollisionObjectQueryParams ObjParams{ FCollisionObjectQueryParams::InitType::AllDynamicObjects };
+    GetWorld()->LineTraceSingleByObjectType(HitRes, Start, End, ObjParams);
+
+    return HitRes.ImpactPoint;
+}
+
 void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta)
 {
     HitStrengthRatio = FMath::Clamp(HitStrengthRatio + Delta * HitStrengthadjustmentSpeed, 0.f, 1.f);
