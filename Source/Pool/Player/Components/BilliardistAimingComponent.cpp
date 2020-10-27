@@ -116,9 +116,9 @@ FVector UBilliardistAimingComponent::GetHitLocation() const
     return HitRes.ImpactPoint;
 }
 
-void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta)
+void UBilliardistAimingComponent::UpdateHitStrengthRatio(float Delta, float UpdateCoeff)
 {
-    HitStrengthRatio = FMath::Clamp(HitStrengthRatio + Delta * HitStrengthadjustmentSpeed, 0.f, 1.f);
+    HitStrengthRatio = FMath::Clamp(HitStrengthRatio + Delta * UpdateCoeff, 0.f, 1.f);
     HitStrength = MaxAcceptableHitStrength * HitStrengthRatio;
 
     CueOffsetMultiplier = MaxCueOffsetMultiplier * HitStrengthRatio;
@@ -154,7 +154,7 @@ void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
 
 void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLookAt)
 {
-    UpdateHitStrengthRatio(-HitStrengthRatio);
+    UpdateHitStrengthRatio(-HitStrengthRatio, 1.f);
     if (!SpringArm) { return; }
     
     ActorToLookAtWhileBlending = ActorToLookAt;

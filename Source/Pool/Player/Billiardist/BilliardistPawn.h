@@ -91,6 +91,8 @@ protected:
 
     void LaunchBall(ABall* Ball, const FVector& Velocity, const FVector& AtLocation = FVector(0));
 
+    void ResetAimingVariables();
+    
 #pragma region InputBindedFunctions
     UFUNCTION()
     void MoveForward(float Value);

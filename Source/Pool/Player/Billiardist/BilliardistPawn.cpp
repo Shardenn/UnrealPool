@@ -113,7 +113,7 @@ void ABilliardistPawn::Turn(float Value)
 void ABilliardistPawn::LookUp(float Value)
 {
     if (bAdjustingHitStrength)
-        AimingComponent->UpdateHitStrengthRatio(Value);
+        AimingComponent->UpdateHitStrengthRatio(Value, AimingComponent->GetHitStrengthAdjustmentSpeed());
     else if (bAdjustingZoom)
         AimingComponent->AdjustZoom(Value);
     else if (bAdjustingSpin)
@@ -229,6 +229,9 @@ void ABilliardistPawn::ReturnPressHandle()
 void ABilliardistPawn::HandleFinishedAiming(AActor* const ActorToLookAt)
 {
     AimingComponent->HandleFinishedAiming(ActorToLookAt);
+    bAdjustingHitStrength = false;
+    bAdjustingSpin = false;
+    bAdjustingZoom = false;
     SetState(FBilliardistState::WALKING);
 }
 
@@ -281,6 +284,11 @@ float ABilliardistPawn::GetMaxHitStrength()
 float ABilliardistPawn::GetCurrentHitStrength()
 {
     return AimingComponent->GetHitStrength();
+}
+
+void ABilliardistPawn::ResetAimingVariables()
+{
+           
 }
 
 void ABilliardistPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

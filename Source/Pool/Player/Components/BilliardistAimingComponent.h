@@ -39,10 +39,11 @@ public:
     FVector GetCueForwardVector() const;
     FVector GetHitLocation() const;
 
-    float GetHitStrength() { return HitStrength; }
-    float GetMaxHitStrength() { return MaxAcceptableHitStrength; }
-
-    void UpdateHitStrengthRatio(float Delta);
+    float GetHitStrength() const { return HitStrength; }
+    float GetMaxHitStrength() const { return MaxAcceptableHitStrength; }
+    float GetHitStrengthRatio() const { return HitStrengthRatio; }
+    float GetHitStrengthAdjustmentSpeed() const { return HitStrengthAdjustmentSpeed; }
+    void UpdateHitStrengthRatio(float Delta, float UpdateCoeff);
 
     void AdjustZoom(float Delta);
 
@@ -97,7 +98,7 @@ protected:
     float HitStrength = 100.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
-    float HitStrengthadjustmentSpeed = 0.05f;
+    float HitStrengthAdjustmentSpeed = 0.05f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hit strength")
     float MaxAcceptableHitStrength = 1000.f;

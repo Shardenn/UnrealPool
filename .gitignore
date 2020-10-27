@@ -14,4 +14,4 @@ Content/StarterContent
 *.vs
 
 # Rider files
-.idea
+*.idea

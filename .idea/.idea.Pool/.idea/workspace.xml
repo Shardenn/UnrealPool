@@ -9,9 +9,9 @@
   <component name="ChangeListManager">
     <list default="true" id="e511c46c-ebfa-44de-ba93-5696ba597b55" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Pool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Pool/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallAmerican.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Gameplay/BP_BallAmerican.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Maps/Pool_cozy_room.umap" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Maps/Pool_cozy_room.umap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Billiardist/BP_EightBallBilliardist.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Billiardist/BP_EightBallBilliardist.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/Pool/AmericanPool/EightBallGameState.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/AmericanPool/EightBallGameState.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" afterDir="false" />
@@ -33,9 +33,9 @@
         <option value="$PROJECT_DIR$/Source/Pool/Objects/Cue.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Objects/Cue.cpp" />
         <option value="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.h" />
-        <option value="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" />
-        <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" />
         <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.cpp" />
+        <option value="$PROJECT_DIR$/Source/Pool/Player/Components/BilliardistAimingComponent.h" />
+        <option value="$PROJECT_DIR$/Source/Pool/Player/Billiardist/BilliardistPawn.cpp" />
       </list>
     </option>
   </component>
@@ -48,7 +48,7 @@
     <property name="DebuggerViewTab_PTCS_FirstProportionKey" value="0.34994584" />
     <property name="DebuggerViewTab_PTCS_LastProportionKey" value="0.30010834" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="settings.editor.selected.configurable" value="project.propDebugger" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RunManager">
     <configuration name="Pool" type="CppProject" factoryName="C++ Project">
@@ -163,26 +163,30 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="694" y="362" width="714" height="490" key="#Vim_Emulation" timestamp="1603809921457">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="694" y="362" width="714" height="490" key="#Vim_Emulation/0.0.1920.1040@0.0.1920.1040" timestamp="1603809921457" />
     <state x="1152" y="430" width="672" height="592" key="#xdebugger.evaluate" timestamp="1602341909314">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="1152" y="430" width="672" height="592" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1602341909314" />
-    <state width="1877" height="375" key="GridCell.Tab.0.bottom" timestamp="1602605080377">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom" timestamp="1603812320574">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
-    <state width="1877" height="375" key="GridCell.Tab.0.center" timestamp="1602605080376">
+    <state width="1877" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1603812320574" />
+    <state width="1877" height="282" key="GridCell.Tab.0.center" timestamp="1603812320573">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
-    <state width="1877" height="375" key="GridCell.Tab.0.left" timestamp="1602605080376">
+    <state width="1877" height="282" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1603812320573" />
+    <state width="1877" height="282" key="GridCell.Tab.0.left" timestamp="1603812320573">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
-    <state width="1877" height="375" key="GridCell.Tab.0.right" timestamp="1602605080376">
+    <state width="1877" height="282" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1603812320573" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right" timestamp="1603812320574">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1877" height="375" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080376" />
+    <state width="1877" height="282" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1603812320574" />
     <state width="1877" height="375" key="GridCell.Tab.1.bottom" timestamp="1602605080377">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -231,14 +235,18 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1877" height="375" key="GridCell.Tab.3.right/0.0.1920.1040@0.0.1920.1040" timestamp="1602605080377" />
-    <state x="374" y="138" width="1437" height="807" key="SettingsEditor" timestamp="1602345031452">
+    <state x="310" y="172" width="1437" height="807" key="SettingsEditor" timestamp="1603810776245">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="374" y="138" width="1437" height="807" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1602345031452" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1602599678608">
+    <state x="310" y="172" width="1437" height="807" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1603810776245" />
+    <state x="638" y="119" width="644" height="801" key="find.popup" timestamp="1603810576652">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1602599678608" />
+    <state x="638" y="119" width="644" height="801" key="find.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1603810576652" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1603810787223">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1603810787223" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

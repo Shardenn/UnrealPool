@@ -250,8 +250,13 @@ void AEightBallGameState::HandleTurnEnd_Internal()
         uint8 BallsClearedOut = 0;
         for (const auto& BallOfType : BallsManager->GetBallsPlayedOut())
         {
-            if (Cast<ABallAmerican>(BallOfType)->GetType() == PlayerAssignedType)
-                BallsClearedOut++;
+            // TODO sometimes the first ball in the list is NULL, that's why I've added this if. 
+            // Why is it null?
+            if (ABallAmerican* BallAm = Cast<ABallAmerican>(BallOfType))
+            {
+                if (BallAm->GetType() == PlayerAssignedType)
+                    BallsClearedOut++;
+            }
         }
         if (BallsClearedOut == RequiredBalls)
             bAllBallsOfTypeCleared = true;
