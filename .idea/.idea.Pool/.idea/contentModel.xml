@@ -43635,6 +43635,10 @@
               <e p="BilliardistWithPlacableBall.cpp" t="Include" />
               <e p="BilliardistWithPlacableBall.h" t="Include" />
             </e>
+            <e p="Spectator" t="Include">
+              <e p="ReplayController.cpp" t="Include" />
+              <e p="ReplayController.h" t="Include" />
+            </e>
           </e>
           <e p="Pool.Build.cs" t="Include" />
           <e p="Pool.cpp" t="Include" />

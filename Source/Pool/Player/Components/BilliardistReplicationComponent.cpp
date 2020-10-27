@@ -6,6 +6,7 @@
 #include "GameplayLogic/PoolPlayerState.h"
 #include "Objects/Ball.h" // TODO not needed much, but no better workaround
 #include "BilliardistMovementComponent.h"
+#include "PoolGameInstance.h"
 
 #include "Kismet/GameplayStatics.h"
 

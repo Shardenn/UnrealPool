@@ -35,7 +35,6 @@ protected:
     virtual bool Initialize() override;
     virtual void OnLevelRemovedFromWorld(class ULevel* InLevel, 
                                          class UWorld* InWorld) override;
-private:
     UPROPERTY(meta = (BindWidget))
     class UButton* ButtonHost;
     UPROPERTY(meta = (BindWidget))
@@ -56,7 +55,7 @@ private:
 
     //class UServerRow* ServerRow;
     
-    UPROPERTY(meta = (BindWidget))
+    UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
     class UWidgetSwitcher* MenuSwitcher;
 
     UPROPERTY(meta = (BindWidget))

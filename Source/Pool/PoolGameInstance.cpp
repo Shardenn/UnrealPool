@@ -10,6 +10,9 @@
 
 #include "Blueprint/UserWidget.h"
 
+#include "Runtime/NetworkReplayStreaming/NullNetworkReplayStreaming/Public/NullNetworkReplayStreaming.h"
+#include "NetworkVersion.h"
+
 const static FName SESSION_NAME = NAME_GameSession;//TEXT("BilliardSessionGame");
 const static FName SERVER_NAME_SETTING_KEY = TEXT("ServerName");
 
@@ -31,6 +34,8 @@ UPoolGameInstance::UPoolGameInstance(const FObjectInitializer& ObjectInitializer
 
 void UPoolGameInstance::Init()
 {
+    Super::Init();
+    
     IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
     if (Subsystem != nullptr)
     {
@@ -48,6 +53,14 @@ void UPoolGameInstance::Init()
     {
         UE_LOG(LogPool, Error, TEXT("No online subsystem found"));
     }
+
+    // Create a ReplayStreamer for FindReplays and DeleteReplay
+    EnumerateStreamsPtr = FNetworkReplayStreaming::Get().GetFactory().CreateReplayStreamer();
+    // Link FindReplays delegate to function
+//    OnEnumerateStreamsCompleteDelegate = FOnEnumerateStreamsComplete::CreateUObject(this, &UPoolGameInstance::OnEnumerateStreamsComplete);
+    OnEnumerateStreamsCallback.BindUObject(this, &UPoolGameInstance::OnEnumerateStreamsComplete);
+    // Link DeleteReplay delegate to function
+    OnDeleteFinishedStreamCompleteCallback.BindUObject(this, &UPoolGameInstance::OnDeleteFinishedStreamComplete);
 }
 
 void UPoolGameInstance::LoadMenu()
@@ -237,4 +250,71 @@ void UPoolGameInstance::LoadMainMenuLevel()
     if (!ensure(PlayerController != nullptr)) return;
 
     PlayerController->ClientTravel("/Game/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
+void UPoolGameInstance::StartRecording(FString Name, FString FriendlyName)
+{
+    StartRecordingReplay(Name, FriendlyName);
+}
+
+void UPoolGameInstance::StopRecording()
+{
+    StopRecordingReplay(); 
+}
+
+void UPoolGameInstance::PlayLastRecording(FString ReplayName)
+{
+    PlayReplay(ReplayName); 
+}
+
+void UPoolGameInstance::FindReplays()
+{
+    if (EnumerateStreamsPtr.Get())
+    {
+        EnumerateStreamsPtr.Get()->EnumerateStreams(FNetworkReplayVersion(), 0, FString(), TArray<FString>(),
+            OnEnumerateStreamsCallback);
+    }
+}
+
+void UPoolGameInstance::OnEnumerateStreamsComplete(const FEnumerateStreamsResult& StreamInfos)
+{
+    TArray<FReplayInfo> AllReplays;
+    for (FNetworkReplayStreamInfo Info : StreamInfos.FoundStreams)
+    {
+        if (!Info.bIsLive)
+        {
+            AllReplays.Add(FReplayInfo(Info.Name, Info.FriendlyName, Info.Timestamp, Info.LengthInMS));
+        }
+    }
+    BP_OnFindReplaysComplete(AllReplays);
+}
+
+void UPoolGameInstance::RenameReplay(const FString& ReplayName, const FString& NewFriendlyReplayName)
+{
+    const FString DemoPath = FPaths::Combine(*FPaths::ProjectSavedDir(), TEXT("Demos/"));
+    const FString StreamDir = FPaths::Combine(*DemoPath, *ReplayName);
+    const FString StreamFullBaseName = FPaths::Combine(*StreamDir, *ReplayName);
+    const FString InfoFileName = StreamFullBaseName + TEXT(".replayinfo");
+
+    TUniquePtr<FArchive> InfoFileArchive(IFileManager::Get().CreateFileReader(*InfoFileName));
+    if (InfoFileArchive.IsValid() && InfoFileArchive->TotalSize() != 0)
+    {
+        FString JsonString;
+        *InfoFileArchive << JsonString;
+        InfoFileArchive->Close();
+    }
+    // Not finished function.
+}
+
+void UPoolGameInstance::DeleteReplay(const FString& ReplayName)
+{
+    if (EnumerateStreamsPtr.Get())
+    {
+        EnumerateStreamsPtr.Get()->DeleteFinishedStream(ReplayName, OnDeleteFinishedStreamCompleteCallback);
+    }
+}
+
+void UPoolGameInstance::OnDeleteFinishedStreamComplete(const FDeleteFinishedStreamResult& Result)
+{
+    FindReplays();
 }

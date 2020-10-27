@@ -6,6 +6,7 @@
 // TODO handle includes correctly, maybe refactor
 //#include "Objects/Ball.h"
 
+#include "PoolGameInstance.h"
 #include "Objects/Table/Table.h"
 #include "Objects/Table/Components/ActivePlayArea.h"
 #include "Objects/Table/Components/BallRegistrator.h"
@@ -159,6 +160,9 @@ void APoolGameState::OnFrameRestarted()
 void APoolGameState::HandleTurnEnd()
 {
     Server_HandleTurnEnd();
+    if (GetLocalRole() < ROLE_Authority)
+    {
+    }
 }
 
 void APoolGameState::Server_HandleTurnEnd_Implementation()
