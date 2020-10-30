@@ -79,7 +79,7 @@ void ABall::Tick(float DeltaTime)
         ServerPhysicsState.Location = GetActorLocation();
         ServerPhysicsState.Rotation = GetActorRotation().Quaternion();
         ServerPhysicsState.Velocity = SphereMesh->GetComponentVelocity();
-        ServerPhysicsState.TimeStamp = ABilliardistController::GetLocalTime();
+        ServerPhysicsState.Timestamp = ABilliardistController::GetLocalTime();
     }
 
     if (bLoggingSpeed)
@@ -92,14 +92,42 @@ void ABall::ClientTick(float DeltaTime)
 {
     ClientTimeSinceUpdate += DeltaTime;
 
-    if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
-    
-    FHermiteCubicSpline Spline = CreateSpline();
-    const float Ratio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
+  if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
+//    
+//    FHermiteCubicSpline Spline = CreateSpline();
+//    const float Ratio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
+//
+//    InterpolateVelocity(Spline, Ratio);
+//    InterpolateLocation(Spline, Ratio);
+//    InterpolateRotation(Ratio);
+//    if (!bSmoothStatesFilled) return;
+    uint32 MostRelevantState = CurrentSmoothStateIndex;
+    uint32 CurrentSimulatedStateInd = SmoothStates.GetNextIndex(CurrentSmoothStateIndex);
+    while (CurrentSimulatedStateInd != MostRelevantState)
+    {
+        uint32 PrevStateInd = SmoothStates.GetPreviousIndex(CurrentSimulatedStateInd);
+        uint64 TimeBetweenUpdates = SmoothStates[CurrentSimulatedStateInd].Timestamp -
+            SmoothStates[PrevStateInd].Timestamp;
+        FHermiteCubicSpline Spline = CreateSpline(CurrentSimulatedStateInd);
+        const float Ratio = ClientTimeSinceUpdate / TimeBetweenUpdates;
+        InterpolateVelocity(Spline, Ratio);
+        InterpolateLocation(Spline, Ratio);
+        InterpolateRotation(Ratio);
 
-    InterpolateVelocity(Spline, Ratio);
-    InterpolateLocation(Spline, Ratio);
-    InterpolateRotation(Ratio);
+        CurrentSimulatedStateInd = SmoothStates.GetNextIndex(CurrentSimulatedStateInd);
+    }
+}
+
+FHermiteCubicSpline ABall::CreateSpline(uint32 ArrayIndex)
+{
+    FHermiteCubicSpline Spline;
+    uint32 PreviousIndex = SmoothStates.GetPreviousIndex(ArrayIndex);
+    Spline.StartLocation = SmoothStates[PreviousIndex].Location;
+    Spline.TargetLocation = SmoothStates[ArrayIndex].Location;
+    Spline.StartDerivative = SmoothStates[PreviousIndex].Velocity * VelocityToDerivative();
+    Spline.TargetDerivative = SmoothStates[ArrayIndex].Velocity * VelocityToDerivative();
+
+    return Spline;
 }
 
 FHermiteCubicSpline ABall::CreateSpline()
@@ -151,6 +179,9 @@ void ABall::OnRep_SmoothPhysicsState()
     ClientStartTransform = GetActorTransform();
     //ClientLastKnownVelocity = ClientStartVelocity;
     ClientLastKnownDerivative = ClientStartDerivative;
+
+    SmoothStates[CurrentSmoothStateIndex] = ServerPhysicsState;
+    CurrentSmoothStateIndex = SmoothStates.GetNextIndex(CurrentSmoothStateIndex);
 }
 
 void ABall::RemoveBallFromGame()

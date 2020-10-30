@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "CircularBuffer.h"
 #include "GameFramework/Actor.h"
-#include "Components/StaticMeshComponent.h"
 #include "Ball.generated.h"
 
 USTRUCT()
@@ -14,8 +15,11 @@ struct FSmoothPhysicsState
 
 public:
     UPROPERTY()
-    uint64 TimeStamp;
+    uint64 TimeSincePreviousUpdate;
 
+    UPROPERTY()
+    uint64 Timestamp;
+    
     UPROPERTY()
     FVector Location;
 
@@ -27,7 +31,8 @@ public:
 
     FSmoothPhysicsState()
     {
-        TimeStamp = 0;
+        TimeSincePreviousUpdate = 0;
+        Timestamp = 0;
         Location = FVector::ZeroVector;
         Velocity = FVector::ZeroVector;
         Rotation = FQuat::Identity;
@@ -70,7 +75,7 @@ class POOL_API ABall : public AActor
 public:
     ABall();
 
-    bool IsInGame() { return bCurrentlyInGame; }
+    bool IsInGame() const { return bCurrentlyInGame; }
     void SetIsInGame(const bool NewInGame) { bCurrentlyInGame = NewInGame; }
 
     virtual void RemoveBallFromGame();
@@ -93,6 +98,8 @@ protected:
 
     UPROPERTY(ReplicatedUsing = OnRep_SmoothPhysicsState)
     FSmoothPhysicsState ServerPhysicsState;
+
+    TCircularBuffer<FSmoothPhysicsState> SmoothStates{ 16 };
     
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
     class UPocketArea* LastOverlappedPocket{ nullptr };
@@ -107,6 +114,7 @@ protected:
     
     void ClientTick(float DeltaTime);
 
+    FHermiteCubicSpline CreateSpline(uint32 ArrayIndex);
     FHermiteCubicSpline CreateSpline();
     void InterpolateLocation(const FHermiteCubicSpline& Spline, const float Ratio);
     void InterpolateRotation(const float Ratio);
@@ -138,4 +146,7 @@ private:
     void OnTurnEndFired();
 
     bool bLoggingSpeed = false;
+
+    uint32 CurrentSmoothStateIndex{ 0 };
+    bool bSmoothStatesFilled{ false };
 };

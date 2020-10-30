@@ -88,7 +88,7 @@ void UBilliardistReplicationComponent::Server_PerformBallHit_Implementation(ABal
     State->Server_StartWatchingBallsMovement();
 
     if (!ensure(Ball != nullptr)) return;
-    Ball->StartLoggingSpeed();
+    //Ball->StartLoggingSpeed();
     if (AtLocation == FVector(0))
         Cast<UStaticMeshComponent>(Ball->GetRootComponent())->AddImpulse(Velocity, NAME_None, false);
     else
