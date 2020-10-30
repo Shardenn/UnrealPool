@@ -82,6 +82,10 @@ void ABall::Tick(float DeltaTime)
         ServerPhysicsState.TimeStamp = ABilliardistController::GetLocalTime();
     }
 
+    if (bLoggingSpeed)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("%s speed is %s"), *GetName(), *SphereMesh->GetComponentVelocity().ToString());
+    }
 }
 
 void ABall::ClientTick(float DeltaTime)
