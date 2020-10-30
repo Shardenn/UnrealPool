@@ -155,6 +155,9 @@ void UBilliardistAimingComponent::HandleStartedAiming(const FVector& AimedAt)
 void UBilliardistAimingComponent::HandleFinishedAiming(AActor* const ActorToLookAt)
 {
     UpdateHitStrengthRatio(-HitStrengthRatio, 1.f);
+    CueSpinOffsetX = 0.f;
+    CueSpinOffsetY = 0.f;
+    
     if (!SpringArm) { return; }
     
     ActorToLookAtWhileBlending = ActorToLookAt;

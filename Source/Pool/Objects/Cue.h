@@ -18,14 +18,10 @@ public:
     
     uint32 GetMeshOverlapNum() const
     {
-        for (auto& Comp : MeshOverlappingComponents)
-            UE_LOG(LogTemp, Warning, TEXT("Mesh overlapping %s"), *Comp->GetName());
         return MeshOverlappingComponents.Num();
     }
     uint32 GetCapsuleOverlapNum() const
     {
-        for (auto& Comp: CapsuleOverlappingComponents)
-            UE_LOG(LogTemp, Warning, TEXT("Capsule overlapping %s"), *Comp->GetName());
         return CapsuleOverlappingComponents.Num();
     }
     
